@@ -1,0 +1,200 @@
+.profile-page {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.profile-page__heading {
+  margin-bottom: 24px;
+}
+
+.profile-page__heading h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profile-page__heading p {
+  margin: 6px 0 0;
+  color: var(--sc-on-surface-variant);
+}
+
+.profile-page__layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.profile-card,
+.profile-section {
+  border: 1px solid var(--sc-outline-variant);
+  border-radius: 16px;
+  background: var(--sc-surface-container-lowest);
+  box-shadow: var(--sc-shadow-sm);
+}
+
+.profile-card {
+  position: sticky;
+  top: calc(var(--sc-header-height) + 24px);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 32px;
+  text-align: center;
+}
+
+.profile-avatar-wrap {
+  position: relative;
+}
+
+.profile-avatar {
+  width: 148px;
+  height: 148px;
+  border: 4px solid var(--sc-surface-container);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sc-primary);
+  background: var(--sc-surface-container-high);
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.profile-avatar-button {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  border-radius: 50%;
+  color: white;
+  background: var(--sc-primary);
+  cursor: pointer;
+}
+
+.profile-avatar-button input {
+  display: none;
+}
+
+.profile-card h2 {
+  margin: 20px 0 4px;
+  font-size: 21px;
+}
+
+.profile-card > p {
+  color: var(--sc-on-surface-variant);
+}
+
+.profile-card__divider {
+  width: 100%;
+  margin: 24px 0 12px;
+  border-top: 1px solid var(--sc-outline-variant);
+}
+
+.profile-card__link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  color: var(--sc-on-surface);
+  text-decoration: none;
+}
+
+.profile-card__link:hover {
+  background: var(--sc-surface-container-low);
+}
+
+.profile-card__logout {
+  color: var(--bs-danger, #b42318);
+  cursor: pointer;
+  font: inherit;
+  margin-top: 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.profile-card__logout:hover,
+.profile-card__logout:focus-visible {
+  background: color-mix(in srgb, var(--bs-danger, #b42318) 8%, transparent);
+  color: var(--bs-danger, #b42318);
+}
+
+.profile-section {
+  overflow: hidden;
+  scroll-margin-top: calc(var(--sc-header-height) + 20px);
+}
+
+.profile-section__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--sc-outline-variant);
+}
+
+.profile-section__header h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.profile-section__accent {
+  width: 5px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--sc-primary);
+}
+
+.profile-section__accent--green {
+  background: #16835b;
+}
+
+.profile-section__accent--orange {
+  background: #b76800;
+}
+
+.patient-history__table th { background: var(--sc-surface-container-low); font-size: .74rem; text-transform: uppercase; white-space: nowrap; }
+.patient-history__table td { min-width: 110px; }
+.patient-history__table td:last-child, .patient-history__table th:last-child { min-width: 48px; }
+.patient-history__table small { font-size: .75rem; }
+.patient-history__review-cell { min-width: 110px; }
+.patient-history-modal { align-items: center; display: grid; inset: 0; justify-items: center; padding: 16px; position: fixed; z-index: 2000; }
+.patient-history-modal__backdrop { background: rgba(16, 30, 52, .52); border: 0; cursor: default; inset: 0; position: absolute; width: 100%; }
+.patient-history-modal__dialog { justify-self: center; max-height: calc(100dvh - 32px); min-width: 0; position: relative; width: min(720px, calc(100vw - 32px)); z-index: 1; }
+.patient-history-modal__surface { background: var(--sc-surface-container-lowest); border: 1px solid var(--sc-outline-variant); border-radius: 14px; box-shadow: 0 20px 48px rgba(16, 30, 52, .28); display: flex; flex-direction: column; max-height: calc(100dvh - 32px); overflow: hidden; width: 100%; }
+.patient-history-modal__header { align-items: flex-start; border-bottom: 1px solid var(--sc-outline-variant); display: flex; flex: 0 0 auto; justify-content: space-between; padding: 18px 22px; }
+.patient-history-modal__body { overflow-y: auto; padding: 24px; }
+.patient-history-modal__footer { align-items: center; border-top: 1px solid var(--sc-outline-variant); display: flex; flex: 0 0 auto; gap: 8px; justify-content: flex-end; padding: 14px 22px; }
+.patient-history__details { display: grid; gap: 12px 20px; grid-template-columns: minmax(120px, 150px) minmax(0, 1fr); margin: 0; }
+.patient-history__details dt { color: var(--sc-on-surface-variant); font-weight: 600; }.patient-history__details dd { margin: 0; overflow-wrap: anywhere; }
+.patient-history__stars { display: flex; gap: 8px; }.patient-history__stars button { background: transparent; border: 0; border-radius: 6px; color: #c2c8d2; font-size: 2rem; line-height: 1; padding: 2px; }.patient-history__stars button:hover, .patient-history__stars button:focus-visible { color: #e39b00; }.patient-history__stars button:focus-visible { outline: 2px solid var(--sc-primary); outline-offset: 2px; }.patient-history__stars button.active { color: #e39b00; }
+
+@media (max-width: 991.98px) {
+  .profile-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    position: static;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .patient-history-modal { padding: 10px; }
+  .patient-history-modal__dialog, .patient-history-modal__surface { max-height: calc(100dvh - 20px); }
+  .patient-history-modal__body { padding: 18px; }
+  .patient-history-modal__header, .patient-history-modal__footer { padding: 14px 18px; }
+  .patient-history__details { grid-template-columns: 1fr; gap: 4px; }
+  .patient-history__details dd { margin-bottom: 10px; }
+}

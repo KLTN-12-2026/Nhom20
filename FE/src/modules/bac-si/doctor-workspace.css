@@ -1,0 +1,749 @@
+.doctor-page {
+  color: #12213f;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.doctor-page__eyebrow {
+  color: #1457c8;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.doctor-page__title {
+  font-size: clamp(1.55rem, 2.4vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+
+.doctor-page__description {
+  color: #667085;
+  margin: 0.45rem 0 0;
+}
+
+.doctor-panel {
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(21, 45, 82, 0.05);
+}
+
+.doctor-stat {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  display: flex;
+  gap: 14px;
+  min-height: 112px;
+  padding: 20px;
+}
+
+.doctor-stat__icon {
+  align-items: center;
+  background: #eaf1ff;
+  border-radius: 12px;
+  color: #1457c8;
+  display: flex;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+
+.doctor-stat__value {
+  color: #102a56;
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.doctor-stat__label {
+  color: #667085;
+  font-size: 0.86rem;
+  margin-top: 7px;
+}
+
+.doctor-section-title {
+  align-items: center;
+  display: flex;
+  font-size: 1.05rem;
+  font-weight: 800;
+  gap: 9px;
+  margin: 0;
+}
+
+.doctor-table {
+  margin: 0;
+}
+
+.doctor-table thead th {
+  background: #f6f8fc;
+  border-bottom: 1px solid #dbe3ef;
+  color: #475467;
+  font-size: 0.73rem;
+  font-weight: 800;
+  padding: 13px 16px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.doctor-table tbody td {
+  border-color: #e7ecf3;
+  padding: 15px 16px;
+  vertical-align: middle;
+}
+
+.doctor-patient {
+  align-items: center;
+  display: flex;
+  gap: 11px;
+  min-width: 200px;
+}
+
+.doctor-patient__avatar {
+  align-items: center;
+  background: #e9efff;
+  border-radius: 50%;
+  color: #1457c8;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 800;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.doctor-patient__name {
+  color: #12213f;
+  font-weight: 700;
+}
+
+.doctor-patient__meta {
+  color: #7a8699;
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.doctor-status {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.doctor-status--waiting {
+  background: #fff4d6;
+  color: #9a6700;
+}
+
+.doctor-status--ready {
+  background: #dff8eb;
+  color: #087443;
+}
+
+.doctor-status--done {
+  background: #e8eef8;
+  color: #526175;
+}
+
+.doctor-status--cancelled {
+  background: #ffe5e8;
+  color: #bb2634;
+}
+
+.doctor-empty {
+  color: #667085;
+  padding: 54px 24px;
+  text-align: center;
+}
+
+.doctor-empty .material-symbols-outlined {
+  color: #9aa7b8;
+  display: block;
+  font-size: 44px;
+  margin-bottom: 8px;
+}
+
+.doctor-filter-bar {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+}
+
+.doctor-filter-bar .form-control,
+.doctor-filter-bar .form-select {
+  min-height: 42px;
+}
+
+.doctor-queue-number {
+  align-items: center;
+  background: #1457c8;
+  border-radius: 12px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 1.05rem;
+  font-weight: 800;
+  height: 44px;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.doctor-note {
+  background: #f5f8ff;
+  border: 1px solid #d9e5ff;
+  border-radius: 12px;
+  color: #405474;
+  font-size: 0.86rem;
+  padding: 12px 14px;
+}
+
+.doctor-exam-shell {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 330px;
+}
+
+.doctor-form-section {
+  border-bottom: 1px solid #e7ecf3;
+  padding: 22px;
+}
+
+.doctor-exam-patient-bar {
+  align-items: center;
+  background: #f5f8ff;
+  border-bottom: 1px solid #dbe3ef;
+  display: flex;
+  gap: 12px;
+  padding: 16px 22px;
+}
+
+.doctor-patient-allergies {
+  align-items: flex-start;
+  background: #f8fafc;
+  border-bottom: 1px solid #dbe3ef;
+  color: #475467;
+  display: flex;
+  gap: 11px;
+  padding: 14px 22px;
+}
+
+.doctor-patient-allergies--has-data {
+  background: #fff7f7;
+  color: #8a1c1c;
+}
+
+.doctor-patient-allergies>.material-symbols-outlined {
+  color: #b42318;
+  font-size: 23px;
+}
+
+.doctor-patient-allergies strong {
+  display: block;
+  font-size: .9rem;
+}
+
+.doctor-patient-allergies p {
+  font-size: .82rem;
+  line-height: 1.45;
+  margin: 4px 0 0;
+}
+
+.doctor-patient-allergies ul {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 5px 0 0;
+  padding: 0;
+}
+
+.doctor-patient-allergies li {
+  font-size: .83rem;
+}
+
+.doctor-patient-allergies li small {
+  color: #a23b3b;
+  display: block;
+  font-size: .73rem;
+  margin-top: 1px;
+}
+
+.doctor-history-diagnosis {
+  max-width: 360px;
+  white-space: normal;
+}
+
+.doctor-history-modal-list {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.doctor-history-modal {
+  z-index: 1060;
+}
+
+.doctor-history-modal__backdrop {
+  z-index: 0;
+}
+
+.doctor-history-modal__dialog {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .doctor-history-modal-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.doctor-form-section:last-child {
+  border-bottom: 0;
+}
+
+.doctor-form-section h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.doctor-patient-summary {
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  color: #12213f;
+  padding: 22px;
+}
+
+.doctor-exam-aside {
+  align-self: start;
+  min-width: 0;
+}
+
+.doctor-safety-panel {
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgb(15 23 42 / 5%);
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  padding: 16px;
+  position: sticky;
+  top: 16px;
+}
+
+.doctor-safety-panel__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.doctor-safety-panel__header h2 {
+  color: #102a56;
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 2px 0 0;
+}
+
+.doctor-safety-panel__eyebrow {
+  color: #587092;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+
+.doctor-safety-panel__loading {
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.doctor-safety-panel__empty {
+  align-items: center;
+  background: #f4fbf7;
+  border: 1px dashed #b5e5c9;
+  border-radius: 10px;
+  color: #237a52;
+  display: flex;
+  font-size: 0.82rem;
+  gap: 8px;
+  padding: 12px;
+}
+
+.doctor-safety-panel__empty .material-symbols-outlined {
+  font-size: 19px;
+}
+
+.doctor-safety-panel__list {
+  display: grid;
+  gap: 10px;
+}
+
+.doctor-warning-group {
+  display: grid;
+  gap: 10px;
+}
+
+.doctor-safety-alert {
+  border: 1px solid;
+  border-radius: 12px;
+  display: flex;
+  gap: 9px;
+  padding: 11px;
+}
+
+.doctor-safety-alert--critical {
+  background: #fff7f7;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.doctor-safety-alert--caution {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.doctor-safety-alert--info {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #075985;
+}
+
+.doctor-safety-alert__icon .material-symbols-outlined {
+  font-size: 21px;
+}
+
+.doctor-safety-alert__body {
+  min-width: 0;
+}
+
+.doctor-safety-alert__body strong,
+.doctor-safety-alert__body p,
+.doctor-safety-alert__body small {
+  display: block;
+}
+
+.doctor-safety-alert__body strong {
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.doctor-safety-alert__body p {
+  color: #344054;
+  font-size: 0.79rem;
+  line-height: 1.45;
+  margin: 5px 0;
+}
+
+.doctor-safety-alert__body small {
+  color: #667085;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.doctor-safety-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.doctor-warning-ack-button {
+  background: #eef4ff;
+  border: 1px solid #b9cdf8;
+  color: #28559a;
+}
+
+.doctor-warning-ack-button:hover {
+  background: #dfeaff;
+  border-color: #94b2ef;
+  color: #173f7a;
+}
+
+.doctor-allergy-facts {
+  display: grid;
+  gap: 5px;
+  margin: 9px 0;
+}
+
+.doctor-allergy-facts div {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 104px minmax(0, 1fr);
+}
+
+.doctor-allergy-facts dt,
+.doctor-allergy-facts dd {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.doctor-allergy-facts dt {
+  color: #7f1d1d;
+  font-weight: 700;
+}
+
+.doctor-allergy-facts dd {
+  color: #344054;
+}
+
+.doctor-ai-card {
+  background: #f8faff;
+  border: 1px solid #cbdcff;
+  border-radius: 12px;
+  color: #1d2939;
+  padding: 12px;
+}
+
+.doctor-ai-card__loading {
+  align-items: center;
+  color: #28559a;
+  display: flex;
+  font-size: 0.78rem;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.doctor-ai-card__message {
+  background: #fff;
+  border: 1px solid #dbe7ff;
+  border-radius: 8px;
+  color: #475467;
+  font-size: 0.78rem;
+  margin: 0;
+  padding: 9px;
+}
+
+.doctor-ai-card__message--error {
+  background: #fff7f7;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.doctor-ai-suggestions {
+  background: rgb(255 255 255 / 82%);
+  border: 1px solid rgb(37 99 235 / 22%);
+  border-radius: 10px;
+  color: #1d2939;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.doctor-ai-suggestions__heading {
+  align-items: center;
+  color: #175cd3;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.doctor-ai-suggestions__heading .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.doctor-ai-suggestions__list {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doctor-ai-suggestions__list li {
+  background: #f8faff;
+  border: 1px solid #dbe7ff;
+  border-radius: 8px;
+  counter-increment: ai-suggestion;
+  padding: 8px 8px 8px 34px;
+  position: relative;
+}
+
+.doctor-ai-suggestions__list li::before {
+  align-items: center;
+  background: #2563eb;
+  border-radius: 99px;
+  color: #fff;
+  content: counter(ai-suggestion);
+  display: flex;
+  font-size: 0.68rem;
+  font-weight: 800;
+  height: 20px;
+  justify-content: center;
+  left: 8px;
+  position: absolute;
+  top: 8px;
+  width: 20px;
+}
+
+.doctor-ai-suggestions__list div {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.doctor-ai-suggestions__list span,
+.doctor-ai-suggestions__notice,
+.doctor-ai-suggestions__empty {
+  color: #667085;
+  font-size: 0.74rem;
+}
+
+.doctor-ai-suggestions__list p {
+  color: #344054;
+  font-size: 0.76rem;
+  margin: 3px 0 0;
+}
+
+.doctor-ai-suggestions__notice {
+  border-top: 1px solid #eaecf0;
+  display: block;
+  margin-top: 8px;
+  padding-top: 7px;
+}
+
+.doctor-safety-alert__resolve {
+  border-top: 1px solid rgb(148 163 184 / 35%);
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.doctor-safety-alert__resolve label {
+  color: #475467;
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.doctor-safety-alert__status {
+  border-radius: 99px;
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 9px;
+  padding: 4px 8px;
+}
+
+.doctor-safety-alert__status--confirmed {
+  background: #dcfae8;
+  color: #087443;
+}
+
+.doctor-safety-alert__status--skipped {
+  background: #eaecf0;
+  color: #475467;
+}
+
+.doctor-schedule-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  overflow-x: auto;
+  padding: 18px;
+}
+
+.doctor-schedule-day {
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  min-height: 210px;
+  padding: 14px;
+}
+
+.doctor-schedule-shift {
+  background: #f6f8fc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  color: #344054;
+  font-size: 0.82rem;
+  margin-top: 9px;
+  padding: 9px;
+}
+
+.doctor-schedule-shift strong,
+.doctor-schedule-shift small {
+  display: block;
+}
+
+.doctor-schedule-shift small {
+  margin-top: 4px;
+}
+
+.schedule-shift--work {
+  background: #eef4ff;
+  border-color: #cfddfa;
+  color: #164c9d;
+}
+
+.schedule-shift--duty {
+  background: #fff4dc;
+  border-color: #f3d798;
+  color: #8a5a00;
+}
+
+.schedule-shift--rest,
+.doctor-schedule-day--rest {
+  background: #eaf8f1;
+  border-color: #bfe8d3;
+  color: #087443;
+}
+
+.schedule-legend {
+  border-radius: 50%;
+  display: inline-block;
+  height: 9px;
+  margin-right: 4px;
+  width: 9px;
+}
+
+.schedule-legend--work {
+  background: #2f6fec;
+}
+
+.schedule-legend--duty {
+  background: #d99000;
+}
+
+.schedule-legend--rest {
+  background: #1f9d67;
+}
+
+.doctor-assignment-select {
+  min-width: 145px;
+}
+
+.doctor-coming-soon {
+  align-items: center;
+  display: flex;
+  min-height: 440px;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+}
+
+.doctor-pagination {
+  align-items: center;
+  border-top: 1px solid #e7ecf3;
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+@media (max-width: 992px) {
+  .doctor-exam-shell {
+    grid-template-columns: 1fr;
+  }
+}

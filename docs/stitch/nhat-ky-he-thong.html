@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nhật ký hệ thống - Smart Clinic</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary: #0c56d0;
+        --on-surface: #041b3c;
+        --on-surface-variant: #434654;
+        --outline: #737685;
+        --outline-variant: #c3c6d6;
+        --background: #f9f9ff;
+        --surface: #ffffff;
+        --surface-low: #f1f3ff;
+        --surface-high: #e0e8ff;
+        --sidebar-width: 280px;
+        --header-height: 72px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--on-surface);
+        background: var(--background);
+        font-family: Inter, sans-serif;
+        font-size: 14px;
+      }
+
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 50;
+        width: var(--sidebar-width);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px;
+        overflow-y: auto;
+        border-right: 1px solid var(--outline-variant);
+        background: var(--surface);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 12px;
+        margin-bottom: 28px;
+      }
+
+      .brand-icon {
+        color: var(--primary);
+        font-size: 34px;
+      }
+
+      .brand-name {
+        margin: 0;
+        color: var(--primary);
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .brand-subtitle {
+        margin: 0;
+        color: var(--on-surface-variant);
+        font-size: 12px;
+      }
+
+      .sidebar-nav {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        color: var(--on-surface-variant);
+        text-decoration: none;
+      }
+
+      .sidebar-link:hover {
+        color: var(--on-surface);
+        background: var(--surface-low);
+      }
+
+      .sidebar-link.active {
+        color: var(--on-surface);
+        background: var(--surface-high);
+        font-weight: 700;
+      }
+
+      .sidebar-link.settings {
+        margin-top: auto;
+      }
+
+      .sidebar-link .material-symbols-outlined {
+        font-size: 22px;
+      }
+
+      .app-shell {
+        min-height: 100vh;
+        margin-left: var(--sidebar-width);
+      }
+
+      .admin-header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        height: var(--header-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        border-bottom: 1px solid var(--outline-variant);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(12px);
+      }
+
+      .header-search {
+        position: relative;
+        width: min(380px, 45vw);
+      }
+
+      .header-search .material-symbols-outlined {
+        position: absolute;
+        top: 50%;
+        left: 14px;
+        color: var(--outline);
+        transform: translateY(-50%);
+      }
+
+      .header-search input {
+        padding-left: 44px;
+        border-color: var(--outline-variant);
+        border-radius: 999px;
+        background: var(--surface-low);
+      }
+
+      .admin-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .role-badge {
+        padding: 5px 10px;
+        border-radius: 6px;
+        color: white;
+        background: var(--primary);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .admin-avatar,
+      .log-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 50%;
+        color: var(--primary);
+        background: var(--surface-high);
+        font-weight: 700;
+      }
+
+      .admin-avatar {
+        width: 40px;
+        height: 40px;
+      }
+
+      .main-content {
+        padding: 32px;
+      }
+
+      .page-container {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      .page-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow .material-symbols-outlined {
+        font-size: 20px;
+      }
+
+      .page-heading h1 {
+        margin: 6px 0;
+        font-size: 28px;
+        line-height: 36px;
+        font-weight: 700;
+      }
+
+      .page-heading p {
+        margin: 0;
+        color: var(--on-surface-variant);
+      }
+
+      .filter-panel {
+        display: grid;
+        grid-template-columns:
+          minmax(180px, 0.8fr)
+          minmax(280px, 1.8fr)
+          minmax(200px, 1fr);
+        gap: 12px;
+        padding: 12px;
+        margin-bottom: 24px;
+        border: 1px solid var(--outline-variant);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+
+      .filter-control {
+        position: relative;
+      }
+
+      .filter-control > .material-symbols-outlined {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        z-index: 2;
+        color: var(--outline);
+        font-size: 20px;
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+
+      .filter-control .form-control,
+      .filter-control .form-select {
+        height: 44px;
+        padding-left: 42px;
+        border-color: transparent;
+        background: var(--surface-low);
+      }
+
+      .log-card {
+        overflow: hidden;
+        border: 1px solid var(--outline-variant);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: 0 2px 8px rgba(29, 48, 82, 0.06);
+      }
+
+      .log-card th {
+        padding: 15px 20px;
+        color: var(--on-surface-variant);
+        background: var(--surface-low);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .log-card td {
+        min-width: 150px;
+        padding: 18px 20px;
+      }
+
+      .log-card td:nth-child(2),
+      .log-card td:nth-child(4) {
+        min-width: 290px;
+      }
+
+      .log-avatar {
+        width: 42px;
+        height: 42px;
+        font-size: 13px;
+      }
+
+      .module-badge {
+        display: inline-flex;
+        padding: 5px 10px;
+        border: 1px solid var(--outline-variant);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .module-auth {
+        color: #0040a2;
+        background: #dae2ff;
+      }
+
+      .module-user {
+        color: #005235;
+        background: #d4f8e5;
+      }
+
+      .module-doctor {
+        color: #624000;
+        background: #ffddb3;
+      }
+
+      .module-patient {
+        color: #6b2d5c;
+        background: #f9d8ed;
+      }
+
+      .module-appointment {
+        color: #4b3b82;
+        background: #e8e0ff;
+      }
+
+      .log-footer {
+        padding: 14px 20px;
+        border-top: 1px solid var(--outline-variant);
+        color: var(--on-surface-variant);
+      }
+
+      @media (max-width: 992px) {
+        :root {
+          --sidebar-width: 88px;
+        }
+
+        .brand div,
+        .sidebar-link span:last-child {
+          display: none;
+        }
+
+        .sidebar-link {
+          justify-content: center;
+        }
+
+        .filter-panel {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .filter-search {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          padding: 20px;
+        }
+
+        .page-heading {
+          flex-direction: column;
+        }
+
+        .filter-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .filter-search {
+          grid-column: auto;
+          grid-row: auto;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="material-symbols-outlined brand-icon">
+          medical_services
+        </span>
+        <div>
+          <h1 class="brand-name">Smart Clinic AI</h1>
+          <p class="brand-subtitle">Quản trị hệ thống</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>Tổng quan</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">group</span>
+          <span>Quản lý người dùng</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">security</span>
+          <span>Vai trò và phân quyền</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">medical_services</span>
+          <span>Quản lý bác sĩ</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">person</span>
+          <span>Quản lý bệnh nhân</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">category</span>
+          <span>Quản lý chuyên khoa</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">event</span>
+          <span>Quản lý lịch hẹn</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">medication</span>
+          <span>Quản lý thuốc</span>
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">analytics</span>
+          <span>Báo cáo và thống kê</span>
+        </a>
+        <a class="sidebar-link active" href="#">
+          <span class="material-symbols-outlined">history</span>
+          <span>Nhật ký hệ thống</span>
+        </a>
+        <a class="sidebar-link settings" href="#">
+          <span class="material-symbols-outlined">settings</span>
+          <span>Cài đặt hệ thống</span>
+        </a>
+      </nav>
+    </aside>
+
+    <div class="app-shell">
+      <header class="admin-header">
+        <div class="header-search">
+          <span class="material-symbols-outlined">search</span>
+          <input
+            class="form-control"
+            type="search"
+            placeholder="Tìm kiếm hệ thống..."
+          />
+        </div>
+
+        <div class="admin-user">
+          <span class="material-symbols-outlined text-secondary">
+            notifications
+          </span>
+          <span class="role-badge">QUẢN TRỊ VIÊN</span>
+          <span class="admin-avatar">MQ</span>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <div class="page-container">
+          <section class="page-heading">
+            <div>
+              <div class="eyebrow">
+                <span class="material-symbols-outlined">history</span>
+                Giám sát hệ thống
+              </div>
+              <h1>NHẬT KÝ HỆ THỐNG</h1>
+              <p>
+                Theo dõi các thao tác của người dùng và sự kiện đăng nhập trong
+                hệ thống.
+              </p>
+            </div>
+
+          </section>
+
+          <section class="filter-panel">
+            <div class="filter-control">
+              <span class="material-symbols-outlined">calendar_today</span>
+              <select class="form-select">
+                <option>Tất cả thời gian</option>
+                <option>Hôm nay</option>
+                <option>7 ngày qua</option>
+              </select>
+            </div>
+
+            <div class="filter-control filter-search">
+              <span class="material-symbols-outlined">person_search</span>
+              <input
+                class="form-control"
+                type="search"
+                placeholder="Tìm người dùng, email hoặc hành động..."
+              />
+            </div>
+
+            <div class="filter-control">
+              <span class="material-symbols-outlined">filter_list</span>
+              <select class="form-select">
+                <option>Tất cả phân hệ</option>
+                <option>Xác thực</option>
+                <option>Người dùng</option>
+                <option>Bác sĩ</option>
+                <option>Bệnh nhân</option>
+                <option>Lịch hẹn</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="log-card">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Người thực hiện</th>
+                    <th>Phân hệ</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td class="text-nowrap">
+                      <div class="fw-semibold">20:04:00</div>
+                      <small class="text-secondary">27/07/2026</small>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        <span class="log-avatar">MQ</span>
+                        <div>
+                          <div class="fw-semibold">Nguyễn Minh Quân</div>
+                          <small class="text-secondary">
+                            admin@gmail.com · Quản trị viên
+                          </small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="module-badge module-auth">Xác thực</span>
+                    </td>
+                    <td>
+                      <div class="fw-semibold">
+                        Đăng nhập vào trang quản trị
+                      </div>
+                      <small class="text-secondary">
+                        Phiên đăng nhập mới được tạo
+                      </small>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="text-nowrap">
+                      <div class="fw-semibold">18:16:00</div>
+                      <small class="text-secondary">27/07/2026</small>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        <span class="log-avatar">HN</span>
+                        <div>
+                          <div class="fw-semibold">Lê Hoàng Nam</div>
+                          <small class="text-secondary">
+                            thungan@gmail.com · Lễ tân / Thu ngân
+                          </small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="module-badge module-patient">Bệnh nhân</span>
+                    </td>
+                    <td>
+                      <div class="fw-semibold">
+                        Cập nhật hồ sơ bệnh nhân
+                      </div>
+                      <small class="text-secondary">
+                        Thay đổi thông tin liên hệ của bệnh nhân #BN0009
+                      </small>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="text-nowrap">
+                      <div class="fw-semibold">18:12:00</div>
+                      <small class="text-secondary">27/07/2026</small>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        <span class="log-avatar">MA</span>
+                        <div>
+                          <div class="fw-semibold">Nguyễn Minh Anh</div>
+                          <small class="text-secondary">
+                            bacsi@gmail.com · Bác sĩ
+                          </small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="module-badge module-doctor">Bác sĩ</span>
+                    </td>
+                    <td>
+                      <div class="fw-semibold">Cập nhật hồ sơ bác sĩ</div>
+                      <small class="text-secondary">
+                        Thay đổi ảnh đại diện và thông tin chuyên môn
+                      </small>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="text-nowrap">
+                      <div class="fw-semibold">17:48:00</div>
+                      <small class="text-secondary">27/07/2026</small>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        <span class="log-avatar">TH</span>
+                        <div>
+                          <div class="fw-semibold">Trần Thu Hà</div>
+                          <small class="text-secondary">
+                            duocsi@gmail.com · Dược sĩ
+                          </small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="module-badge module-user">Người dùng</span>
+                    </td>
+                    <td>
+                      <div class="fw-semibold">
+                        Cập nhật thông tin cá nhân
+                      </div>
+                      <small class="text-secondary">
+                        Thay đổi số điện thoại tài khoản
+                      </small>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="text-nowrap">
+                      <div class="fw-semibold">16:35:00</div>
+                      <small class="text-secondary">26/07/2026</small>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        <span class="log-avatar">HN</span>
+                        <div>
+                          <div class="fw-semibold">Lê Hoàng Nam</div>
+                          <small class="text-secondary">
+                            thungan@gmail.com · Lễ tân / Thu ngân
+                          </small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="module-badge module-appointment">
+                        Lịch hẹn
+                      </span>
+                    </td>
+                    <td>
+                      <div class="fw-semibold">Tạo lịch hẹn khám</div>
+                      <small class="text-secondary">
+                        Tạo lịch hẹn #LH0024 cho khách vãng lai
+                      </small>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="log-footer">Hiển thị 5 trong 5 hoạt động mẫu</div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

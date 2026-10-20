@@ -1,0 +1,16 @@
+:root {
+  --chat-admin-space-sm: .65rem;
+  --chat-admin-space-md: 1rem;
+  --chat-admin-space-lg: 1.5rem;
+  --chat-admin-radius: 14px;
+  --chat-admin-rule: var(--sc-outline-variant);
+  --chat-admin-surface: var(--sc-surface-container-lowest);
+  --chat-admin-surface-muted: var(--sc-surface-container-low);
+  --chat-admin-ink: var(--sc-on-surface);
+  --chat-admin-muted: var(--sc-on-surface-variant);
+  --chat-admin-accent: var(--sc-primary);
+  --chat-admin-success: var(--sc-success);
+  --chat-admin-danger: var(--sc-error);
+  --chat-admin-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --chat-admin-duration: 160ms;
+}

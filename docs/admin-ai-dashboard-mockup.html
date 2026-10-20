@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Clinic - Admin Dashboard</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --sc-primary: #0d6efd;
+            --sc-primary-light: #e7f1ff;
+            --sc-success: #198754;
+            --sc-success-light: #d1e7dd;
+            --sc-warning: #ffc107;
+            --sc-warning-light: #fff3cd;
+            --sc-danger: #dc3545;
+            --sc-danger-light: #f8d7da;
+            --sc-info: #0dcaf0;
+            --sc-info-light: #cff4fc;
+            --sc-purple: #6f42c1;
+            --sc-purple-light: #e2d9f3;
+            --sc-bg: #f8f9fa;
+            --sc-sidebar-bg: #ffffff;
+            --sc-border: #e2e8f0;
+            --sc-text-main: #1e293b;
+            --sc-text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--sc-bg);
+            color: var(--sc-text-main);
+        }
+
+        /* Layout */
+        .wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sc-sidebar-bg);
+            border-right: 1px solid var(--sc-border);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--sc-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sidebar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--sc-primary);
+            text-decoration: none;
+        }
+
+        .sidebar-nav {
+            padding: 1.5rem 0;
+            list-style: none;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 0 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1rem;
+            color: var(--sc-text-muted);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: var(--sc-bg);
+            color: var(--sc-text-main);
+        }
+
+        .nav-link.active {
+            background-color: var(--sc-primary-light);
+            color: var(--sc-primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            height: 100vh;
+        }
+
+        .page-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: var(--sc-text-main);
+        }
+
+        .page-subtitle {
+            color: var(--sc-text-muted);
+            font-size: 0.875rem;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            margin: 3rem 0 1.5rem;
+            gap: 1rem;
+        }
+        
+        .section-divider::after {
+            content: '';
+            flex-grow: 1;
+            height: 1px;
+            background-color: var(--sc-border);
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--sc-text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background-color: #fff;
+            border: 1px solid var(--sc-border);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid var(--sc-border);
+            padding: 1rem 1.25rem;
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-card {
+            padding: 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .stat-content {
+            flex-grow: 1;
+        }
+
+        .stat-title {
+            color: var(--sc-text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            line-height: 1;
+            color: var(--sc-text-main);
+        }
+
+        .stat-desc {
+            font-size: 0.75rem;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Stat Variations */
+        .stat-blue .stat-icon { background: var(--sc-primary-light); color: var(--sc-primary); }
+        .stat-blue .stat-desc { color: var(--sc-primary); }
+        
+        .stat-purple .stat-icon { background: var(--sc-purple-light); color: var(--sc-purple); }
+        .stat-purple .stat-desc { color: var(--sc-text-muted); }
+        
+        .stat-green .stat-icon { background: var(--sc-success-light); color: var(--sc-success); }
+        .stat-green .stat-desc { color: var(--sc-text-muted); }
+        
+        .stat-red .stat-icon { background: var(--sc-danger-light); color: var(--sc-danger); }
+        .stat-red .stat-desc { color: var(--sc-danger); }
+
+        /* Tables */
+        .table-responsive {
+            margin: 0;
+        }
+        .table {
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+        .table th {
+            color: var(--sc-text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-top: none;
+            border-bottom: 1px solid var(--sc-border);
+            padding: 1rem 1.25rem;
+            background-color: #f8fafc;
+        }
+        .table td {
+            padding: 1rem 1.25rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--sc-border);
+            color: var(--sc-text-main);
+        }
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 0.35em 0.65em;
+            font-weight: 500;
+            border-radius: 6px;
+        }
+        .badge-active { background-color: var(--sc-success-light); color: var(--sc-success); }
+        .badge-ended { background-color: #f1f5f9; color: var(--sc-text-muted); }
+        .badge-model { background-color: var(--sc-purple-light); color: var(--sc-purple); }
+
+        /* Info List */
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed var(--sc-border);
+            font-size: 0.875rem;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .info-label {
+            color: var(--sc-text-muted);
+        }
+        .info-val {
+            font-weight: 600;
+            color: var(--sc-text-main);
+        }
+
+        /* Activity List */
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed var(--sc-border);
+            font-size: 0.875rem;
+        }
+        .activity-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .act-time { color: var(--sc-text-muted); width: 45px; font-variant-numeric: tabular-nums; }
+        .act-name { flex-grow: 1; font-weight: 500; }
+        .act-status { display: flex; align-items: center; gap: 4px; font-weight: 500; }
+        .status-ok { color: var(--sc-success); }
+        .status-err { color: var(--sc-danger); }
+
+        /* Progress Bar */
+        .progress-slim {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--sc-border);
+            margin-top: 0.5rem;
+            overflow: hidden;
+            display: flex;
+        }
+        .pg-patient { background-color: var(--sc-primary); width: 68%; }
+        .pg-guest { background-color: var(--sc-info); width: 32%; }
+        
+        .legend {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.75rem;
+            font-size: 0.8125rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--sc-text-muted);
+        }
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Button */
+        .btn-link-custom {
+            font-size: 0.875rem;
+            text-decoration: none;
+            font-weight: 500;
+            color: var(--sc-primary);
+        }
+        .btn-link-custom:hover {
+            color: #0a58ca;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                z-index: 1040;
+                height: 100vh;
+                transition: 0.3s;
+            }
+            .sidebar.show {
+                left: 0;
+            }
+            .main-content {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="bi bi-heart-pulse-fill fs-4 text-primary"></i>
+                <a href="#" class="sidebar-brand">Smart Clinic</a>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <i class="bi bi-grid-1x2"></i> Tổng quan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-people"></i> Người dùng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-person-badge"></i> Bệnh nhân
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-heart-pulse"></i> Bác sĩ
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-journal-medical"></i> Chuyên khoa
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-capsule"></i> Thuốc
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-calendar-check"></i> Lịch hẹn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-receipt"></i> Hóa đơn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-graph-up"></i> Báo cáo
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-gear"></i> Cài đặt
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="d-flex justify-content-between align-items-center page-header">
+                <div>
+                    <h1 class="page-title">Dashboard</h1>
+                    <div class="page-subtitle">Tổng quan hoạt động hệ thống Smart Clinic</div>
+                </div>
+                <button class="btn btn-light d-lg-none border" type="button" onclick="document.getElementById('sidebar').classList.toggle('show')">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+
+            <!-- AI SECTION -->
+            <div class="section-divider">
+                <h2 class="section-title"><i class="bi bi-robot text-primary"></i> HOẠT ĐỘNG CHATBOX AI</h2>
+            </div>
+            <p class="text-muted mb-4 fs-6">Theo dõi tình trạng sử dụng trợ lý Gemini trong hệ thống</p>
+
+            <!-- 4 Cards Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="card h-100 border-0 stat-blue">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-title">Phiên chat hôm nay</div>
+                                <div class="stat-value">42</div>
+                                <p class="stat-desc"><i class="bi bi-arrow-up-short"></i>+8 so với hôm qua</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="card h-100 border-0 stat-purple">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-stars"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-title">Tin nhắn AI</div>
+                                <div class="stat-value">156</div>
+                                <p class="stat-desc">Trong hôm nay</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="card h-100 border-0 stat-green">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-title">Phản hồi thành công</div>
+                                <div class="stat-value">97.4%</div>
+                                <p class="stat-desc">152 / 156 yêu cầu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="card h-100 border-0 stat-red">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-title">Yêu cầu thất bại</div>
+                                <div class="stat-value">4</div>
+                                <p class="stat-desc">Timeout / API / Quota</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Section (8/4 split) -->
+            <div class="row g-4">
+                
+                <!-- LEFT: Table -->
+                <div class="col-12 col-xl-8">
+                    <div class="card border-0 h-100">
+                        <div class="card-header">
+                            Hội thoại Chatbox gần đây
+                            <a href="#" class="btn-link-custom">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <thead>
+                                    <tr>
+                                        <th>Người dùng</th>
+                                        <th>Loại</th>
+                                        <th>Tin nhắn</th>
+                                        <th>Thời gian</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-medium">Nguyễn Minh Khang</td>
+                                        <td>Bệnh nhân</td>
+                                        <td>12</td>
+                                        <td class="text-muted">15:32</td>
+                                        <td><span class="badge badge-active">Đang hoạt động</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Guest #A82</td>
+                                        <td>Khách</td>
+                                        <td>5</td>
+                                        <td class="text-muted">15:20</td>
+                                        <td><span class="badge badge-ended">Kết thúc</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Trần Thanh Vy</td>
+                                        <td>Bệnh nhân</td>
+                                        <td>8</td>
+                                        <td class="text-muted">14:48</td>
+                                        <td><span class="badge badge-active">Đang hoạt động</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Guest #B14</td>
+                                        <td>Khách</td>
+                                        <td>3</td>
+                                        <td class="text-muted">14:25</td>
+                                        <td><span class="badge badge-ended">Kết thúc</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Lê Quốc Bảo</td>
+                                        <td>Bệnh nhân</td>
+                                        <td>15</td>
+                                        <td class="text-muted">13:50</td>
+                                        <td><span class="badge badge-ended">Kết thúc</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Details -->
+                <div class="col-12 col-xl-4 d-flex flex-column gap-4">
+                    
+                    <!-- Gemini Status -->
+                    <div class="card border-0 mb-0">
+                        <div class="card-header">Trạng thái Gemini</div>
+                        <div class="card-body p-4">
+                            <ul class="info-list">
+                                <li class="info-item">
+                                    <span class="info-label">Model</span>
+                                    <span class="info-val badge badge-model">Gemini 3.6 Flash</span>
+                                </li>
+                                <li class="info-item">
+                                    <span class="info-label">Trạng thái</span>
+                                    <span class="info-val text-success"><i class="bi bi-record-circle-fill"></i> Hoạt động</span>
+                                </li>
+                                <li class="info-item">
+                                    <span class="info-label">Phản hồi trung bình</span>
+                                    <span class="info-val">1.2 giây</span>
+                                </li>
+                                <li class="info-item">
+                                    <span class="info-label">Yêu cầu hôm nay</span>
+                                    <span class="info-val">156</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card border-0 mb-0">
+                        <div class="card-header">Hoạt động gần đây</div>
+                        <div class="card-body p-4">
+                            <ul class="activity-list">
+                                <li class="activity-item">
+                                    <div class="act-time">15:32</div>
+                                    <div class="act-name">Chat AI</div>
+                                    <div class="act-status status-ok"><i class="bi bi-check2"></i> Thành công</div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="act-time">15:29</div>
+                                    <div class="act-name">Tìm bác sĩ</div>
+                                    <div class="act-status status-ok"><i class="bi bi-check2"></i> Thành công</div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="act-time">15:25</div>
+                                    <div class="act-time" style="flex-grow: 1; color: var(--sc-text-main); font-weight: 500;">Tìm lịch</div>
+                                    <div class="act-status status-ok"><i class="bi bi-check2"></i> Thành công</div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="act-time">15:20</div>
+                                    <div class="act-name">Chat AI</div>
+                                    <div class="act-status status-err"><i class="bi bi-x"></i> Timeout</div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="act-time">15:13</div>
+                                    <div class="act-name">Đặt lịch AI</div>
+                                    <div class="act-status status-ok"><i class="bi bi-check2"></i> Thành công</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Usage Split -->
+                    <div class="card border-0 mb-0">
+                        <div class="card-header">Phân loại người sử dụng</div>
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-medium" style="font-size: 0.875rem;">Bệnh nhân đăng nhập</span>
+                                <span class="fw-bold">68%</span>
+                            </div>
+                            <div class="progress-slim">
+                                <div class="pg-patient"></div>
+                                <div class="pg-guest"></div>
+                            </div>
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <div class="legend-dot bg-primary"></div> Bệnh nhân
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-dot bg-info"></div> Khách (32%)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

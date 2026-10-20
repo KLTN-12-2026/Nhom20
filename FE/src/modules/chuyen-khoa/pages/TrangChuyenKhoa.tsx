@@ -1,0 +1,14 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useSpecialties } from '../hooks/use-specialties';
+import { getSpecialtyIcon } from '@/utils/icon-mapper';
+import '@/modules/trang-chu/public-pages.css';
+
+function currency(value: number) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value); }
+
+export default function TrangChuyenKhoa() {
+  const { specialties, isLoading, error, reload } = useSpecialties();
+  const [search, setSearch] = useState('');
+  const items = useMemo(() => { const key = search.trim().toLocaleLowerCase('vi'); return specialties.filter((item) => item.status === 'DANG_HOAT_DONG' && (!key || item.name.toLocaleLowerCase('vi').includes(key))); }, [specialties, search]);
+  return <div className="public-directory-page"><section className="public-directory-hero"><div className="container public-directory-hero__content"><span className="public-directory-hero__eyebrow">Chăm sóc theo chuyên khoa</span><h1>Chọn đúng chuyên khoa, gặp đúng bác sĩ</h1><p>Tra cứu chuyên khoa đang hoạt động, đội ngũ phụ trách và mức phí khám trước khi đặt lịch.</p></div></section><div className="container public-directory-content"><div className="public-directory-toolbar"><div className="public-directory-search"><span className="material-symbols-outlined">search</span><input className="form-control" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm chuyên khoa..." /></div><span className="text-secondary small px-2">{items.length} chuyên khoa đang tiếp nhận</span></div><div className="public-card-grid">{isLoading && <div className="public-page-empty"><div className="spinner-border text-primary" />Đang tải chuyên khoa...</div>}{error && <div className="public-page-empty"><span className="text-danger">{error}</span><button className="btn btn-outline-primary" onClick={() => void reload()}>Thử lại</button></div>}{!isLoading && !error && items.map((item) => <article className="public-info-card" key={item.id}><div className="public-info-card__icon"><span className="material-symbols-outlined">{getSpecialtyIcon(item.name)}</span></div><span className="public-info-card__kicker">Mã chuyên khoa {item.code}</span><h2>{item.name}</h2><p>{item.description || `Khám và tư vấn chuyên khoa ${item.name}.`}</p><div className="public-info-card__footer"><div><small className="d-block text-secondary">Phí khám từ</small><span className="public-info-card__price">{currency(item.examinationFee)}</span></div><span className="badge text-bg-light">{item.doctorCount} bác sĩ</span></div><Link className="btn btn-primary mt-3" to={`/dat-lich?chuyenKhoaId=${item.id}`}>Đặt lịch chuyên khoa</Link></article>)}{!isLoading && !error && !items.length && <div className="public-page-empty">Không tìm thấy chuyên khoa phù hợp.</div>}</div></div></div>;
+}

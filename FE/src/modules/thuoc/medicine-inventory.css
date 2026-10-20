@@ -1,0 +1,639 @@
+.medicine-inventory {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  color: #101828;
+}
+
+.medicine-inventory__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.medicine-inventory__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: #155eef;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.medicine-inventory__eyebrow span {
+  width: 30px;
+  height: 2px;
+  border-radius: 999px;
+  background: #155eef;
+}
+
+.medicine-inventory__header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.medicine-inventory__header p {
+  max-width: 650px;
+  margin: 7px 0 0;
+  color: #475467;
+  font-weight: 500;
+}
+
+.medicine-inventory__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.medicine-inventory .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  border-radius: 9px;
+  font-weight: 700;
+}
+
+.medicine-inventory .btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.medicine-inventory__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.medicine-inventory__stats article {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(16, 24, 40, 0.06);
+}
+
+.medicine-inventory__stats article > .material-symbols-outlined {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 10px;
+  color: #155eef;
+  background: #eaf0ff;
+}
+
+.medicine-inventory__stats article.is-warning > .material-symbols-outlined {
+  color: #b54708;
+  background: #fff4e5;
+}
+
+.medicine-inventory__stats article.is-success > .material-symbols-outlined {
+  color: #067647;
+  background: #dcfae6;
+}
+
+.medicine-inventory__stats small,
+.medicine-inventory__stats strong {
+  display: block;
+}
+
+.medicine-inventory__stats small {
+  margin-bottom: 3px;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.medicine-inventory__stats strong {
+  overflow: hidden;
+  color: #101828;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medicine-inventory__filters {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.5fr) minmax(190px, 0.8fr) minmax(190px, 0.8fr);
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.medicine-inventory__filters .form-control,
+.medicine-inventory__filters .form-select {
+  min-height: 44px;
+  border-color: #b8c2d1;
+  border-radius: 8px;
+  color: #1d2939;
+  font-weight: 500;
+}
+
+.medicine-inventory__search {
+  position: relative;
+}
+
+.medicine-inventory__search > .material-symbols-outlined {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  z-index: 2;
+  color: #667085;
+  font-size: 21px;
+  transform: translateY(-50%);
+}
+
+.medicine-inventory__search .form-control {
+  padding-left: 43px;
+}
+
+.medicine-inventory__card {
+  overflow: hidden;
+  border: 1px solid #c4ccda;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.07);
+}
+
+.medicine-inventory__tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 62px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #d8dee9;
+}
+
+.medicine-inventory__tabs button {
+  min-height: 38px;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 8px;
+  color: #475467;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.medicine-inventory__tabs button:hover {
+  background: #f2f4f7;
+}
+
+.medicine-inventory__tabs button.active {
+  color: #1849a9;
+  background: #eaf0ff;
+}
+
+.medicine-inventory__tabs > span {
+  margin-left: auto;
+  color: #667085;
+  font-size: 13px;
+}
+
+.medicine-inventory__table th {
+  padding: 14px 16px;
+  border-bottom: 1px solid #bfc8d8;
+  color: #1d2939;
+  background: #edf1f7;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.medicine-inventory__table td {
+  padding: 13px 16px;
+  border-color: #e0e4eb;
+  color: #344054;
+  font-size: 14px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.medicine-inventory__table tbody tr:hover {
+  background: #f8faff;
+}
+
+.medicine-inventory__table small {
+  color: #667085;
+  font-size: 12px;
+}
+
+.medicine-inventory__product {
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.medicine-inventory__product strong,
+.medicine-inventory__product small {
+  display: block;
+}
+
+.medicine-inventory__product strong {
+  color: #101828;
+  font-weight: 700;
+}
+
+.medicine-inventory__image {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  flex-shrink: 0;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid #e0e4eb;
+  border-radius: 9px;
+  color: #98a2b3;
+  background: #f7f8fa;
+}
+
+.medicine-inventory__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.medicine-inventory__code {
+  display: inline-block;
+  padding: 4px 7px;
+  border-radius: 6px;
+  color: #344054;
+  background: #f2f4f7;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.medicine-inventory__stock {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.medicine-inventory__stock.is-active,
+.medicine-inventory__stock.is-inactive {
+  color: #067647;
+}
+
+.medicine-inventory__stock.is-low {
+  color: #b54708;
+}
+
+.medicine-inventory__stock.is-out {
+  color: #d92d20;
+}
+
+.medicine-inventory__status {
+  display: inline-flex;
+  padding: 5px 9px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.medicine-inventory__status.is-active {
+  border-color: #a6f4c5;
+  color: #067647;
+  background: #ecfdf3;
+}
+
+.medicine-inventory__status.is-low {
+  border-color: #fedf89;
+  color: #b54708;
+  background: #fffaeb;
+}
+
+.medicine-inventory__status.is-out {
+  border-color: #fecdca;
+  color: #b42318;
+  background: #fef3f2;
+}
+
+.medicine-inventory__status.is-inactive {
+  border-color: #d0d5dd;
+  color: #475467;
+  background: #f2f4f7;
+}
+
+.medicine-inventory__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 3px;
+}
+
+.medicine-inventory__actions button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  color: #344054;
+  background: transparent;
+}
+
+.medicine-inventory__actions button:hover {
+  color: #155eef;
+  background: #eaf0ff;
+}
+
+.medicine-inventory__actions button.is-danger:hover {
+  color: #d92d20;
+  background: #fef3f2;
+}
+
+.medicine-inventory__actions .material-symbols-outlined {
+  font-size: 19px;
+}
+
+.medicine-inventory__state {
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 32px;
+  text-align: center;
+}
+
+.medicine-inventory__state > .material-symbols-outlined {
+  margin-bottom: 8px;
+  color: #98a2b3;
+  font-size: 42px;
+}
+
+.medicine-inventory__state h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.medicine-inventory__state p {
+  margin: 5px 0 12px;
+  color: #667085;
+}
+
+.medicine-inventory__skeleton span {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #f2f4f7, #e4e7ec, #f2f4f7);
+  background-size: 200% 100%;
+  animation: medicine-loading 1.2s infinite;
+}
+
+.medicine-inventory__pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 130px;
+  align-items: center;
+  gap: 16px;
+  min-height: 68px;
+  padding: 12px 18px;
+  border-top: 1px solid #d0d5dd;
+  color: #475467;
+  background: #f8faff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.medicine-inventory__pagination .form-select {
+  min-height: 40px;
+  border-color: #c4ccda;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.medicine-inventory__page-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.medicine-inventory__page-buttons button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #cbd3e1;
+  border-radius: 8px;
+  color: #344054;
+  background: #fff;
+  font-weight: 700;
+}
+
+.medicine-inventory__page-buttons button:hover:not(:disabled) {
+  border-color: #155eef;
+  color: #155eef;
+}
+
+.medicine-inventory__page-buttons button.active {
+  border-color: #155eef;
+  color: #fff;
+  background: #155eef;
+}
+
+.medicine-inventory__page-buttons button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.medicine-inventory__page-buttons .material-symbols-outlined {
+  font-size: 21px;
+}
+
+.medicine-inventory__ellipsis {
+  padding: 0 4px;
+  color: #667085;
+}
+
+.medicine-inventory__upload {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px;
+  border: 1px dashed #98a2b3;
+  border-radius: 12px;
+  background: #f8faff;
+}
+
+.medicine-inventory__upload-preview {
+  width: 92px;
+  height: 92px;
+  display: grid;
+  flex-shrink: 0;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  color: #98a2b3;
+  background: #fff;
+}
+
+.medicine-inventory__upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.medicine-inventory__upload-preview .material-symbols-outlined {
+  font-size: 40px;
+}
+
+.medicine-inventory__detail {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 24px;
+}
+
+.medicine-inventory__detail-image {
+  min-height: 210px;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  color: #98a2b3;
+  background: #f8faff;
+}
+
+.medicine-inventory__detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.medicine-inventory__detail-image .material-symbols-outlined {
+  font-size: 64px;
+}
+
+.medicine-inventory__detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid #e0e4eb;
+  border-radius: 10px;
+  background: #e0e4eb;
+}
+
+.medicine-inventory__detail dl > div {
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.medicine-inventory__detail dt {
+  margin-bottom: 3px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.medicine-inventory__detail dd {
+  margin: 0;
+  color: #101828;
+  font-weight: 700;
+}
+
+.medicine-inventory__delete {
+  padding: 12px 12px 4px;
+  text-align: center;
+}
+
+.medicine-inventory__delete > .material-symbols-outlined {
+  color: #d92d20;
+  font-size: 52px;
+}
+
+.medicine-inventory__delete h2 {
+  margin: 10px 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.medicine-inventory__delete p {
+  margin: 0 0 22px;
+  color: #667085;
+}
+
+@keyframes medicine-loading {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .medicine-inventory__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .medicine-inventory__header-actions {
+    justify-content: flex-start;
+  }
+
+  .medicine-inventory__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .medicine-inventory__filters,
+  .medicine-inventory__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .medicine-inventory__tabs {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .medicine-inventory__tabs > span {
+    margin-left: 0;
+  }
+
+  .medicine-inventory__pagination {
+    grid-template-columns: 1fr;
+  }
+
+  .medicine-inventory__page-buttons {
+    justify-content: flex-start;
+  }
+
+  .medicine-inventory__detail {
+    grid-template-columns: 1fr;
+  }
+}

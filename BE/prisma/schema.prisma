@@ -1,0 +1,1402 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Trạng thái kích hoạt và khóa tài khoản người dùng.
+enum TrangThaiNguoiDung {
+  DANG_HOAT_DONG
+  NGUNG_HOAT_DONG
+  BI_KHOA
+
+  @@map("trang_thai_nguoi_dung")
+}
+
+enum LoaiXacThucToken {
+  XAC_MINH_EMAIL
+  DAT_LAI_MAT_KHAU
+
+  @@map("loai_xac_thuc_token")
+}
+
+enum KenhXacThucToken {
+  EMAIL
+  SMS_MOCK
+
+  @@map("kenh_xac_thuc_token")
+}
+
+// Phân hệ phát sinh thao tác được ghi trong nhật ký hệ thống.
+enum PhanHeNhatKyHeThong {
+  XAC_THUC
+  NGUOI_DUNG
+  BAC_SI
+  CHUYEN_KHOA
+  BENH_NHAN
+  LICH_HEN
+  CA_LAM_VIEC
+  THUOC
+  DICH_VU
+  HE_THONG
+
+  @@map("phan_he_nhat_ky_he_thong")
+}
+
+// Giới tính của bệnh nhân.
+enum GioiTinh {
+  NAM
+  NU
+  KHAC
+
+  @@map("gioi_tinh")
+}
+
+// Trạng thái dùng chung cho các danh mục và nhân sự.
+enum TrangThaiChung {
+  DANG_HOAT_DONG
+  NGUNG_HOAT_DONG
+
+  @@map("trang_thai_chung")
+}
+
+// Chức vụ nghiệp vụ của nhân viên phòng khám.
+enum ChucVuNhanVien {
+  LE_TAN_THU_NGAN
+  DUOC_SI
+  NHAN_VIEN_HO_TRO
+
+  @@map("chuc_vu_nhan_vien")
+}
+
+// Nguồn tạo một phân công ca để phân biệt nhân sự tự đăng ký và quản lý sắp lịch.
+enum NguonPhanCongCa {
+  TU_DANG_KY
+  TRUONG_DON_VI_PHAN_CONG
+  CHUYEN_DOI_DU_LIEU
+
+  @@map("nguon_phan_cong_ca")
+}
+
+// Phân biệt chuyên khoa khám với các bộ phận vận hành như Tiếp đón và Dược.
+enum LoaiDonViLamViec {
+  CHUYEN_KHOA
+  BO_PHAN
+
+  @@map("loai_don_vi_lam_viec")
+}
+
+// Chức vụ quản lý có quyền duyệt và sắp xếp ca trong phạm vi đơn vị.
+enum ChucVuQuanLyDonVi {
+  TRUONG_DON_VI
+  PHO_DON_VI
+
+  @@map("chuc_vu_quan_ly_don_vi")
+}
+
+// Vòng đời đăng ký, duyệt và thực hiện một ca làm việc.
+enum TrangThaiPhanCongCa {
+  CHO_DUYET
+  DA_DUYET
+  TU_CHOI
+  DA_HUY
+  DA_HOAN_THANH
+
+  @@map("trang_thai_phan_cong_ca")
+}
+
+// Trạng thái báo cáo và bàn giao sau khi nhân sự kết thúc ca.
+enum TrangThaiBanGiaoCa {
+  BAN_NHAP
+  CHO_XAC_NHAN
+  DA_BAN_GIAO
+
+  @@map("trang_thai_ban_giao_ca")
+}
+
+// Hình thức tiếp nhận lượt khám.
+enum HinhThucKham {
+  KHAM_TRUC_TIEP
+  DAT_LICH_TRUOC
+
+  @@map("hinh_thuc_kham")
+}
+
+// Mức ưu tiên khi lễ tân tiếp nhận bệnh nhân tại quầy.
+enum MucDoUuTienTiepDon {
+  THONG_THUONG
+  TRE_EM
+  NGUOI_CAO_TUOI
+  MANG_THAI
+  KHAN_CAP
+
+  @@map("muc_do_uu_tien_tiep_don")
+}
+
+// Vòng đời của một lượt khám.
+enum TrangThaiLuotKham {
+  DA_DANG_KY
+  DANG_CHO
+  DA_VAO_PHONG
+  DA_HOAN_TAT
+  DA_HUY
+
+  @@map("trang_thai_luot_kham")
+}
+
+// Trạng thái gọi số của phiếu hàng chờ.
+enum TrangThaiHangCho {
+  CHO_GOI
+  DANG_GOI
+  DA_VAO_PHONG
+  DA_HOAN_TAT
+  BO_QUA
+  DA_HUY
+
+  @@map("trang_thai_hang_cho")
+}
+
+// Trạng thái xử lý và cấp phát đơn thuốc.
+enum TrangThaiDonThuoc {
+  CHO_CAP_THUOC
+  DANG_XU_LY
+  DA_CAP_THUOC
+  TU_CHOI_CAP_THUOC
+  KHONG_DU_THUOC
+  DA_HUY
+
+  @@map("trang_thai_don_thuoc")
+}
+
+enum TrangThaiHoSoKham {
+  BAN_NHAP
+  DA_HOAN_TAT
+
+  @@map("trang_thai_ho_so_kham")
+}
+
+// Loại biến động làm thay đổi hoặc ghi nhận tồn kho thuốc.
+enum LoaiGiaoDichKho {
+  NHAP_KHO
+  XUAT_KHO
+  CAP_THUOC
+  DIEU_CHINH
+  HOAN_TRA
+
+  @@map("loai_giao_dich_kho")
+}
+
+// Trạng thái lập và thanh toán hóa đơn.
+enum TrangThaiHoaDon {
+  BAN_NHAP
+  CHUA_THANH_TOAN
+  CHO_THANH_TOAN
+  DA_THANH_TOAN
+  DA_HUY
+
+  @@map("trang_thai_hoa_don")
+}
+
+// Phương thức người bệnh sử dụng để thanh toán.
+enum PhuongThucThanhToan {
+  TIEN_MAT
+  CHUYEN_KHOAN
+  SEPAY
+
+  @@map("phuong_thuc_thanh_toan")
+}
+
+// Kết quả của từng lần thử thanh toán.
+enum TrangThaiThanhToan {
+  DANG_CHO
+  THANH_CONG
+  THAT_BAI
+  DA_HUY
+
+  @@map("trang_thai_thanh_toan")
+}
+
+enum TrangThaiLichHen {
+  CHO_XAC_NHAN
+  DA_XAC_NHAN
+  DA_TU_CHOI
+  DA_HUY
+  DA_CHECK_IN
+  KHONG_DEN
+
+  @@map("trang_thai_lich_hen")
+}
+
+enum NguonDatLich {
+  KHACH_VANG_LAI
+  BENH_NHAN
+  NHAN_VIEN
+  AI_HO_TRO
+
+  @@map("nguon_dat_lich")
+}
+
+enum MucDoDiUng {
+  CHUA_XAC_DINH
+  NHE
+  TRUNG_BINH
+  NGHIEM_TRONG
+
+  @@map("muc_do_di_ung")
+}
+
+enum TrangThaiXacNhanYTe {
+  CHUA_XAC_NHAN
+  DA_XAC_NHAN
+  DA_PHU_NHAN
+
+  @@map("trang_thai_xac_nhan_y_te")
+}
+
+enum LoaiCanhBaoDonThuoc {
+  DI_UNG_THUOC
+  TRUNG_HOAT_CHAT
+  TUONG_TAC_THUOC
+  VUOT_LIEU_KHUYEN_NGHI
+  CHONG_CHI_DINH
+  THUOC_HET_HAN
+  TON_KHO_KHONG_DU
+  THIEU_LIEU_DUNG
+  THIEU_HUONG_DAN
+
+  @@map("loai_canh_bao_don_thuoc")
+}
+
+enum MucDoCanhBao {
+  THONG_TIN
+  CAN_THAN
+  NGHIEM_TRONG
+
+  @@map("muc_do_canh_bao")
+}
+
+enum NguonCanhBao {
+  QUY_TAC_HE_THONG
+  DU_LIEU_THUOC
+  AI_GEMINI
+
+  @@map("nguon_canh_bao")
+}
+
+enum TrangThaiXuLyCanhBao {
+  CHO_XU_LY
+  DA_XAC_NHAN
+  DA_BO_QUA
+
+  @@map("trang_thai_xu_ly_canh_bao")
+}
+
+enum LoaiMucHoaDon {
+  PHI_KHAM
+  TIEN_THUOC
+  DICH_VU
+  PHU_THU
+  KHAC
+
+  @@map("loai_muc_hoa_don")
+}
+
+enum TrangThaiDanhGia {
+  CHO_DUYET
+  DA_HIEN_THI
+  DA_AN
+
+  @@map("trang_thai_danh_gia")
+}
+
+enum LoaiPhienChat {
+  TU_VAN_CHUNG
+  DAT_LICH
+  TRA_CUU_BAC_SI
+  TRA_CUU_GOI_KHAM
+  TRA_CUU_VOUCHER
+  HO_TRO_DON_THUOC
+
+  @@map("loai_phien_chat")
+}
+
+enum TrangThaiPhienChat {
+  DANG_HOAT_DONG
+  DA_KET_THUC
+  DA_XOA
+
+  @@map("trang_thai_phien_chat")
+}
+
+enum VaiTroTinNhan {
+  HE_THONG
+  NGUOI_DUNG
+  TRO_LY
+  CONG_CU
+
+  @@map("vai_tro_tin_nhan")
+}
+
+enum LoaiTacVuAI {
+  CHAT_CHUNG
+  DAT_LICH
+  GOI_Y_LICH
+  TRA_CUU
+  CANH_BAO_THUOC
+  TOM_TAT_HO_SO
+  NHAC_TAI_KHAM
+
+  @@map("loai_tac_vu_ai")
+}
+
+enum TrangThaiLanChayAI {
+  DANG_XU_LY
+  THANH_CONG
+  THAT_BAI
+
+  @@map("trang_thai_lan_chay_ai")
+}
+
+// Trang thai ban nhap lich do Chatbox tao truoc khi nguoi dung xac nhan.
+enum TrangThaiBanNhapDatLichChat {
+  DANG_CHO_XAC_NHAN
+  DA_XAC_NHAN
+  DA_HUY
+
+  @@map("trang_thai_ban_nhap_dat_lich_chat")
+}
+
+// Tài khoản đăng nhập dùng chung cho bệnh nhân và nhân sự phòng khám.
+model NguoiDung {
+  id                  Int                @id @default(autoincrement())
+  email               String?            @unique @db.VarChar(255)
+  soDienThoai         String?            @unique @map("so_dien_thoai") @db.VarChar(20)
+  matKhau             String             @map("mat_khau") @db.VarChar(255)
+  hoTen               String             @map("ho_ten") @db.VarChar(150)
+  anhDaiDienUrl       String?            @map("anh_dai_dien_url") @db.VarChar(500)
+  anhDaiDienPublicId  String?            @map("anh_dai_dien_public_id") @db.VarChar(255)
+  gioiTinh            GioiTinh?          @map("gioi_tinh")
+  ngaySinh            DateTime?          @map("ngay_sinh") @db.Date
+  soCanCuoc           String?            @map("so_can_cuoc") @db.VarChar(20)
+  diaChi              String?            @map("dia_chi") @db.Text
+  trangThai           TrangThaiNguoiDung @default(DANG_HOAT_DONG) @map("trang_thai")
+  emailDaXacMinh      Boolean            @default(false) @map("email_da_xac_minh")
+  lanDangNhapCuoi     DateTime?          @map("lan_dang_nhap_cuoi")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+  nguoiDungVaiTro     NguoiDungVaiTro[]
+  benhNhan            BenhNhan?
+  nhanVien            NhanVien?
+  bacSi               BacSi?
+  phieuHangChoDaGoi   PhieuHangCho[]     @relation("NguoiGoiHangCho")
+  phieuHangChoXacNhan PhieuHangCho[]     @relation("NguoiXacNhanHangCho")
+  donThuocDaCap       DonThuoc[]         @relation("NguoiCapThuoc")
+  donThuocDaTuChoi    DonThuoc[]         @relation("NguoiTuChoiCapThuoc")
+  giaoDichKho         GiaoDichKho[]      @relation("NguoiThucHienGiaoDichKho")
+  hoaDonDaTao         HoaDon[]           @relation("NguoiTaoHoaDon")
+  thanhToanDaThu      ThanhToan[]        @relation("NguoiThuTien")
+  lichHenDaXacNhan    LichHen[]          @relation("NguoiXacNhanLichHen")
+  duLieuYTeDaGhi      DiUngBenhNhan[]    @relation("NguoiGhiNhanDiUng")
+  tienSuBenhDaGhi     TienSuBenh[]       @relation("NguoiGhiNhanTienSu")
+  canhBaoDaXuLy       CanhBaoDonThuoc[]  @relation("NguoiXuLyCanhBao")
+  phanCongCa          PhanCongCa[]       @relation("NhanSuDuocPhanCongCa")
+  caDaSapXep          PhanCongCa[]       @relation("NguoiSapXepCa")
+  caDaDuyet           PhanCongCa[]       @relation("NguoiDuyetCa")
+  donViDangQuanLy     QuanLyDonVi[]
+  caDaBanGiao         BanGiaoCa[]        @relation("NguoiBanGiaoCa")
+  caDaNhanBanGiao     BanGiaoCa[]        @relation("NguoiNhanBanGiaoCa")
+  phienChat           PhienChat[]
+  nhatKyHeThong       NhatKyHeThong[]
+  thongBao            ThongBao[]
+  xacThucTokens       XacThucToken[]
+  goiYThuocDaDuyet    GoiYThuocThayThe[] @relation("NguoiDuyetGoiY")
+
+  @@index([email])
+  @@index([soDienThoai])
+  @@map("nguoi_dung")
+}
+
+model XacThucToken {
+  id            Int               @id @default(autoincrement())
+  nguoiDungId   Int               @map("nguoi_dung_id")
+  loai         LoaiXacThucToken  @map("loai")
+  kenh         KenhXacThucToken  @map("kenh")
+  doiTuong     String            @map("doi_tuong") @db.VarChar(255)
+  tokenHash    String            @unique @map("token_hash") @db.VarChar(128)
+  hetHanAt     DateTime          @map("het_han_at")
+  daSuDungAt   DateTime?         @map("da_su_dung_at")
+  soLanThu     Int               @default(0) @map("so_lan_thu")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  nguoiDung    NguoiDung         @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+
+  @@index([nguoiDungId, loai])
+  @@index([hetHanAt])
+  @@map("xac_thuc_token")
+}
+
+// Lưu trữ các thông báo realtime cho người dùng
+model ThongBao {
+  id           Int      @id @default(autoincrement())
+  nguoiDungId  Int      @map("nguoi_dung_id")
+  tieuDe       String   @map("tieu_de") @db.VarChar(255)
+  noiDung      String   @map("noi_dung") @db.Text
+  loaiThongBao String   @map("loai_thong_bao") @db.VarChar(50)
+  duongDan     String?  @map("duong_dan") @db.VarChar(255)
+  daDoc        Boolean  @default(false) @map("da_doc")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+
+  @@index([nguoiDungId])
+  @@index([createdAt])
+  @@map("thong_bao")
+}
+
+// Lưu vết thao tác quản trị và sự kiện đăng nhập quan trọng.
+model NhatKyHeThong {
+  id          Int                 @id @default(autoincrement())
+  nguoiDungId Int?                @map("nguoi_dung_id")
+  hoTen       String              @map("ho_ten") @db.VarChar(150)
+  email       String?             @db.VarChar(255)
+  vaiTro      String              @map("vai_tro") @db.VarChar(255)
+  phanHe      PhanHeNhatKyHeThong @map("phan_he")
+  hanhDong    String              @map("hanh_dong") @db.VarChar(200)
+  chiTiet     String?             @map("chi_tiet") @db.Text
+  createdAt   DateTime            @default(now()) @map("created_at")
+  nguoiDung   NguoiDung?          @relation(fields: [nguoiDungId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([phanHe])
+  @@index([nguoiDungId])
+  @@map("nhat_ky_he_thong")
+}
+
+// Danh mục năm vai trò của hệ thống.
+model VaiTro {
+  id         Int               @id @default(autoincrement())
+  maVaiTro   String            @unique @map("ma_vai_tro") @db.VarChar(50)
+  tenVaiTro  String            @map("ten_vai_tro") @db.VarChar(100)
+  moTa       String?           @map("mo_ta") @db.Text
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+  nguoiDung  NguoiDungVaiTro[]
+  quyen      VaiTroQuyen[]
+  phanCongCa PhanCongCa[]
+
+  @@map("vai_tro")
+}
+
+// Danh mục quyền thao tác theo từng phân hệ.
+model Quyen {
+  id        Int           @id @default(autoincrement())
+  maQuyen   String        @unique @map("ma_quyen") @db.VarChar(100)
+  tenQuyen  String        @map("ten_quyen") @db.VarChar(150)
+  phanHe    String        @map("phan_he") @db.VarChar(100)
+  moTa      String?       @map("mo_ta") @db.Text
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  vaiTro    VaiTroQuyen[]
+
+  @@map("quyen")
+}
+
+// Bảng nối nhiều-nhiều giữa tài khoản và vai trò.
+model NguoiDungVaiTro {
+  id          Int       @id @default(autoincrement())
+  nguoiDungId Int       @map("nguoi_dung_id")
+  vaiTroId    Int       @map("vai_tro_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  nguoiDung   NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  vaiTro      VaiTro    @relation(fields: [vaiTroId], references: [id], onDelete: Cascade)
+
+  @@unique([nguoiDungId, vaiTroId])
+  @@index([vaiTroId])
+  @@map("nguoi_dung_vai_tro")
+}
+
+// Bảng nối nhiều-nhiều giữa vai trò và quyền.
+model VaiTroQuyen {
+  id        Int      @id @default(autoincrement())
+  vaiTroId  Int      @map("vai_tro_id")
+  quyenId   Int      @map("quyen_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  vaiTro    VaiTro   @relation(fields: [vaiTroId], references: [id], onDelete: Cascade)
+  quyen     Quyen    @relation(fields: [quyenId], references: [id], onDelete: Cascade)
+
+  @@unique([vaiTroId, quyenId])
+  @@index([quyenId])
+  @@map("vai_tro_quyen")
+}
+
+// Hồ sơ thông tin hành chính và tiền sử của bệnh nhân.
+model BenhNhan {
+  id                 Int             @id @default(autoincrement())
+  nguoiDungId        Int?            @unique @map("nguoi_dung_id")
+  maBenhNhan         String          @unique @map("ma_benh_nhan") @db.VarChar(30)
+  hoTen              String          @map("ho_ten") @db.VarChar(150)
+  soDienThoai        String          @map("so_dien_thoai") @db.VarChar(20)
+  email              String?         @db.VarChar(255)
+  ngaySinh           DateTime?       @map("ngay_sinh") @db.Date
+  gioiTinh           GioiTinh?       @map("gioi_tinh")
+  diaChi             String?         @map("dia_chi") @db.Text
+  soCanCuoc          String?         @map("so_can_cuoc") @db.VarChar(20)
+  maTheBaoHiemYTe    String?         @map("ma_the_bao_hiem_y_te") @db.VarChar(30)
+  ghiChuDiUng        String?         @map("ghi_chu_di_ung") @db.Text
+  ghiChuTienSuBenh   String?         @map("ghi_chu_tien_su_benh") @db.Text
+  nguoiLienHeKhanCap String?         @map("nguoi_lien_he_khan_cap") @db.VarChar(150)
+  soDienThoaiKhanCap String?         @map("so_dien_thoai_khan_cap") @db.VarChar(20)
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+  nguoiDung          NguoiDung?      @relation(fields: [nguoiDungId], references: [id], onDelete: SetNull)
+  luotKham           LuotKham[]
+  hoaDon             HoaDon[]
+  lichHen            LichHen[]
+  diUng              DiUngBenhNhan[]
+  tienSuBenh         TienSuBenh[]
+  danhGiaBacSi       DanhGiaBacSi[]
+  phienChat          PhienChat[]
+  lanChayAI          LanChayAI[]
+
+  @@index([soDienThoai])
+  @@index([email])
+  @@index([hoTen])
+  @@map("benh_nhan")
+}
+
+// Hồ sơ nhân viên lễ tân, thu ngân, dược sĩ hoặc hỗ trợ.
+model NhanVien {
+  id          Int            @id @default(autoincrement())
+  nguoiDungId Int            @unique @map("nguoi_dung_id")
+  maNhanVien  String         @unique @map("ma_nhan_vien") @db.VarChar(30)
+  hoTen       String         @map("ho_ten") @db.VarChar(150)
+  soDienThoai String?        @map("so_dien_thoai") @db.VarChar(20)
+  chucVu      ChucVuNhanVien @map("chuc_vu")
+  ngayVaoLam  DateTime       @map("ngay_vao_lam") @db.Date
+  trangThai   TrangThaiChung @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  nguoiDung   NguoiDung      @relation(fields: [nguoiDungId], references: [id], onDelete: Restrict)
+
+  @@map("nhan_vien")
+}
+
+// Hồ sơ chuyên môn của bác sĩ thuộc một chuyên khoa.
+model BacSi {
+  id              Int            @id @default(autoincrement())
+  nguoiDungId     Int            @unique @map("nguoi_dung_id")
+  maBacSi         String         @unique @map("ma_bac_si") @db.VarChar(30)
+  chuyenKhoaId    Int            @map("chuyen_khoa_id")
+  hoTen           String         @map("ho_ten") @db.VarChar(150)
+  soDienThoai     String?        @map("so_dien_thoai") @db.VarChar(20)
+  hocVi           String?        @map("hoc_vi") @db.VarChar(100)
+  soNamKinhNghiem Int            @default(0) @map("so_nam_kinh_nghiem")
+  moTa            String?        @map("mo_ta") @db.Text
+  trangThai       TrangThaiChung @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  nguoiDung       NguoiDung      @relation(fields: [nguoiDungId], references: [id], onDelete: Restrict)
+  chuyenKhoa      ChuyenKhoa     @relation(fields: [chuyenKhoaId], references: [id], onDelete: Restrict)
+  luotKham        LuotKham[]
+  lichHen         LichHen[]
+  danhGia         DanhGiaBacSi[]
+
+  @@index([chuyenKhoaId])
+  @@map("bac_si")
+}
+
+// Danh mục chuyên khoa và mức phí khám cơ bản.
+model ChuyenKhoa {
+  id            Int            @id @default(autoincrement())
+  maChuyenKhoa  String         @unique @map("ma_chuyen_khoa") @db.VarChar(30)
+  tenChuyenKhoa String         @unique @map("ten_chuyen_khoa") @db.VarChar(150)
+  moTa          String?        @map("mo_ta") @db.Text
+  phiKham       Decimal        @map("phi_kham") @db.Decimal(15, 2)
+  trangThai     TrangThaiChung @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  bacSi         BacSi[]
+  luotKham      LuotKham[]
+  phieuHangCho  PhieuHangCho[]
+  lichHen       LichHen[]
+  dichVu        DichVu[]
+  donViLamViec  DonViLamViec?
+  chiTietKham   ChiTietKhamChuyenKhoa[]
+
+  @@map("chuyen_khoa")
+}
+
+// Đơn vị chịu trách nhiệm sắp lịch: chuyên khoa khám hoặc bộ phận vận hành.
+model DonViLamViec {
+  id           Int              @id @default(autoincrement())
+  maDonVi      String           @unique @map("ma_don_vi") @db.VarChar(50)
+  tenDonVi     String           @map("ten_don_vi") @db.VarChar(150)
+  loaiDonVi    LoaiDonViLamViec @map("loai_don_vi")
+  chuyenKhoaId Int?             @unique @map("chuyen_khoa_id")
+  moTa         String?          @map("mo_ta") @db.Text
+  trangThai    TrangThaiChung   @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  chuyenKhoa   ChuyenKhoa?      @relation(fields: [chuyenKhoaId], references: [id], onDelete: Restrict)
+  nguoiQuanLy  QuanLyDonVi[]
+  phanCongCa   PhanCongCa[]
+
+  @@index([loaiDonVi, trangThai])
+  @@map("don_vi_lam_viec")
+}
+
+// Trưởng/phó đơn vị được quyền duyệt ca trong thời gian được bổ nhiệm.
+model QuanLyDonVi {
+  id             Int               @id @default(autoincrement())
+  donViLamViecId Int               @map("don_vi_lam_viec_id")
+  nguoiDungId    Int               @map("nguoi_dung_id")
+  chucVu         ChucVuQuanLyDonVi @default(TRUONG_DON_VI) @map("chuc_vu")
+  ngayBatDau     DateTime          @map("ngay_bat_dau") @db.Date
+  ngayKetThuc    DateTime?         @map("ngay_ket_thuc") @db.Date
+  trangThai      TrangThaiChung    @default(DANG_HOAT_DONG) @map("trang_thai")
+  ghiChu         String?           @map("ghi_chu") @db.Text
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  donViLamViec   DonViLamViec      @relation(fields: [donViLamViecId], references: [id], onDelete: Restrict)
+  nguoiDung      NguoiDung         @relation(fields: [nguoiDungId], references: [id], onDelete: Restrict)
+
+  @@unique([donViLamViecId, nguoiDungId, chucVu, ngayBatDau])
+  @@index([nguoiDungId])
+  @@index([donViLamViecId, trangThai])
+  @@map("quan_ly_don_vi")
+}
+
+// Danh mục ca chuẩn dùng chung cho bác sĩ, lễ tân/thu ngân và dược sĩ.
+model CaLamViec {
+  id         Int            @id @default(autoincrement())
+  maCa       String         @unique @map("ma_ca") @db.VarChar(30)
+  tenCa      String         @map("ten_ca") @db.VarChar(100)
+  gioBatDau  DateTime       @map("gio_bat_dau") @db.Time(0)
+  gioKetThuc DateTime       @map("gio_ket_thuc") @db.Time(0)
+  quaNgay    Boolean        @default(false) @map("qua_ngay")
+  moTa       String?        @map("mo_ta") @db.Text
+  trangThai  TrangThaiChung @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+  phanCongCa PhanCongCa[]
+
+  @@unique([gioBatDau, gioKetThuc])
+  @@index([trangThai])
+  @@map("ca_lam_viec")
+}
+
+// Lịch ca cụ thể của một tài khoản; bản ghi tự đăng ký phải được quản lý duyệt.
+model PhanCongCa {
+  id             Int                 @id @default(autoincrement())
+  nguoiDungId    Int                 @map("nguoi_dung_id")
+  vaiTroId       Int                 @map("vai_tro_id")
+  caLamViecId    Int                 @map("ca_lam_viec_id")
+  donViLamViecId Int                 @map("don_vi_lam_viec_id")
+  ngayLamViec    DateTime            @map("ngay_lam_viec") @db.Date
+  nguon          NguonPhanCongCa     @default(TU_DANG_KY)
+  trangThai      TrangThaiPhanCongCa @default(CHO_DUYET) @map("trang_thai")
+  nguoiSapXepId  Int?                @map("nguoi_sap_xep_id")
+  nguoiDuyetId   Int?                @map("nguoi_duyet_id")
+  thoiGianDuyet  DateTime?           @map("thoi_gian_duyet")
+  lyDoTuChoi     String?             @map("ly_do_tu_choi") @db.Text
+  ghiChu         String?             @map("ghi_chu") @db.Text
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  nguoiDung      NguoiDung           @relation("NhanSuDuocPhanCongCa", fields: [nguoiDungId], references: [id], onDelete: Restrict)
+  vaiTro         VaiTro              @relation(fields: [vaiTroId], references: [id], onDelete: Restrict)
+  caLamViec      CaLamViec           @relation(fields: [caLamViecId], references: [id], onDelete: Restrict)
+  donViLamViec   DonViLamViec        @relation(fields: [donViLamViecId], references: [id], onDelete: Restrict)
+  nguoiSapXep    NguoiDung?          @relation("NguoiSapXepCa", fields: [nguoiSapXepId], references: [id], onDelete: Restrict)
+  nguoiDuyet     NguoiDung?          @relation("NguoiDuyetCa", fields: [nguoiDuyetId], references: [id], onDelete: Restrict)
+  banGiaoCa      BanGiaoCa?
+
+  @@unique([nguoiDungId, caLamViecId, ngayLamViec])
+  @@index([vaiTroId])
+  @@index([caLamViecId])
+  @@index([donViLamViecId])
+  @@index([ngayLamViec, trangThai])
+  @@index([nguoiSapXepId])
+  @@index([nguoiDuyetId])
+  @@map("phan_cong_ca")
+}
+
+// Báo cáo kết ca và bàn giao công việc; chỉ phát sinh sau một phân công ca.
+model BanGiaoCa {
+  id                    Int                @id @default(autoincrement())
+  phanCongCaId          Int                @unique @map("phan_cong_ca_id")
+  nguoiBanGiaoId        Int                @map("nguoi_ban_giao_id")
+  nguoiNhanBanGiaoId    Int?               @map("nguoi_nhan_ban_giao_id")
+  thoiGianBatDauThucTe  DateTime?          @map("thoi_gian_bat_dau_thuc_te")
+  thoiGianKetThucThucTe DateTime?          @map("thoi_gian_ket_thuc_thuc_te")
+  tongDoanhThu          Decimal            @default(0) @map("tong_doanh_thu") @db.Decimal(15, 2)
+  tienMatHeThong        Decimal            @default(0) @map("tien_mat_he_thong") @db.Decimal(15, 2)
+  tienMatThucTe         Decimal?           @map("tien_mat_thuc_te") @db.Decimal(15, 2)
+  tienChuyenKhoan       Decimal            @default(0) @map("tien_chuyen_khoan") @db.Decimal(15, 2)
+  tienSepay             Decimal            @default(0) @map("tien_sepay") @db.Decimal(15, 2)
+  chenhLechTienMat      Decimal?           @map("chenh_lech_tien_mat") @db.Decimal(15, 2)
+  lyDoChenhLech         String?            @map("ly_do_chenh_lech") @db.Text
+  soBenhNhanTiepNhan    Int                @default(0) @map("so_benh_nhan_tiep_nhan")
+  soPhieuChoXuLy        Int                @default(0) @map("so_phieu_cho_xu_ly")
+  checklist             Json?
+  ghiChu                String?            @map("ghi_chu") @db.Text
+  trangThai             TrangThaiBanGiaoCa @default(BAN_NHAP) @map("trang_thai")
+  thoiGianBanGiao       DateTime?          @map("thoi_gian_ban_giao")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+  phanCongCa            PhanCongCa         @relation(fields: [phanCongCaId], references: [id], onDelete: Restrict)
+  nguoiBanGiao          NguoiDung          @relation("NguoiBanGiaoCa", fields: [nguoiBanGiaoId], references: [id], onDelete: Restrict)
+  nguoiNhanBanGiao      NguoiDung?         @relation("NguoiNhanBanGiaoCa", fields: [nguoiNhanBanGiaoId], references: [id], onDelete: Restrict)
+
+  @@index([nguoiBanGiaoId])
+  @@index([nguoiNhanBanGiaoId])
+  @@index([trangThai])
+  @@map("ban_giao_ca")
+}
+
+// Lượt tiếp nhận trung tâm, liên kết bệnh nhân với chuyên khoa và quy trình khám.
+model LuotKham {
+  id               Int                @id @default(autoincrement())
+  lichHenId        Int?               @unique @map("lich_hen_id")
+  maLuotKham       String             @unique @map("ma_luot_kham") @db.VarChar(30)
+  benhNhanId       Int                @map("benh_nhan_id")
+  chuyenKhoaId     Int                @map("chuyen_khoa_id")
+  bacSiId          Int?               @map("bac_si_id")
+  hinhThucKham     HinhThucKham       @map("hinh_thuc_kham")
+  thoiGianHen      DateTime?          @map("thoi_gian_hen")
+  lyDoKham         String             @map("ly_do_kham") @db.Text
+  trieuChungBanDau String?            @map("trieu_chung_ban_dau") @db.Text
+  mucDoUuTien      MucDoUuTienTiepDon @default(THONG_THUONG) @map("muc_do_uu_tien")
+  trangThai        TrangThaiLuotKham  @default(DA_DANG_KY) @map("trang_thai")
+  thoiGianDangKy   DateTime           @default(now()) @map("thoi_gian_dang_ky")
+  thoiGianHoanTat  DateTime?          @map("thoi_gian_hoan_tat")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  benhNhan         BenhNhan           @relation(fields: [benhNhanId], references: [id], onDelete: Restrict)
+  chuyenKhoa       ChuyenKhoa         @relation(fields: [chuyenKhoaId], references: [id], onDelete: Restrict)
+  bacSi            BacSi?             @relation(fields: [bacSiId], references: [id], onDelete: Restrict)
+  lichHen          LichHen?           @relation(fields: [lichHenId], references: [id], onDelete: Restrict)
+  phieuHangCho     PhieuHangCho?
+  hoSoKham         HoSoKham?
+  hoaDon           HoaDon?
+  danhGiaBacSi     DanhGiaBacSi?
+
+  @@index([benhNhanId])
+  @@index([chuyenKhoaId])
+  @@index([bacSiId])
+  @@index([lichHenId])
+  @@index([trangThai])
+  @@index([thoiGianDangKy])
+  @@map("luot_kham")
+}
+
+// Phiếu số thứ tự một-một với lượt khám, phục vụ gọi hàng chờ thời gian thực.
+model PhieuHangCho {
+  id              Int              @id @default(autoincrement())
+  luotKhamId      Int              @unique @map("luot_kham_id")
+  soThuTu         Int              @map("so_thu_tu")
+  maSoThuTu       String           @map("ma_so_thu_tu") @db.VarChar(30)
+  ngayXepHang     DateTime         @map("ngay_xep_hang") @db.Date
+  chuyenKhoaId    Int              @map("chuyen_khoa_id")
+  trangThai       TrangThaiHangCho @default(CHO_GOI) @map("trang_thai")
+  thoiGianGoi     DateTime?        @map("thoi_gian_goi")
+  thoiGianXacNhan DateTime?        @map("thoi_gian_xac_nhan")
+  thoiGianBoQua   DateTime?        @map("thoi_gian_bo_qua")
+  thoiGianHoanTat DateTime?        @map("thoi_gian_hoan_tat")
+  nguoiGoiId      Int?             @map("nguoi_goi_id")
+  nguoiXacNhanId  Int?             @map("nguoi_xac_nhan_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  luotKham        LuotKham         @relation(fields: [luotKhamId], references: [id], onDelete: Restrict)
+  chuyenKhoa      ChuyenKhoa       @relation(fields: [chuyenKhoaId], references: [id], onDelete: Restrict)
+  nguoiGoi        NguoiDung?       @relation("NguoiGoiHangCho", fields: [nguoiGoiId], references: [id], onDelete: Restrict)
+  nguoiXacNhan    NguoiDung?       @relation("NguoiXacNhanHangCho", fields: [nguoiXacNhanId], references: [id], onDelete: Restrict)
+
+  @@unique([ngayXepHang, chuyenKhoaId, soThuTu])
+  @@index([ngayXepHang])
+  @@index([trangThai])
+  @@index([nguoiGoiId])
+  @@index([nguoiXacNhanId])
+  @@map("phieu_hang_cho")
+}
+
+// Hồ sơ kết quả khám một-một với lượt khám do bác sĩ nộp.
+model HoSoKham {
+  id                Int               @id @default(autoincrement())
+  luotKhamId        Int               @unique @map("luot_kham_id")
+  trieuChung        String?           @map("trieu_chung") @db.Text
+  chanDoan          String?           @map("chan_doan") @db.Text
+  maIcd10           String?           @map("ma_icd_10") @db.VarChar(30)
+  sinhHieu          Json?             @map("sinh_hieu")
+  noiDungChuyenKhoa Json?             @map("noi_dung_chuyen_khoa")
+  ketLuan           String?           @map("ket_luan") @db.Text
+  ghiChuBacSi       String?           @map("ghi_chu_bac_si") @db.Text
+  ngayTaiKham       DateTime?         @map("ngay_tai_kham") @db.Date
+  trangThai         TrangThaiHoSoKham @default(BAN_NHAP) @map("trang_thai")
+  thoiGianNop       DateTime?         @map("thoi_gian_nop")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  luotKham          LuotKham          @relation(fields: [luotKhamId], references: [id], onDelete: Restrict)
+  donThuoc          DonThuoc?
+  chiTietChuyenKhoa ChiTietKhamChuyenKhoa?
+  @@map("ho_so_kham")
+}
+
+// Dữ liệu khám theo chuyên khoa, tách riêng để lưu JSONB có kiểm soát.
+model ChiTietKhamChuyenKhoa {
+  id           Int        @id @default(autoincrement())
+  hoSoKhamId   Int        @unique @map("ho_so_kham_id")
+  chuyenKhoaId Int        @map("chuyen_khoa_id")
+  duLieu       Json       @map("du_lieu")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  hoSoKham     HoSoKham   @relation(fields: [hoSoKhamId], references: [id], onDelete: Cascade)
+  chuyenKhoa   ChuyenKhoa @relation(fields: [chuyenKhoaId], references: [id], onDelete: Restrict)
+
+  @@index([chuyenKhoaId])
+  @@map("chi_tiet_kham_chuyen_khoa")
+}
+
+// Đơn thuốc tối đa một bản cho mỗi hồ sơ khám.
+model DonThuoc {
+  id               Int               @id @default(autoincrement())
+  maDonThuoc       String            @unique @map("ma_don_thuoc") @db.VarChar(30)
+  hoSoKhamId       Int               @unique @map("ho_so_kham_id")
+  trangThai        TrangThaiDonThuoc @default(CHO_CAP_THUOC) @map("trang_thai")
+  ghiChuBacSi      String?           @map("ghi_chu_bac_si") @db.Text
+  nguoiCapThuocId  Int?              @map("nguoi_cap_thuoc_id")
+  thoiGianCapThuoc DateTime?         @map("thoi_gian_cap_thuoc")
+  lyDoTuChoi       String?           @map("ly_do_tu_choi") @db.Text
+  nguoiTuChoiId    Int?              @map("nguoi_tu_choi_id")
+  thoiGianTuChoi   DateTime?         @map("thoi_gian_tu_choi")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  hoSoKham         HoSoKham          @relation(fields: [hoSoKhamId], references: [id], onDelete: Restrict)
+  nguoiCapThuoc    NguoiDung?        @relation("NguoiCapThuoc", fields: [nguoiCapThuocId], references: [id], onDelete: Restrict)
+  nguoiTuChoi      NguoiDung?        @relation("NguoiTuChoiCapThuoc", fields: [nguoiTuChoiId], references: [id], onDelete: Restrict)
+  chiTiet          ChiTietDonThuoc[]
+  chiTietCapThuoc  ChiTietCapThuoc[]
+  canhBao          CanhBaoDonThuoc[]
+
+  @@index([trangThai])
+  @@index([nguoiCapThuocId])
+  @@index([nguoiTuChoiId])
+  @@map("don_thuoc")
+}
+
+// Dòng thuốc, liều dùng và giá được chốt tại thời điểm kê đơn.
+model ChiTietDonThuoc {
+  id              Int               @id @default(autoincrement())
+  donThuocId      Int               @map("don_thuoc_id")
+  thuocId         Int               @map("thuoc_id")
+  soLuong         Int               @map("so_luong")
+  lieuDung        String            @map("lieu_dung") @db.VarChar(255)
+  tanSuat         String            @map("tan_suat") @db.VarChar(255)
+  soNgaySuDung    Int               @map("so_ngay_su_dung")
+  huongDanSuDung  String?           @map("huong_dan_su_dung") @db.Text
+  donGia          Decimal           @map("don_gia") @db.Decimal(15, 2)
+  thanhTien       Decimal           @map("thanh_tien") @db.Decimal(15, 2)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  donThuoc        DonThuoc          @relation(fields: [donThuocId], references: [id], onDelete: Restrict)
+  thuoc           Thuoc             @relation(fields: [thuocId], references: [id], onDelete: Restrict)
+  chiTietCapThuoc ChiTietCapThuoc[]
+
+  @@unique([donThuocId, thuocId])
+  @@index([thuocId])
+  @@map("chi_tiet_don_thuoc")
+}
+
+// Danh mục thuốc, giá bán và số lượng tồn hiện hành.
+model Thuoc {
+  id               Int               @id @default(autoincrement())
+  maThuoc          String            @unique @map("ma_thuoc") @db.VarChar(30)
+  tenThuoc         String            @map("ten_thuoc") @db.VarChar(200)
+  donViTinh        String            @map("don_vi_tinh") @db.VarChar(50)
+  giaNhap          Decimal           @map("gia_nhap") @db.Decimal(15, 2)
+  giaBan           Decimal           @map("gia_ban") @db.Decimal(15, 2)
+  soLuongTon       Int               @default(0) @map("so_luong_ton")
+  mucTonToiThieu   Int               @default(0) @map("muc_ton_toi_thieu")
+  nhaSanXuat       String?           @map("nha_san_xuat") @db.VarChar(200)
+  moTa             String?           @map("mo_ta") @db.Text
+  anhThuocUrl      String?           @map("anh_thuoc_url") @db.VarChar(500)
+  anhThuocPublicId String?           @map("anh_thuoc_public_id") @db.VarChar(255)
+  trangThai        TrangThaiChung    @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  chiTietDonThuoc  ChiTietDonThuoc[]
+  giaoDichKho      GiaoDichKho[]
+  loThuoc          LoThuoc[]
+  hoatChatCauThanh ThuocHoatChat[]
+  diUngBenhNhan    DiUngBenhNhan[]
+  canhBaoDonThuoc  CanhBaoDonThuoc[]
+  chiTietHoaDon    ChiTietHoaDon[]
+  goiYCanTranh     GoiYThuocThayThe[] @relation("ThuocCanTranh")
+  goiYThayThe      GoiYThuocThayThe[] @relation("ThuocThayThe")
+
+  @@index([tenThuoc])
+  @@index([trangThai])
+  @@map("thuoc")
+}
+
+// Tồn kho thật theo từng lô; dùng FEFO khi dược sĩ cấp thuốc.
+model LoThuoc {
+  id              Int               @id @default(autoincrement())
+  thuocId         Int               @map("thuoc_id")
+  maLo            String            @unique @map("ma_lo") @db.VarChar(100)
+  ngaySanXuat     DateTime?         @map("ngay_san_xuat") @db.Date
+  hanDung         DateTime          @map("han_dung") @db.Date
+  nhaCungCap      String            @map("nha_cung_cap") @db.VarChar(200)
+  giaNhap         Decimal           @map("gia_nhap") @db.Decimal(15, 2)
+  soLuongNhap     Int               @map("so_luong_nhap")
+  soLuongConLai   Int               @map("so_luong_con_lai")
+  trangThai       TrangThaiChung    @default(DANG_HOAT_DONG) @map("trang_thai")
+  ghiChu          String?           @map("ghi_chu") @db.Text
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  thuoc           Thuoc             @relation(fields: [thuocId], references: [id], onDelete: Restrict)
+  giaoDichKho     GiaoDichKho[]
+  chiTietCapThuoc ChiTietCapThuoc[]
+
+  @@index([thuocId, hanDung, soLuongConLai])
+  @@index([trangThai])
+  @@map("lo_thuoc")
+}
+
+// Ghi nhận chính xác mỗi dòng đơn đã được lấy từ lô nào.
+model ChiTietCapThuoc {
+  id                Int             @id @default(autoincrement())
+  donThuocId        Int             @map("don_thuoc_id")
+  chiTietDonThuocId Int             @map("chi_tiet_don_thuoc_id")
+  loThuocId         Int             @map("lo_thuoc_id")
+  soLuong           Int             @map("so_luong")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  donThuoc          DonThuoc        @relation(fields: [donThuocId], references: [id], onDelete: Restrict)
+  chiTietDonThuoc   ChiTietDonThuoc @relation(fields: [chiTietDonThuocId], references: [id], onDelete: Restrict)
+  loThuoc           LoThuoc         @relation(fields: [loThuocId], references: [id], onDelete: Restrict)
+
+  @@unique([chiTietDonThuocId, loThuocId])
+  @@index([donThuocId])
+  @@index([loThuocId])
+  @@map("chi_tiet_cap_thuoc")
+}
+
+// Sổ bất biến ghi nhận mọi lần nhập, xuất, cấp và điều chỉnh kho.
+model GiaoDichKho {
+  id              Int             @id @default(autoincrement())
+  thuocId         Int             @map("thuoc_id")
+  loThuocId       Int?            @map("lo_thuoc_id")
+  loaiGiaoDich    LoaiGiaoDichKho @map("loai_giao_dich")
+  soLuong         Int             @map("so_luong")
+  soLuongTruoc    Int             @map("so_luong_truoc")
+  soLuongSau      Int             @map("so_luong_sau")
+  loaiThamChieu   String?         @map("loai_tham_chieu") @db.VarChar(50)
+  maThamChieu     String?         @map("ma_tham_chieu") @db.VarChar(100)
+  ghiChu          String?         @map("ghi_chu") @db.Text
+  nguoiThucHienId Int             @map("nguoi_thuc_hien_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  thuoc           Thuoc           @relation(fields: [thuocId], references: [id], onDelete: Restrict)
+  loThuoc         LoThuoc?        @relation(fields: [loThuocId], references: [id], onDelete: Restrict)
+  nguoiThucHien   NguoiDung       @relation("NguoiThucHienGiaoDichKho", fields: [nguoiThucHienId], references: [id], onDelete: Restrict)
+
+  @@index([thuocId])
+  @@index([loThuocId])
+  @@index([loaiGiaoDich])
+  @@index([createdAt])
+  @@index([nguoiThucHienId])
+  @@index([loaiThamChieu, maThamChieu])
+  @@map("giao_dich_kho")
+}
+
+// Hóa đơn một-một với lượt khám, tổng hợp phí khám, thuốc và dịch vụ.
+model HoaDon {
+  id                Int             @id @default(autoincrement())
+  maHoaDon          String          @unique @map("ma_hoa_don") @db.VarChar(30)
+  luotKhamId        Int             @unique @map("luot_kham_id")
+  benhNhanId        Int             @map("benh_nhan_id")
+  tienKham          Decimal         @default(0) @map("tien_kham") @db.Decimal(15, 2)
+  tienThuoc         Decimal         @default(0) @map("tien_thuoc") @db.Decimal(15, 2)
+  phiDichVu         Decimal         @default(0) @map("phi_dich_vu") @db.Decimal(15, 2)
+  soTienGiam        Decimal         @default(0) @map("so_tien_giam") @db.Decimal(15, 2)
+  tongTien          Decimal         @map("tong_tien") @db.Decimal(15, 2)
+  trangThai         TrangThaiHoaDon @default(BAN_NHAP) @map("trang_thai")
+  nguoiTaoId        Int             @map("nguoi_tao_id")
+  thoiGianThanhToan DateTime?       @map("thoi_gian_thanh_toan")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  luotKham          LuotKham        @relation(fields: [luotKhamId], references: [id], onDelete: Restrict)
+  benhNhan          BenhNhan        @relation(fields: [benhNhanId], references: [id], onDelete: Restrict)
+  nguoiTao          NguoiDung       @relation("NguoiTaoHoaDon", fields: [nguoiTaoId], references: [id], onDelete: Restrict)
+  thanhToan         ThanhToan[]
+  chiTiet           ChiTietHoaDon[]
+
+  @@index([trangThai])
+  @@index([createdAt])
+  @@index([benhNhanId])
+  @@index([nguoiTaoId])
+  @@map("hoa_don")
+}
+
+// Mỗi bản ghi là một lần thử thanh toán của hóa đơn.
+model ThanhToan {
+  id                Int                 @id @default(autoincrement())
+  hoaDonId          Int                 @map("hoa_don_id")
+  soTien            Decimal             @map("so_tien") @db.Decimal(15, 2)
+  phuongThuc        PhuongThucThanhToan @map("phuong_thuc")
+  maGiaoDich        String?             @map("ma_giao_dich") @db.VarChar(100)
+  trangThai         TrangThaiThanhToan  @default(DANG_CHO) @map("trang_thai")
+  nguoiThuTienId    Int?                @map("nguoi_thu_tien_id")
+  thoiGianThanhToan DateTime?           @map("thoi_gian_thanh_toan")
+  ghiChu            String?             @map("ghi_chu") @db.Text
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  hoaDon            HoaDon              @relation(fields: [hoaDonId], references: [id], onDelete: Restrict)
+  nguoiThuTien      NguoiDung?          @relation("NguoiThuTien", fields: [nguoiThuTienId], references: [id], onDelete: Restrict)
+
+  @@index([hoaDonId])
+  @@index([trangThai])
+  @@index([maGiaoDich])
+  @@index([nguoiThuTienId])
+  @@map("thanh_toan")
+}
+
+// Lịch hẹn được tạo bởi bệnh nhân, nhân viên hoặc trợ lý AI trước khi check-in thành lượt khám.
+model LichHen {
+  id                Int              @id @default(autoincrement())
+  maLichHen         String           @unique @map("ma_lich_hen") @db.VarChar(30)
+  benhNhanId        Int              @map("benh_nhan_id")
+  chuyenKhoaId      Int              @map("chuyen_khoa_id")
+  bacSiId           Int?             @map("bac_si_id")
+  ngayHen           DateTime         @map("ngay_hen") @db.Date
+  gioBatDau         DateTime         @map("gio_bat_dau") @db.Time(0)
+  gioKetThuc        DateTime         @map("gio_ket_thuc") @db.Time(0)
+  nguonDatLich      NguonDatLich     @map("nguon_dat_lich")
+  lyDoKham          String?          @map("ly_do_kham") @db.Text
+  trieuChungBanDau  String?          @map("trieu_chung_ban_dau") @db.Text
+  ghiChu            String?          @map("ghi_chu") @db.Text
+  trangThai         TrangThaiLichHen @default(CHO_XAC_NHAN) @map("trang_thai")
+  nguoiXacNhanId    Int?             @map("nguoi_xac_nhan_id")
+  thoiGianXacNhan   DateTime?        @map("thoi_gian_xac_nhan")
+  lyDoTuChoiHoacHuy String?          @map("ly_do_tu_choi_hoac_huy") @db.Text
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  benhNhan          BenhNhan         @relation(fields: [benhNhanId], references: [id], onDelete: Restrict)
+  chuyenKhoa        ChuyenKhoa       @relation(fields: [chuyenKhoaId], references: [id], onDelete: Restrict)
+  bacSi             BacSi?           @relation(fields: [bacSiId], references: [id], onDelete: Restrict)
+  nguoiXacNhan      NguoiDung?       @relation("NguoiXacNhanLichHen", fields: [nguoiXacNhanId], references: [id], onDelete: Restrict)
+  luotKham          LuotKham?
+  @@index([benhNhanId])
+  @@index([chuyenKhoaId])
+  @@index([bacSiId])
+  @@index([ngayHen, trangThai])
+  @@index([nguoiXacNhanId])
+  @@map("lich_hen")
+}
+
+// Dị ứng có cấu trúc để quy tắc hệ thống kiểm tra trước khi Gemini diễn giải cảnh báo.
+model DiUngBenhNhan {
+  id               Int                 @id @default(autoincrement())
+  benhNhanId       Int                 @map("benh_nhan_id")
+  thuocId          Int?                @map("thuoc_id")
+  hoatChatId       Int?                @map("hoat_chat_id")
+  tacNhanDiUng     String              @map("tac_nhan_di_ung") @db.VarChar(200)
+  phanUng          String?             @map("phan_ung") @db.Text
+  mucDo            MucDoDiUng          @default(CHUA_XAC_DINH) @map("muc_do")
+  trangThaiXacNhan TrangThaiXacNhanYTe @default(CHUA_XAC_NHAN) @map("trang_thai_xac_nhan")
+  nguonThongTin    String?             @map("nguon_thong_tin") @db.VarChar(100)
+  nguoiGhiNhanId   Int?                @map("nguoi_ghi_nhan_id")
+  ghiChu           String?             @map("ghi_chu") @db.Text
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  benhNhan         BenhNhan            @relation(fields: [benhNhanId], references: [id], onDelete: Cascade)
+  thuoc            Thuoc?              @relation(fields: [thuocId], references: [id], onDelete: Restrict)
+  hoatChat         HoatChat?           @relation(fields: [hoatChatId], references: [id], onDelete: Restrict)
+  nguoiGhiNhan     NguoiDung?          @relation("NguoiGhiNhanDiUng", fields: [nguoiGhiNhanId], references: [id], onDelete: Restrict)
+
+  @@index([benhNhanId])
+  @@index([thuocId])
+  @@index([hoatChatId])
+  @@index([nguoiGhiNhanId])
+  @@map("di_ung_benh_nhan")
+}
+
+// Tiền sử bệnh được lưu thành từng mục để bác sĩ và hệ thống AI tra cứu có kiểm soát.
+model TienSuBenh {
+  id               Int                 @id @default(autoincrement())
+  benhNhanId       Int                 @map("benh_nhan_id")
+  tenBenh          String              @map("ten_benh") @db.VarChar(200)
+  maICD            String?             @map("ma_icd") @db.VarChar(20)
+  ngayBatDau       DateTime?           @map("ngay_bat_dau") @db.Date
+  ngayKetThuc      DateTime?           @map("ngay_ket_thuc") @db.Date
+  dangDieuTri      Boolean             @default(false) @map("dang_dieu_tri")
+  trangThaiXacNhan TrangThaiXacNhanYTe @default(CHUA_XAC_NHAN) @map("trang_thai_xac_nhan")
+  moTa             String?             @map("mo_ta") @db.Text
+  nguoiGhiNhanId   Int?                @map("nguoi_ghi_nhan_id")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  benhNhan         BenhNhan            @relation(fields: [benhNhanId], references: [id], onDelete: Cascade)
+  nguoiGhiNhan     NguoiDung?          @relation("NguoiGhiNhanTienSu", fields: [nguoiGhiNhanId], references: [id], onDelete: Restrict)
+
+  @@index([benhNhanId])
+  @@index([tenBenh])
+  @@index([nguoiGhiNhanId])
+  @@map("tien_su_benh")
+}
+
+// Danh mục hoạt chất chuẩn hóa dùng để phát hiện trùng hoạt chất và dị ứng chéo.
+model HoatChat {
+  id              Int               @id @default(autoincrement())
+  maHoatChat      String            @unique @map("ma_hoat_chat") @db.VarChar(30)
+  tenHoatChat     String            @unique @map("ten_hoat_chat") @db.VarChar(200)
+  moTa            String?           @map("mo_ta") @db.Text
+  trangThai       TrangThaiChung    @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  thuoc           ThuocHoatChat[]
+  diUngBenhNhan   DiUngBenhNhan[]
+  canhBaoDonThuoc CanhBaoDonThuoc[]
+  goiYCanTranh    GoiYThuocThayThe[] @relation("HoatChatCanTranh")
+
+  @@index([tenHoatChat])
+  @@map("hoat_chat")
+}
+
+// Quan hệ nhiều-nhiều giữa thuốc và hoạt chất cùng hàm lượng tương ứng.
+model ThuocHoatChat {
+  id         Int      @id @default(autoincrement())
+  thuocId    Int      @map("thuoc_id")
+  hoatChatId Int      @map("hoat_chat_id")
+  hamLuong   String?  @map("ham_luong") @db.VarChar(100)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  thuoc      Thuoc    @relation(fields: [thuocId], references: [id], onDelete: Cascade)
+  hoatChat   HoatChat @relation(fields: [hoatChatId], references: [id], onDelete: Restrict)
+
+  @@unique([thuocId, hoatChatId])
+  @@index([hoatChatId])
+  @@map("thuoc_hoat_chat")
+}
+
+// Danh mục thuốc thay thế đã được duyệt; Gemini chỉ được phép diễn giải dữ liệu này.
+model GoiYThuocThayThe {
+  id                 Int            @id @default(autoincrement())
+  thuocCanTranhId    Int?           @map("thuoc_can_tranh_id")
+  hoatChatCanTranhId Int?           @map("hoat_chat_can_tranh_id")
+  thuocThayTheId     Int            @map("thuoc_thay_the_id")
+  ghiChuChuyenMon    String?        @map("ghi_chu_chuyen_mon") @db.Text
+  trangThai          TrangThaiChung @default(DANG_HOAT_DONG) @map("trang_thai")
+  nguoiDuyetId       Int            @map("nguoi_duyet_id")
+  ngayHieuLuc        DateTime       @map("ngay_hieu_luc") @db.Date
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  thuocCanTranh      Thuoc?         @relation("ThuocCanTranh", fields: [thuocCanTranhId], references: [id], onDelete: Restrict)
+  hoatChatCanTranh   HoatChat?      @relation("HoatChatCanTranh", fields: [hoatChatCanTranhId], references: [id], onDelete: Restrict)
+  thuocThayThe       Thuoc          @relation("ThuocThayThe", fields: [thuocThayTheId], references: [id], onDelete: Restrict)
+  nguoiDuyet         NguoiDung      @relation("NguoiDuyetGoiY", fields: [nguoiDuyetId], references: [id], onDelete: Restrict)
+
+  @@index([thuocCanTranhId])
+  @@index([hoatChatCanTranhId])
+  @@index([thuocThayTheId])
+  @@index([trangThai, ngayHieuLuc])
+  @@map("goi_y_thuoc_thay_the")
+}
+
+// Kết quả kiểm tra an toàn đơn thuốc, có lưu nguồn phát hiện và quyết định cuối của bác sĩ.
+model CanhBaoDonThuoc {
+  id              Int                  @id @default(autoincrement())
+  donThuocId      Int                  @map("don_thuoc_id")
+  thuocId         Int?                 @map("thuoc_id")
+  hoatChatId      Int?                 @map("hoat_chat_id")
+  loaiCanhBao     LoaiCanhBaoDonThuoc  @map("loai_canh_bao")
+  mucDo           MucDoCanhBao         @map("muc_do")
+  nguonCanhBao    NguonCanhBao         @map("nguon_canh_bao")
+  tieuDe          String               @map("tieu_de") @db.VarChar(255)
+  noiDung         String               @map("noi_dung") @db.Text
+  khuyenNghi      String?              @map("khuyen_nghi") @db.Text
+  duLieuBangChung Json?                @map("du_lieu_bang_chung")
+  trangThaiXuLy   TrangThaiXuLyCanhBao @default(CHO_XU_LY) @map("trang_thai_xu_ly")
+  nguoiXuLyId     Int?                 @map("nguoi_xu_ly_id")
+  lyDoXuLy        String?              @map("ly_do_xu_ly") @db.Text
+  thoiGianXuLy    DateTime?            @map("thoi_gian_xu_ly")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+  donThuoc        DonThuoc             @relation(fields: [donThuocId], references: [id], onDelete: Cascade)
+  thuoc           Thuoc?               @relation(fields: [thuocId], references: [id], onDelete: Restrict)
+  hoatChat        HoatChat?            @relation(fields: [hoatChatId], references: [id], onDelete: Restrict)
+  nguoiXuLy       NguoiDung?           @relation("NguoiXuLyCanhBao", fields: [nguoiXuLyId], references: [id], onDelete: Restrict)
+
+  @@index([donThuocId])
+  @@index([thuocId])
+  @@index([hoatChatId])
+  @@index([trangThaiXuLy])
+  @@index([nguoiXuLyId])
+  @@map("canh_bao_don_thuoc")
+}
+
+// Danh mục dịch vụ lẻ có thể đưa vào chi tiết hóa đơn.
+model DichVu {
+  id                 Int             @id @default(autoincrement())
+  maDichVu           String          @unique @map("ma_dich_vu") @db.VarChar(30)
+  tenDichVu          String          @map("ten_dich_vu") @db.VarChar(200)
+  moTa               String?         @map("mo_ta") @db.Text
+  donGia             Decimal         @map("don_gia") @db.Decimal(15, 2)
+  chuyenKhoaId       Int?            @map("chuyen_khoa_id")
+  thoiGianDuKienPhut Int?            @map("thoi_gian_du_kien_phut")
+  trangThai          TrangThaiChung  @default(DANG_HOAT_DONG) @map("trang_thai")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+  chiTietHoaDon      ChiTietHoaDon[]
+  chuyenKhoa         ChuyenKhoa?     @relation(fields: [chuyenKhoaId], references: [id], onDelete: Restrict)
+
+  @@index([tenDichVu])
+  @@index([trangThai])
+  @@index([chuyenKhoaId])
+  @@map("dich_vu")
+}
+
+// Dòng hóa đơn lưu ảnh chụp tên, đơn giá và thành tiền tại thời điểm lập hóa đơn.
+model ChiTietHoaDon {
+  id        Int           @id @default(autoincrement())
+  hoaDonId  Int           @map("hoa_don_id")
+  dichVuId  Int?          @map("dich_vu_id")
+  thuocId   Int?          @map("thuoc_id")
+  loaiMuc   LoaiMucHoaDon @map("loai_muc")
+  maMuc     String?       @map("ma_muc") @db.VarChar(50)
+  tenMuc    String        @map("ten_muc") @db.VarChar(255)
+  soLuong   Int           @default(1) @map("so_luong")
+  donGia    Decimal       @map("don_gia") @db.Decimal(15, 2)
+  thanhTien Decimal       @map("thanh_tien") @db.Decimal(15, 2)
+  ghiChu    String?       @map("ghi_chu") @db.Text
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  hoaDon    HoaDon        @relation(fields: [hoaDonId], references: [id], onDelete: Cascade)
+  dichVu    DichVu?       @relation(fields: [dichVuId], references: [id], onDelete: Restrict)
+  thuoc     Thuoc?        @relation(fields: [thuocId], references: [id], onDelete: Restrict)
+
+  @@index([hoaDonId])
+  @@index([dichVuId])
+  @@index([thuocId])
+  @@map("chi_tiet_hoa_don")
+}
+
+model DanhGiaBacSi {
+  id         Int              @id @default(autoincrement())
+  luotKhamId Int              @unique @map("luot_kham_id")
+  benhNhanId Int              @map("benh_nhan_id")
+  bacSiId    Int              @map("bac_si_id")
+  soSao      Int              @map("so_sao")
+  noiDung    String?          @map("noi_dung") @db.Text
+  trangThai  TrangThaiDanhGia @default(CHO_DUYET) @map("trang_thai")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+  luotKham   LuotKham         @relation(fields: [luotKhamId], references: [id], onDelete: Restrict)
+  benhNhan   BenhNhan         @relation(fields: [benhNhanId], references: [id], onDelete: Restrict)
+  bacSi      BacSi            @relation(fields: [bacSiId], references: [id], onDelete: Restrict)
+
+  @@index([benhNhanId])
+  @@index([bacSiId, trangThai])
+  @@map("danh_gia_bac_si")
+}
+
+// Phiên hội thoại được lưu tại Smart Clinic; không phụ thuộc bộ nhớ ngắn hạn của Gemini.
+model PhienChat {
+  id              Int                @id @default(autoincrement())
+  maPhien         String             @unique @map("ma_phien") @db.VarChar(50)
+  nguoiDungId     Int?               @map("nguoi_dung_id")
+  benhNhanId      Int?               @map("benh_nhan_id")
+  loaiPhien       LoaiPhienChat      @default(TU_VAN_CHUNG) @map("loai_phien")
+  tieuDe          String?            @map("tieu_de") @db.VarChar(255)
+  tomTatNguCanh   String?            @map("tom_tat_ngu_canh") @db.Text
+  guestTokenHash  String?            @map("guest_token_hash") @db.VarChar(128)
+  trangThai       TrangThaiPhienChat @default(DANG_HOAT_DONG) @map("trang_thai")
+  thoiGianKetThuc DateTime?          @map("thoi_gian_ket_thuc")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  nguoiDung       NguoiDung?         @relation(fields: [nguoiDungId], references: [id], onDelete: SetNull)
+  benhNhan        BenhNhan?          @relation(fields: [benhNhanId], references: [id], onDelete: SetNull)
+  tinNhan         TinNhanChat[]
+  lanChayAI       LanChayAI[]
+  banNhapDatLich  BanNhapDatLichChat[]
+
+  @@index([nguoiDungId])
+  @@index([benhNhanId])
+  @@index([trangThai])
+  @@map("phien_chat")
+}
+
+// Ban nhap chi giu thong tin de nguoi dung kiem tra tren card; chua tao lich_hen.
+model BanNhapDatLichChat {
+  id            Int                         @id @default(autoincrement())
+  phienChatId   Int                         @map("phien_chat_id")
+  hoTen         String                      @map("ho_ten") @db.VarChar(150)
+  soDienThoai   String                      @map("so_dien_thoai") @db.VarChar(20)
+  ngaySinh      DateTime                    @map("ngay_sinh") @db.Date
+  gioiTinh      GioiTinh                    @map("gioi_tinh")
+  email         String?                     @db.VarChar(255)
+  chuyenKhoaId  Int                         @map("chuyen_khoa_id")
+  ngayHen       DateTime                    @map("ngay_hen") @db.Date
+  gioBatDau     DateTime                    @map("gio_bat_dau") @db.Time(0)
+  lyDoKham      String                      @map("ly_do_kham") @db.Text
+  ghiChu        String?                     @map("ghi_chu") @db.Text
+  trangThai     TrangThaiBanNhapDatLichChat @default(DANG_CHO_XAC_NHAN) @map("trang_thai")
+  lichHenId     Int?                        @unique @map("lich_hen_id")
+  createdAt     DateTime                    @default(now()) @map("created_at")
+  updatedAt     DateTime                    @updatedAt @map("updated_at")
+  phienChat     PhienChat                   @relation(fields: [phienChatId], references: [id], onDelete: Cascade)
+
+  @@index([phienChatId, trangThai])
+  @@index([chuyenKhoaId])
+  @@map("ban_nhap_dat_lich_chat")
+}
+
+model TinNhanChat {
+  id             Int           @id @default(autoincrement())
+  phienChatId    Int           @map("phien_chat_id")
+  vaiTro         VaiTroTinNhan @map("vai_tro")
+  noiDung        String        @map("noi_dung") @db.Text
+  tenCongCu      String?       @map("ten_cong_cu") @db.VarChar(100)
+  maLanGoiCongCu String?       @map("ma_lan_goi_cong_cu") @db.VarChar(100)
+  metadata       Json?
+  soToken        Int?          @map("so_token")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  phienChat      PhienChat     @relation(fields: [phienChatId], references: [id], onDelete: Cascade)
+  lanChayAI      LanChayAI[]
+
+  @@index([phienChatId, createdAt])
+  @@map("tin_nhan_chat")
+}
+
+// Nhật ký kỹ thuật từng lần gọi Gemini để theo dõi chi phí, độ trễ và lỗi mà không lưu API key.
+model LanChayAI {
+  id             Int                @id @default(autoincrement())
+  phienChatId    Int?               @map("phien_chat_id")
+  tinNhanChatId  Int?               @map("tin_nhan_chat_id")
+  benhNhanId     Int?               @map("benh_nhan_id")
+  tacVu          LoaiTacVuAI        @map("tac_vu")
+  nhaCungCap     String             @default("GOOGLE_GEMINI") @map("nha_cung_cap") @db.VarChar(50)
+  tenModel       String             @map("ten_model") @db.VarChar(100)
+  trangThai      TrangThaiLanChayAI @default(DANG_XU_LY) @map("trang_thai")
+  soTokenDauVao  Int?               @map("so_token_dau_vao")
+  soTokenDauRa   Int?               @map("so_token_dau_ra")
+  doTreMs        Int?               @map("do_tre_ms")
+  metadataYeuCau Json?              @map("metadata_yeu_cau")
+  maLoi          String?            @map("ma_loi") @db.VarChar(100)
+  thongBaoLoi    String?            @map("thong_bao_loi") @db.Text
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  phienChat      PhienChat?         @relation(fields: [phienChatId], references: [id], onDelete: SetNull)
+  tinNhanChat    TinNhanChat?       @relation(fields: [tinNhanChatId], references: [id], onDelete: SetNull)
+  benhNhan       BenhNhan?          @relation(fields: [benhNhanId], references: [id], onDelete: SetNull)
+
+  @@index([phienChatId])
+  @@index([tinNhanChatId])
+  @@index([benhNhanId])
+  @@index([tacVu, trangThai])
+  @@index([createdAt])
+  @@map("lan_chay_ai")
+}

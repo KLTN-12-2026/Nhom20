@@ -1,0 +1,85 @@
+.segmented-date {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 48px 0 16px;
+  border: 1px solid var(--sc-outline-variant);
+  border-radius: 8px;
+  color: var(--sc-on-surface);
+  background-color: var(--sc-surface);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.segmented-date:focus-within {
+  border-color: var(--sc-primary);
+  box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.12);
+  background-color: var(--sc-surface-container-lowest);
+}
+
+.segmented-date__part {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.segmented-date__part::placeholder {
+  color: var(--sc-on-surface-variant);
+  opacity: 0.75;
+}
+
+.segmented-date__day,
+.segmented-date__month {
+  width: 22px;
+}
+
+.segmented-date__year {
+  width: 38px;
+}
+
+.segmented-date > span:not(.material-symbols-outlined) {
+  margin: 0 4px;
+  color: var(--sc-on-surface-variant);
+}
+
+.segmented-date__picker {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented-date__calendar {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--sc-on-surface);
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.segmented-date__calendar:hover {
+  color: var(--sc-primary);
+  background-color: rgba(0, 74, 198, 0.08);
+}
+
+.segmented-date__calendar .material-symbols-outlined {
+  font-size: 22px;
+}

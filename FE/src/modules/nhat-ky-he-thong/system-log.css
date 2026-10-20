@@ -1,0 +1,217 @@
+.system-log-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.system-log-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.system-log-heading h1 {
+  margin: 6px 0;
+  color: var(--sc-on-surface);
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+}
+
+.system-log-heading p {
+  margin: 0;
+  color: var(--sc-on-surface-variant);
+}
+
+.system-log-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sc-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.system-log-eyebrow .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.system-log-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(280px, 1.8fr) minmax(200px, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--sc-outline-variant);
+  border-radius: 12px;
+  background: var(--sc-surface-container-lowest);
+}
+
+.system-log-filter {
+  position: relative;
+}
+
+.system-log-filter > .material-symbols-outlined {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  z-index: 2;
+  color: var(--sc-outline);
+  font-size: 20px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.system-log-filter .form-control,
+.system-log-filter .form-select {
+  height: 44px;
+  padding-left: 42px;
+  border-color: transparent;
+  background-color: var(--sc-surface-container-low);
+}
+
+.system-log-filter .form-control:focus,
+.system-log-filter .form-select:focus {
+  border-color: var(--sc-primary);
+  box-shadow: 0 0 0 1px var(--sc-primary);
+}
+
+.system-log-table-card {
+  overflow: hidden;
+  border: 1px solid var(--sc-outline-variant);
+  border-radius: 14px;
+  background: var(--sc-surface-container-lowest);
+  box-shadow: var(--sc-shadow-sm);
+}
+
+.system-log-table-card th {
+  padding: 15px 20px;
+  color: var(--sc-on-surface-variant);
+  background: var(--sc-surface-container-low);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.system-log-table-card td {
+  min-width: 130px;
+  padding: 18px 20px;
+}
+
+.system-log-table-card td:nth-child(2),
+.system-log-table-card td:nth-child(4) {
+  min-width: 270px;
+}
+
+.system-log-avatar {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--sc-primary);
+  background: var(--sc-surface-container-high);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.system-log-module {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid var(--sc-outline-variant);
+  border-radius: 999px;
+  color: var(--sc-on-surface-variant);
+  background: var(--sc-surface-container-low);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.system-log-module--xac_thuc {
+  color: #0040a2;
+  background: #dae2ff;
+}
+
+.system-log-module--nguoi_dung {
+  color: #005235;
+  background: #d4f8e5;
+}
+
+.system-log-module--bac_si {
+  color: #624000;
+  background: #ffddb3;
+}
+
+.system-log-module--chuyen_khoa {
+  color: #005a66;
+  background: #d7f5f7;
+}
+
+.system-log-module--benh_nhan {
+  color: #6b2d5c;
+  background: #f9d8ed;
+}
+
+.system-log-module--lich_hen {
+  color: #4b3b82;
+  background: #e8e0ff;
+}
+
+.system-log-module--thuoc {
+  color: #7a3e00;
+  background: #ffdfc2;
+}
+
+.system-log-module--he_thong {
+  color: #434654;
+  background: #e8edff;
+}
+
+.system-log-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--sc-outline-variant);
+  color: var(--sc-on-surface-variant);
+  font-size: 14px;
+}
+
+@media (max-width: 991.98px) {
+  .system-log-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .system-log-filter--search {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .system-log-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .system-log-heading {
+    flex-direction: column;
+  }
+
+  .system-log-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .system-log-filter--search {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}

@@ -1,0 +1,19 @@
+# Dependencies and generated artifacts
+**/node_modules/
+**/dist/
+**/coverage/
+**/*.tsbuildinfo
+
+# Local configuration and secrets
+**/.env
+**/.env.*
+
+# Logs
+*.log
+
+# Local database backups (their nested .gitignore also excludes JSON backups)
+BE/backups/
+
+# Local AI assistant metadata
+.agents/
+.hallmark/
