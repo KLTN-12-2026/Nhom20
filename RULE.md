@@ -518,28 +518,36 @@ React
 
 ---
 
-## 8. Git Commit
+## 8. Git Commit và làm việc theo nhánh
 
-Dùng Conventional Commits:
+Mỗi cá nhân tạo branch làm việc từ code `main` mới nhất. Không làm việc trực tiếp trên `main`.
 
-```text
-feat
-fix
-docs
-style
-refactor
-test
-chore
-```
-
-Ví dụ:
+### Trước khi làm việc (cập nhật nhánh)
 
 ```bash
-git commit -m "feat(auth): add JWT login"
-git commit -m "feat(queue): add realtime queue"
-git commit -m "fix(appointment): prevent duplicate booking"
-git commit -m "refactor(patient): add repository layer"
+git checkout main
+git pull origin main
+git checkout -b <TenBranch>
 ```
+
+Nếu đã có nhánh cá nhân, ví dụ `Tin45`:
+
+```bash
+git checkout main
+git pull origin main
+git checkout Tin45
+git merge main
+```
+
+### Sau khi sửa code xong (lưu và đẩy)
+
+```bash
+git add .
+git commit -m "Nội dung thay đổi"
+git push origin Tin45
+```
+
+Sau khi nhấn **MERGE** trên GitHub, lặp lại từ bước cập nhật nhánh cho lần làm việc tiếp theo. Commit message phải viết bằng tiếng Việt có dấu.
 
 ---
 
