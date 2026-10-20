@@ -194,44 +194,7 @@ Trước khi sửa đổi chức năng, bạn cần:
 
 ---
 
-## 👥 9. Quy trình Git làm việc nhóm
-
-Mỗi cá nhân tạo branch làm việc từ code `main` mới nhất.
-
-### 1. Trước khi làm việc (Cập nhật nhánh)
-
-```bash
-git checkout main
-git pull origin main
-git checkout -b <TenBranch>
-```
-
-Ví dụ, nếu đã có nhánh cá nhân `Tin45`:
-
-```bash
-git checkout main
-git pull origin main
-git checkout Tin45
-git merge main
-```
-
-### 2. Sau khi sửa code xong (Lưu và đẩy)
-
-```bash
-git add .
-git commit -m "Nội dung thay đổi"
-git push origin Tin45
-```
-
-### 3. Sau khi nhấn MERGE trên GitHub
-
-Lặp lại từ bước 1 cho lần làm việc tiếp theo.
-
-> Không làm việc trực tiếp trên `main`. Mỗi thành viên tạo và push branch riêng, sau đó tạo Pull Request để merge vào `main`.
-
----
-
-## 📝 10. Lệnh thường dùng & Lưu ý khác
+## 📝 9. Lệnh thường dùng & Lưu ý khác
 
 **Build dự án:**
 ```bash
