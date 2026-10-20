@@ -1,4 +1,6 @@
-# 🏥 Hệ thống quản lý và điều phối khám bệnh đa chuyên khoa tích hợp trí tuệ nhân tạo
+# Nhom20
+
+**Xây dựng hệ thống quản lý và điều phối khám bệnh đa chuyên khoa tích hợp trí tuệ nhân tạo - GVHD: ThS. Nguyễn Thanh Trung**
 
 **Tên Tiếng Anh:** AI-Integrated Multi-Specialty Clinic Management and Coordination System
 (Tên dự án thực tế: Smart Clinic Management System)

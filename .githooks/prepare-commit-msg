@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# Điền sẵn message tiếng Việt khi chạy `git commit` mà không truyền -m.
+
+message_file="$1"
+
+if [ ! -s "$message_file" ]; then
+  printf '%s\n' 'Cập nhật dự án' > "$message_file"
+fi

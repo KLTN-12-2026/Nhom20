@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+# Không cho phép commit message chỉ dùng tiếng Anh/không dấu.
+
+message_file="$1"
+message=$(cat "$message_file")
+
+case "$message" in
+  *[À-ỹà-ỹ]*) exit 0 ;;
+  *)
+    echo 'Commit message phải viết bằng tiếng Việt có dấu.' >&2
+    exit 1
+    ;;
+esac
