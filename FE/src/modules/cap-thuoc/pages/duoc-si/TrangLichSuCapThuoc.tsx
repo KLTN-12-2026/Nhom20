@@ -159,7 +159,7 @@ export default function TrangLichSuCapThuoc() {
                     <td className="text-end">
                       <button
                         type="button"
-                        className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                        className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
                         onClick={() => setSelectedItem(item)}
                         title="Xem chi tiết đơn thuốc"
                       >
