@@ -34,17 +34,21 @@ type PatientRecord = Patient & {
   }>;
 };
 
+const PATIENTS_PER_PAGE = 10;
+
 const dateText = (value: string | null) => dinhDangNgay(value);
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((part) => part[0]).join('').toUpperCase();
 
 export default function TrangQuanLyBenhNhan() {
   const { showToast } = useAppToast();
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [record, setRecord] = useState<PatientRecord | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setCurrentPage(1);
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
@@ -59,6 +63,16 @@ export default function TrangQuanLyBenhNhan() {
     return () => window.clearTimeout(timer);
   }, [search, showToast]);
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(patients.length / PATIENTS_PER_PAGE),
+  );
+
+  const visiblePatients = patients.slice(
+    (currentPage - 1) * PATIENTS_PER_PAGE,
+    currentPage * PATIENTS_PER_PAGE,
+  );
+
   const openRecord = async (patient: Patient) => {
     try {
       const response = await axiosClient.get<{ data: PatientRecord }>(`/receptions/patients/${patient.id}`);
@@ -71,7 +85,7 @@ export default function TrangQuanLyBenhNhan() {
   return (
     <div className="patient-management">
       <div className="patient-management__heading">
-        <div><p>QUẢN TRỊ HỆ THỐNG</p><h1>QUẢN LÝ BỆNH NHÂN</h1><span className="text-secondary">Danh sách thật từ cơ sở dữ liệu và hồ sơ khám đã lưu.</span></div>
+        <div><p style={{ color: "blue" }}>QUẢN TRỊ HỆ THỐNG</p><h1 style={{ color: "black" }}>QUẢN LÝ BỆNH NHÂN</h1><span className="text-secondary">Hồ sơ khám đã lưu.</span></div>
         <div className="patient-management__search"><span className="material-symbols-outlined">search</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên, mã hoặc số điện thoại..." /></div>
       </div>
 
@@ -80,18 +94,75 @@ export default function TrangQuanLyBenhNhan() {
           <table className="table patient-table align-middle mb-0">
             <thead><tr><th>Mã BN</th><th>Họ tên</th><th>Ngày sinh</th><th>Giới tính</th><th>Số điện thoại</th><th>CCCD</th><th>BHYT</th><th>Địa chỉ</th><th className="text-center">Hồ sơ</th></tr></thead>
             <tbody>
-              {patients.map((patient) => <tr key={patient.id}>
+              {visiblePatients.map((patient) => <tr key={patient.id}>
                 <td><span className="patient-table__code">{patient.code}</span></td>
                 <td><div className="patient-table__identity"><span className="patient-table__avatar patient-table__avatar--primary">{initials(patient.fullName)}</span><strong>{patient.fullName}</strong></div></td>
                 <td>{dateText(patient.dateOfBirth)}</td><td>{patient.gender === 'NU' ? 'Nữ' : patient.gender === 'NAM' ? 'Nam' : 'Khác'}</td><td>{patient.phoneNumber}</td><td>{patient.identityNumber || '—'}</td><td>{patient.healthInsuranceNumber || '—'}</td><td>{patient.address || '—'}</td>
-                <td className="text-center"><button className="btn btn-sm btn-outline-primary" type="button" onClick={() => void openRecord(patient)}><span className="material-symbols-outlined me-1">visibility</span>Xem hồ sơ</button></td>
+                <td className="text-center"><button className="btn btn-sm btn-primary" type="button" onClick={() => void openRecord(patient)}><span className="material-symbols-outlined me-1">visibility</span>Xem hồ sơ</button></td>
               </tr>)}
               {!loading && patients.length === 0 && <tr><td colSpan={9} className="py-5 text-center text-secondary">Không tìm thấy bệnh nhân.</td></tr>}
             </tbody>
           </table>
           {loading && <div className="p-3 text-secondary">Đang tải...</div>}
         </div>
-        <footer className="patient-pagination"><span>Hiển thị {patients.length} bệnh nhân</span></footer>
+        {patients.length > PATIENTS_PER_PAGE && (
+          <nav
+            className="d-flex justify-content-center px-3 py-4 border-top"
+            aria-label="Phân trang danh sách bệnh nhân"
+          >
+            <ul className="pagination pagination-lg mb-0">
+              <li className={`page-item${currentPage === 1 ? ' disabled' : ''}`}>
+                <button
+                  type="button"
+                  className="page-link"
+                  onClick={() => setCurrentPage((page) => page - 1)}
+                  disabled={currentPage === 1}
+                  aria-label="Trang trước"
+                >
+                  <span aria-hidden="true">&laquo;</span>
+                </button>
+              </li>
+
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                (page) => (
+                  <li
+                    key={page}
+                    className={`page-item${currentPage === page ? ' active' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className="page-link"
+                      onClick={() => setCurrentPage(page)}
+                      aria-current={currentPage === page ? 'page' : undefined}
+                    >
+                      {page}
+                    </button>
+                  </li>
+                ),
+              )}
+
+              <li
+                className={`page-item${currentPage === totalPages ? ' disabled' : ''}`}
+              >
+                <button
+                  type="button"
+                  className="page-link"
+                  onClick={() => setCurrentPage((page) => page + 1)}
+                  disabled={currentPage === totalPages}
+                  aria-label="Trang sau"
+                >
+                  <span aria-hidden="true">&raquo;</span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        )}
+
+        <footer className="patient-pagination">
+          <span>
+            Hiển thị {visiblePatients.length} / {patients.length} bệnh nhân
+          </span>
+        </footer>
       </section>
 
       {record && <AppModal title={`Hồ sơ bệnh nhân: ${record.fullName}`} size="xl" onClose={() => setRecord(null)} footer={<button className="btn btn-primary" type="button" onClick={() => setRecord(null)}>Đóng</button>}>
