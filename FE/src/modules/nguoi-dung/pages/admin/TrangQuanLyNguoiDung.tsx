@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
 import '@/components/ui/admin-crud.css';
@@ -31,6 +31,14 @@ const STATUS_LABELS: Record<UserStatus, string> = {
   NGUNG_HOAT_DONG: 'Ngừng hoạt động',
   BI_KHOA: 'Bị khóa',
 };
+
+const USERS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 function getInitials(fullName: string) {
   return fullName
@@ -71,6 +79,7 @@ export default function TrangQuanLyNguoiDung() {
   const { showToast } = useAppToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [page, setPage] = useState(1);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null);
   const [form, setForm] = useState<CreateUserPayload>(EMPTY_FORM);
@@ -91,6 +100,34 @@ export default function TrangQuanLyNguoiDung() {
       return matchesSearch && matchesRole;
     });
   }, [roleFilter, searchTerm, users]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    filteredUsers.length === 0 ? 0 : (currentPage - 1) * USERS_PER_PAGE + 1;
+  const displayedTo = Math.min(currentPage * USERS_PER_PAGE, filteredUsers.length);
+  const paginatedUsers = useMemo(
+    () =>
+      filteredUsers.slice(
+        (currentPage - 1) * USERS_PER_PAGE,
+        currentPage * USERS_PER_PAGE,
+      ),
+    [currentPage, filteredUsers],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [roleFilter, searchTerm]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const closeModal = () => {
     if (isSubmitting) return;
@@ -325,7 +362,7 @@ export default function TrangQuanLyNguoiDung() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr key={user.id}>
                     <td>
                       <div className="d-flex align-items-center gap-3">
@@ -429,6 +466,60 @@ export default function TrangQuanLyNguoiDung() {
               </tbody>
             </table>
           </div>
+          {filteredUsers.length > 0 && (
+            <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+              <span className="text-secondary small">
+                Hiển thị {displayedFrom}–{displayedTo} trong tổng số {filteredUsers.length} người dùng
+              </span>
+              <nav className="align-self-md-auto align-self-start" aria-label="Phân trang người dùng">
+                <ul className="pagination mb-0 flex-wrap">
+                  <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang trước"
+                      disabled={currentPage <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      <span aria-hidden="true">«</span>
+                    </button>
+                  </li>
+                  {pageNumbers.map((pageNumber, index) => (
+                    <Fragment key={pageNumber}>
+                      {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                        <li className="page-item disabled" aria-hidden="true">
+                          <span className="page-link">…</span>
+                        </li>
+                      )}
+                      <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                        <button
+                          type="button"
+                          className="page-link"
+                          aria-current={pageNumber === currentPage ? 'page' : undefined}
+                          onClick={() => setPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
+                  <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang sau"
+                      disabled={currentPage >= totalPages}
+                      onClick={() =>
+                        setPage((current) => Math.min(totalPages, current + 1))
+                      }
+                    >
+                      <span aria-hidden="true">»</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </footer>
+          )}
         </div>
       )}
 
