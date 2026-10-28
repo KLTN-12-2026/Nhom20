@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import AppModal from '@/components/ui/AppModal';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { useAppToast } from '@/components/ui/use-app-toast';
@@ -36,19 +36,25 @@ type PatientRecord = Patient & {
 
 const PATIENTS_PER_PAGE = 10;
 
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
+
 const dateText = (value: string | null) => dinhDangNgay(value);
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((part) => part[0]).join('').toUpperCase();
 
 export default function TrangQuanLyBenhNhan() {
   const { showToast } = useAppToast();
   const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [record, setRecord] = useState<PatientRecord | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setCurrentPage(1);
+    setPage(1);
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
@@ -67,11 +73,31 @@ export default function TrangQuanLyBenhNhan() {
     1,
     Math.ceil(patients.length / PATIENTS_PER_PAGE),
   );
-
-  const visiblePatients = patients.slice(
-    (currentPage - 1) * PATIENTS_PER_PAGE,
-    currentPage * PATIENTS_PER_PAGE,
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
   );
+  const displayedFrom =
+    patients.length === 0 ? 0 : (currentPage - 1) * PATIENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * PATIENTS_PER_PAGE,
+    patients.length,
+  );
+  const visiblePatients = useMemo(
+    () =>
+      patients.slice(
+        (currentPage - 1) * PATIENTS_PER_PAGE,
+        currentPage * PATIENTS_PER_PAGE,
+      ),
+    [currentPage, patients],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const openRecord = async (patient: Patient) => {
     try {
@@ -105,64 +131,60 @@ export default function TrangQuanLyBenhNhan() {
           </table>
           {loading && <div className="p-3 text-secondary">Đang tải...</div>}
         </div>
-        {patients.length > PATIENTS_PER_PAGE && (
-          <nav
-            className="d-flex justify-content-center px-3 py-4 border-top"
-            aria-label="Phân trang danh sách bệnh nhân"
-          >
-            <ul className="pagination pagination-lg mb-0">
-              <li className={`page-item${currentPage === 1 ? ' disabled' : ''}`}>
-                <button
-                  type="button"
-                  className="page-link"
-                  onClick={() => setCurrentPage((page) => page - 1)}
-                  disabled={currentPage === 1}
-                  aria-label="Trang trước"
-                >
-                  <span aria-hidden="true">&laquo;</span>
-                </button>
-              </li>
-
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-                (page) => (
-                  <li
-                    key={page}
-                    className={`page-item${currentPage === page ? ' active' : ''}`}
+        {patients.length > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {patients.length} bệnh nhân
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang bệnh nhân">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
                   >
-                    <button
-                      type="button"
-                      className="page-link"
-                      onClick={() => setCurrentPage(page)}
-                      aria-current={currentPage === page ? 'page' : undefined}
-                    >
-                      {page}
-                    </button>
-                  </li>
-                ),
-              )}
-
-              <li
-                className={`page-item${currentPage === totalPages ? ' disabled' : ''}`}
-              >
-                <button
-                  type="button"
-                  className="page-link"
-                  onClick={() => setCurrentPage((page) => page + 1)}
-                  disabled={currentPage === totalPages}
-                  aria-label="Trang sau"
-                >
-                  <span aria-hidden="true">&raquo;</span>
-                </button>
-              </li>
-            </ul>
-          </nav>
+                    <span aria-hidden="true">«</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === currentPage ? 'page' : undefined}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={currentPage >= totalPages}
+                    onClick={() =>
+                      setPage((current) => Math.min(totalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">»</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
         )}
-
-        <footer className="patient-pagination">
-          <span>
-            Hiển thị {visiblePatients.length} / {patients.length} bệnh nhân
-          </span>
-        </footer>
       </section>
 
       {record && <AppModal title={`Hồ sơ bệnh nhân: ${record.fullName}`} size="xl" onClose={() => setRecord(null)} footer={<button className="btn btn-primary" type="button" onClick={() => setRecord(null)}>Đóng</button>}>
