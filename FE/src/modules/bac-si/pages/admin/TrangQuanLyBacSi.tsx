@@ -16,6 +16,8 @@ import type {
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
 
+const DOCTORS_PER_PAGE = 10;
+
 const EMPTY_FORM: CreateDoctorPayload = {
   code: '',
   fullName: '',
@@ -52,6 +54,7 @@ export default function TrangQuanLyBacSi() {
   const { specialties } = useSpecialties();
   const { showToast } = useAppToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [form, setForm] = useState<CreateDoctorPayload>(EMPTY_FORM);
@@ -70,6 +73,15 @@ export default function TrangQuanLyBacSi() {
         doctor.email.toLocaleLowerCase('vi').includes(search),
     );
   }, [doctors, searchTerm]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredDoctors.length / DOCTORS_PER_PAGE),
+  );
+  const visibleDoctors = useMemo(() => {
+    const startIndex = (currentPage - 1) * DOCTORS_PER_PAGE;
+    return filteredDoctors.slice(startIndex, startIndex + DOCTORS_PER_PAGE);
+  }, [currentPage, filteredDoctors]);
 
   const closeModal = () => {
     if (isSubmitting) return;
@@ -149,6 +161,7 @@ export default function TrangQuanLyBacSi() {
         }
       }
       showToast(message);
+      setCurrentPage(1);
       setModalMode(null);
       setSelectedDoctor(null);
       setAvatarFile(null);
@@ -165,6 +178,7 @@ export default function TrangQuanLyBacSi() {
     try {
       const message = await removeDoctor(selectedDoctor.id);
       showToast(message);
+      setCurrentPage(1);
       setModalMode(null);
       setSelectedDoctor(null);
     } catch (requestError) {
@@ -207,7 +221,10 @@ export default function TrangQuanLyBacSi() {
             className="form-control"
             type="search"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(event) => {
+              setSearchTerm(event.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Tìm theo tên, mã, email hoặc chuyên khoa..."
           />
         </div>
@@ -267,7 +284,7 @@ export default function TrangQuanLyBacSi() {
                 </tr>
               </thead>
               <tbody>
-                {filteredDoctors.map((doctor) => (
+                {visibleDoctors.map((doctor) => (
                   <tr key={doctor.id}>
                     <td>
                       <div className="admin-management-entity">
@@ -318,6 +335,56 @@ export default function TrangQuanLyBacSi() {
             <div className="admin-crud-empty py-5">
               {doctors.length === 0 ? 'Chưa có bác sĩ nào.' : 'Không tìm thấy bác sĩ phù hợp.'}
             </div>
+          )}
+          {filteredDoctors.length > DOCTORS_PER_PAGE && (
+            <nav
+              className="d-flex justify-content-center px-3 py-4 border-top"
+              aria-label="Phân trang danh sách bác sĩ"
+            >
+              <ul className="pagination pagination-lg mb-0">
+                <li className={`page-item${currentPage === 1 ? ' disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => setCurrentPage((page) => page - 1)}
+                    disabled={currentPage === 1}
+                    aria-label="Trang trước"
+                  >
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                  (page) => (
+                    <li
+                      key={page}
+                      className={`page-item${currentPage === page ? ' active' : ''}`}
+                    >
+                      <button
+                        type="button"
+                        className="page-link"
+                        onClick={() => setCurrentPage(page)}
+                        aria-current={currentPage === page ? 'page' : undefined}
+                      >
+                        {page}
+                      </button>
+                    </li>
+                  ),
+                )}
+                <li
+                  className={`page-item${currentPage === totalPages ? ' disabled' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => setCurrentPage((page) => page + 1)}
+                    disabled={currentPage === totalPages}
+                    aria-label="Trang sau"
+                  >
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           )}
         </div>
       )}
