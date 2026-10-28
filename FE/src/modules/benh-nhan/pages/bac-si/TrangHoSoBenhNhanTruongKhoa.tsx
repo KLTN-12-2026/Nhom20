@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import AppModal from '@/components/ui/AppModal';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
+import '@/modules/bac-si/doctor-workspace.css';
 import '../../patients.css';
 
 type Patient = {
@@ -34,18 +35,28 @@ type PatientRecord = Patient & {
   }>;
 };
 
+const PATIENTS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
+
 const dateText = (value: string | null) => dinhDangNgay(value);
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((part) => part[0]).join('').toUpperCase();
 
 export default function TrangHoSoBenhNhanTruongKhoa() {
   const { showToast } = useAppToast();
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [managedSpecialty, setManagedSpecialty] = useState<string | null>(null);
   const [record, setRecord] = useState<PatientRecord | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setPage(1);
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
@@ -66,6 +77,36 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
     return () => window.clearTimeout(timer);
   }, [search, showToast]);
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(patients.length / PATIENTS_PER_PAGE),
+  );
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    patients.length === 0 ? 0 : (currentPage - 1) * PATIENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * PATIENTS_PER_PAGE,
+    patients.length,
+  );
+  const visiblePatients = useMemo(
+    () =>
+      patients.slice(
+        (currentPage - 1) * PATIENTS_PER_PAGE,
+        currentPage * PATIENTS_PER_PAGE,
+      ),
+    [currentPage, patients],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   const openRecord = async (patient: Patient) => {
     try {
       const response = await axiosClient.get<{ data: PatientRecord }>(`/receptions/patients/${patient.id}`);
@@ -76,16 +117,16 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
   };
 
   return (
-    <div className="patient-management">
-      <div className="patient-management__heading">
+    <div className="doctor-page">
+      <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-          <p className="text-uppercase text-primary fw-bold mb-1" style={{ letterSpacing: '0.08em' }}>
+          <div className="doctor-page__eyebrow">
             Bác sĩ trưởng khoa {managedSpecialty ? `• Khoa ${managedSpecialty}` : ''}
-          </p>
-          <h1>HỒ SƠ BỆNH NHÂN CỦA KHOA</h1>
-          <span className="text-secondary">
+          </div>
+          <h1 className="doctor-page__title">Hồ sơ bệnh nhân của khoa</h1>
+          <p className="doctor-page__description">
             Danh sách bệnh nhân và lịch sử khám bệnh thuộc chuyên khoa bạn phụ trách.
-          </span>
+          </p>
         </div>
         <div className="patient-management__search">
           <span className="material-symbols-outlined">search</span>
@@ -101,20 +142,20 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
         <div className="table-responsive">
           <table className="table patient-table align-middle mb-0">
             <thead>
-              <tr>
-                <th>Mã BN</th>
-                <th>Họ tên</th>
-                <th>Ngày sinh</th>
-                <th>Giới tính</th>
-                <th>Số điện thoại</th>
-                <th>CCCD</th>
-                <th>BHYT</th>
-                <th>Địa chỉ</th>
-                <th className="text-center">Hồ sơ</th>
+              <tr className="text-center align-middle">
+                <th className="text-center align-middle">Mã BN</th>
+                <th className="text-center align-middle">Họ tên</th>
+                <th className="text-center align-middle">Ngày sinh</th>
+                <th className="text-center align-middle">Giới tính</th>
+                <th className="text-center align-middle">Số điện thoại</th>
+                <th className="text-center align-middle">CCCD</th>
+                <th className="text-center align-middle">BHYT</th>
+                <th className="text-center align-middle">Địa chỉ</th>
+                <th className="text-center align-middle">Hồ sơ</th>
               </tr>
             </thead>
             <tbody>
-              {patients.map((patient) => (
+              {visiblePatients.map((patient) => (
                 <tr key={patient.id}>
                   <td>
                     <span className="patient-table__code">{patient.code}</span>
@@ -128,18 +169,20 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
                     </div>
                   </td>
                   <td>{dateText(patient.dateOfBirth)}</td>
-                  <td>{patient.gender === 'NU' ? 'Nữ' : patient.gender === 'NAM' ? 'Nam' : 'Khác'}</td>
+                  <td className="text-center align-middle text-nowrap">
+                    {patient.gender === 'NU' ? 'Nữ' : patient.gender === 'NAM' ? 'Nam' : 'Khác'}
+                  </td>
                   <td>{patient.phoneNumber}</td>
                   <td>{patient.identityNumber || '—'}</td>
                   <td>{patient.healthInsuranceNumber || '—'}</td>
                   <td>{patient.address || '—'}</td>
-                  <td className="text-center">
+                  <td className="text-center text-nowrap">
                     <button
-                      className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                      className="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center text-nowrap"
                       type="button"
                       onClick={() => void openRecord(patient)}
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                      <span className="material-symbols-outlined me-1" style={{ fontSize: 18, lineHeight: 1 }}>
                         visibility
                       </span>
                       <span>Xem hồ sơ</span>
@@ -158,11 +201,60 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
           </table>
           {loading && <div className="p-3 text-secondary">Đang tải...</div>}
         </div>
-        <footer className="patient-pagination">
-          <span>
-            Hiển thị <strong>{patients.length}</strong> bệnh nhân thuộc chuyên khoa
-          </span>
-        </footer>
+        {patients.length > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {patients.length} bệnh nhân
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang bệnh nhân">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <span aria-hidden="true">«</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === currentPage ? 'page' : undefined}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={currentPage >= totalPages}
+                    onClick={() =>
+                      setPage((current) => Math.min(totalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">»</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        )}
       </section>
 
       {record && (
