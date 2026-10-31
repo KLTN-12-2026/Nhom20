@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
+import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { doctorApi } from '@/modules/bac-si/api/doctor.api';
 import type { Doctor } from '@/modules/bac-si/types/doctor.types';
@@ -8,7 +9,6 @@ import { specialtyApi } from '@/modules/chuyen-khoa/api/specialty.api';
 import type { Specialty } from '@/modules/chuyen-khoa/types/specialty.types';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
-import ReceptionistStatCard from '@/modules/tiep-don/components/ReceptionistStatCard';
 import '@/modules/tiep-don/receptionist-workspace.css';
 
 import { useAppointments } from '../../hooks/use-appointments';
@@ -21,6 +21,14 @@ import { APPOINTMENT_SOURCE_LABELS } from '../../types/appointment.types';
 import '../../appointment-admin.css';
 
 type ModalMode = 'view' | null;
+
+const APPOINTMENTS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 const STATUS_OPTIONS: Array<{ value: AppointmentStatus; label: string }> = [
   { value: 'CHO_XAC_NHAN', label: 'Chờ xác nhận' },
@@ -69,7 +77,6 @@ export default function TrangQuanLyLichHen() {
   });
   const [filters, setFilters] = useState(draftFilters);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
   const query = useMemo<AppointmentQuery>(
     () => ({
       search: filters.search || undefined,
@@ -79,19 +86,51 @@ export default function TrangQuanLyLichHen() {
       doctorId: filters.doctorId ? Number(filters.doctorId) : undefined,
       date: filters.date || undefined,
       status: (filters.status as AppointmentStatus) || undefined,
-      page,
-      limit,
+      limit: 100,
     }),
-    [filters, page, limit],
+    [filters],
   );
   const {
     appointments,
     stats,
     total,
-    totalPages,
     isLoading,
     error,
+    reload,
   } = useAppointments(query);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(appointments.length / APPOINTMENTS_PER_PAGE),
+  );
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    appointments.length === 0
+      ? 0
+      : (currentPage - 1) * APPOINTMENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * APPOINTMENTS_PER_PAGE,
+    appointments.length,
+  );
+  const visibleAppointments = useMemo(
+    () =>
+      appointments.slice(
+        (currentPage - 1) * APPOINTMENTS_PER_PAGE,
+        currentPage * APPOINTMENTS_PER_PAGE,
+      ),
+    [currentPage, appointments],
+  );
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selected, setSelected] = useState<Appointment | null>(null);
 
@@ -127,34 +166,31 @@ export default function TrangQuanLyLichHen() {
     setModalMode('view');
   };
 
+  const handleApplyFilters = () => {
+    setPage(1);
+    setFilters(draftFilters);
+  };
+
   return (
-    <div className="appointment-admin">
-      <header className="appointment-admin__header">
+    <div className="admin-crud-page">
+      <div className="admin-crud-heading">
         <div>
+          <p className="admin-management-eyebrow">Quản lý khám chữa bệnh</p>
           <h1>QUẢN LÝ LỊCH HẸN</h1>
-          <p>Theo dõi và xử lý các yêu cầu đặt lịch của phòng khám.</p>
+          <p className="admin-management-description">Theo dõi và xử lý các yêu cầu đặt lịch của phòng khám.</p>
         </div>
-        <div className="d-flex gap-3 mb-0" style={{ flex: '1 1 auto', maxWidth: '850px', justifyContent: 'flex-end', justifyItems: 'stretch' }}>
-          <ReceptionistStatCard
-            icon="calendar_today"
-            label="Tổng lịch hôm nay"
-            value={stats.total}
-            tone="blue"
-          />
-          <ReceptionistStatCard
-            icon="pending_actions"
-            label="Chờ xác nhận"
-            value={stats.pending}
-            tone="amber"
-          />
-          <ReceptionistStatCard
-            icon="check_circle"
-            label="Đã xác nhận"
-            value={stats.confirmed}
-            tone="green"
-          />
+        <div className="admin-management-summary" aria-label="Tổng quan lịch hẹn">
+          <span>
+            <strong>{total}</strong> lịch hẹn
+          </span>
+          <span>
+            <strong>{stats.pending}</strong> chờ xác nhận
+          </span>
+          <span>
+            <strong>{stats.confirmed}</strong> đã xác nhận
+          </span>
         </div>
-      </header>
+      </div>
 
       <section className="appointment-admin__filters">
         <label>
@@ -164,6 +200,9 @@ export default function TrangQuanLyLichHen() {
             onChange={(event) =>
               setDraftFilters({ ...draftFilters, search: event.target.value })
             }
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') handleApplyFilters();
+            }}
             placeholder="Mã lịch, tên hoặc số điện thoại..."
           />
         </label>
@@ -209,106 +248,231 @@ export default function TrangQuanLyLichHen() {
         </select>
         <button
           type="button"
-          className="btn btn-success"
-          onClick={() => {
-            setPage(1);
-            setFilters(draftFilters);
-          }}
+          className="btn btn-primary"
+          onClick={handleApplyFilters}
         >
           Áp dụng
         </button>
       </section>
 
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      <section className="reception-card overflow-hidden">
-        <div className="table-responsive">
-          <table className="table reception-table align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Mã lịch</th>
-                <th>Bệnh nhân</th>
-                <th>Nguồn đặt</th>
-                <th>Chuyên khoa</th>
-                <th>Bác sĩ phụ trách</th>
-                <th>Thời gian</th>
-                <th>Trạng thái</th>
-                <th className="text-end">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((appointment) => {
-                const statusTone = appointment.status === 'CHO_XAC_NHAN' ? 'amber' : 
-                                  (appointment.status === 'DA_XAC_NHAN' || appointment.status === 'DA_CHECK_IN') ? 'green' : 'red';
-                return (
-                <tr key={appointment.id}>
-                  <td><strong className="text-primary">{appointment.code}</strong></td>
-                  <td>
-                    <div className="appointment-admin__patient">
-                      <span>{getInitials(appointment.patient.fullName)}</span>
-                      <div>
-                        <strong>{appointment.patient.fullName}</strong>
-                        <small>{appointment.patient.phoneNumber}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="reception-badge reception-badge--blue">
-                      {APPOINTMENT_SOURCE_LABELS[appointment.source]}
-                    </span>
-                  </td>
-                  <td>{appointment.specialty.name}</td>
-                  <td>{appointment.doctor?.fullName ?? 'Chưa chỉ định'}</td>
-                  <td>
-                    <strong>{appointment.startTime}</strong>
-                    <small className="d-block text-secondary">
-                      {formatDate(appointment.appointmentDate)}
-                    </small>
-                  </td>
-                  <td>
-                    <span className={`reception-badge reception-badge--${statusTone}`}>
-                      {statusLabel(appointment.status)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="appointment-admin__actions">
-                      <button type="button" title="Chi tiết" onClick={() => openViewDetails(appointment)}>
-                        <span className="material-symbols-outlined">visibility</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )})}
-              {!isLoading && appointments.length === 0 && (
-                <tr><td colSpan={8} className="text-center py-5 text-secondary">Chưa có lịch hẹn phù hợp.</td></tr>
-              )}
-              {isLoading && (
-                <tr><td colSpan={8} className="text-center py-5 text-secondary">Đang tải lịch hẹn...</td></tr>
-              )}
-            </tbody>
-          </table>
+      {isLoading && appointments.length === 0 && (
+        <div className="admin-crud-empty">
+          <div className="spinner-border text-primary mb-3" role="status" />
+          <div>Đang tải danh sách lịch hẹn...</div>
         </div>
-        <footer className="appointment-admin__pagination">
-          <span>Hiển thị {appointments.length} trong {total} lịch hẹn</span>
-          <div>
-            <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-              <span className="material-symbols-outlined">chevron_left</span>
-            </button>
-            <strong>{page} / {totalPages}</strong>
-            <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-              <span className="material-symbols-outlined">chevron_right</span>
-            </button>
-            <select value={limit} onChange={(event) => { setLimit(Number(event.target.value)); setPage(1); }}>
-              <option value={20}>20 dòng</option>
-              <option value={50}>50 dòng</option>
-              <option value={100}>100 dòng</option>
-            </select>
+      )}
+
+      {!isLoading && error && (
+        <div className="admin-crud-empty">
+          <p className="text-danger">{error}</p>
+          <button
+            type="button"
+            className="btn btn-outline-primary"
+            onClick={() => void reload()}
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
+
+      {(!isLoading || appointments.length > 0) && !error && (
+        <div className="admin-management-table-card">
+          <div className="admin-management-table-heading">
+            <div>
+              <h2>Danh sách lịch hẹn</h2>
+              <p>Hiển thị {appointments.length} kết quả phù hợp</p>
+            </div>
           </div>
-        </footer>
-      </section>
+          <div className="table-responsive">
+            <table
+              className="table admin-management-table admin-management-table--appointments align-middle mb-0"
+              style={{ tableLayout: 'fixed', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '12%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ width: '14%' }}>Mã lịch</th>
+                  <th style={{ width: '16%' }}>Bệnh nhân</th>
+                  <th style={{ width: '11%' }}>Nguồn đặt</th>
+                  <th style={{ width: '12%' }}>Chuyên khoa</th>
+                  <th style={{ width: '12%' }}>Bác sĩ phụ trách</th>
+                  <th style={{ width: '10%' }}>Thời gian</th>
+                  <th style={{ width: '13%' }}>Trạng thái</th>
+                  <th className="text-end text-nowrap" style={{ width: '12%' }}>
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody style={{ opacity: isLoading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                {visibleAppointments.map((appointment) => {
+                  const statusTone =
+                    appointment.status === 'CHO_XAC_NHAN'
+                      ? 'amber'
+                      : appointment.status === 'DA_XAC_NHAN' ||
+                          appointment.status === 'DA_CHECK_IN'
+                        ? 'green'
+                        : 'red';
+                  return (
+                    <tr key={appointment.id}>
+                      <td>
+                        <span className="fw-semibold text-primary">{appointment.code}</span>
+                      </td>
+                      <td>
+                        <div className="admin-management-entity">
+                          <span
+                            className="doctor-card__avatar flex-shrink-0"
+                            style={{ width: 34, height: 34, fontSize: '0.8rem' }}
+                          >
+                            {getInitials(appointment.patient.fullName)}
+                          </span>
+                          <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                            <strong
+                              className="text-truncate d-block"
+                              title={appointment.patient.fullName}
+                            >
+                              {appointment.patient.fullName}
+                            </strong>
+                            <small className="text-secondary d-block text-truncate">
+                              {appointment.patient.phoneNumber}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="reception-badge reception-badge--blue text-nowrap">
+                          {APPOINTMENT_SOURCE_LABELS[appointment.source]}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="text-truncate" title={appointment.specialty.name}>
+                          {appointment.specialty.name}
+                        </div>
+                      </td>
+                      <td>
+                        <div
+                          className="text-truncate"
+                          title={appointment.doctor?.fullName ?? 'Chưa chỉ định'}
+                        >
+                          {appointment.doctor?.fullName ?? 'Chưa chỉ định'}
+                        </div>
+                      </td>
+                      <td className="text-nowrap">
+                        <strong>{appointment.startTime}</strong>
+                        <small className="d-block text-secondary">
+                          {formatDate(appointment.appointmentDate)}
+                        </small>
+                      </td>
+                      <td>
+                        <span className={`reception-badge reception-badge--${statusTone} text-nowrap`}>
+                          {statusLabel(appointment.status)}
+                        </span>
+                      </td>
+                      <td className="text-end text-nowrap" style={{ width: '12%' }}>
+                        <div className="admin-crud-actions justify-content-end">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary text-nowrap"
+                            onClick={() => openViewDetails(appointment)}
+                          >
+                            <span className="material-symbols-outlined">visibility</span>
+                            Chi tiết
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {visibleAppointments.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-5 text-center text-secondary">
+                      Không tìm thấy lịch hẹn phù hợp.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {appointments.length > 0 && (
+            <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+              <span className="text-secondary small">
+                Hiển thị {displayedFrom}–{displayedTo} trong tổng số {appointments.length} lịch hẹn
+              </span>
+              <nav className="align-self-md-auto align-self-start" aria-label="Phân trang lịch hẹn">
+                <ul className="pagination mb-0 flex-wrap">
+                  <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang trước"
+                      disabled={currentPage <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </button>
+                  </li>
+                  {pageNumbers.map((pageNumber, index) => (
+                    <Fragment key={pageNumber}>
+                      {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                        <li className="page-item disabled" aria-hidden="true">
+                          <span className="page-link">…</span>
+                        </li>
+                      )}
+                      <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                        <button
+                          type="button"
+                          className="page-link"
+                          aria-current={pageNumber === currentPage ? 'page' : undefined}
+                          onClick={() => setPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
+                  <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang sau"
+                      disabled={currentPage >= totalPages}
+                      onClick={() =>
+                        setPage((current) => Math.min(totalPages, current + 1))
+                      }
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </footer>
+          )}
+        </div>
+      )}
 
       {modalMode === 'view' && selected && (
-        <AppModal title={`Chi tiết lịch hẹn ${selected.code}`} size="lg" onClose={closeModal}>
+        <AppModal
+          title={`Chi tiết lịch hẹn: ${selected.code}`}
+          size="lg"
+          onClose={closeModal}
+          footer={
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={closeModal}
+            >
+              Đóng
+            </button>
+          }
+        >
           <dl className="row mb-0 appointment-detail">
             <dt className="col-sm-4">Bệnh nhân</dt><dd className="col-sm-8">{selected.patient.fullName} – {selected.patient.phoneNumber}</dd>
             <dt className="col-sm-4">Email</dt><dd className="col-sm-8">{selected.patient.email || 'Chưa có'}</dd>
