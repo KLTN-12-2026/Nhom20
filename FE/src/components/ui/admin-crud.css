@@ -409,6 +409,34 @@
   background: var(--sc-surface-container-low);
 }
 
+.admin-management-table--doctors {
+  min-width: 1140px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-management-table--doctors th,
+.admin-management-table--doctors td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.admin-management-table--doctors .admin-management-entity {
+  min-width: 0;
+}
+
+.admin-management-table--handovers {
+  min-width: 1080px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-management-table--handovers th,
+.admin-management-table--handovers td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 .admin-management-entity {
   display: flex;
   align-items: center;
