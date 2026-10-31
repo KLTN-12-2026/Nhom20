@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "db:seed": "prisma db seed",
-    "db:seed:admin": "node prisma/seed-data/seed-quan-tri-vien.mjs",
+    "db:seed:admin": "node prisma/seed-data/seed-admin.mjs",
     "db:seed:patient": "node prisma/seed-data/seed-benh-nhan.mjs",
     "db:seed:patient-review": "node prisma/seed-data/seed-benh-nhan.mjs && node prisma/seed-data/seed-patient-review-flow.mjs",
     "db:seed:pharmacists": "node prisma/seed-data/seed-duoc-si.mjs",
