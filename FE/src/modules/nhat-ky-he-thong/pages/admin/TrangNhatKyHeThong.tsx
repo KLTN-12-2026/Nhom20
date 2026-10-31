@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 import '@/components/ui/admin-crud.css';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
@@ -8,6 +8,8 @@ import type {
   SystemModule,
 } from '../../types/audit-log.types';
 import '../../system-log.css';
+
+const LOGS_PER_PAGE = 10;
 
 const MODULE_LABELS: Record<SystemModule, string> = {
   XAC_THUC: 'Xác thực',
@@ -19,6 +21,12 @@ const MODULE_LABELS: Record<SystemModule, string> = {
   THUOC: 'Thuốc',
   HE_THONG: 'Hệ thống',
 };
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 function getInitials(fullName: string) {
   return fullName
@@ -68,11 +76,30 @@ export default function TrangNhatKyHeThong() {
       module: (moduleFilter as SystemModule) || undefined,
       ...getTimeRange(timeFilter),
       page,
-      limit: 20,
+      limit: LOGS_PER_PAGE,
     }),
     [moduleFilter, page, searchTerm, timeFilter],
   );
   const { logs, meta, isLoading, error, reload } = useAuditLogs(query);
+
+  const totalPages = Math.max(1, meta.totalPages);
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    meta.total === 0 ? 0 : (currentPage - 1) * meta.limit + 1;
+  const displayedTo = Math.min(
+    currentPage * meta.limit,
+    meta.total,
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const changeFilter = (callback: () => void) => {
     setPage(1);
@@ -84,7 +111,6 @@ export default function TrangNhatKyHeThong() {
       <div className="system-log-heading">
         <div>
           <div className="system-log-eyebrow">
-            <span className="material-symbols-outlined">history</span>
             Giám sát hệ thống
           </div>
           <h1>NHẬT KÝ HỆ THỐNG</h1>
@@ -93,7 +119,11 @@ export default function TrangNhatKyHeThong() {
             thống.
           </p>
         </div>
-
+        <div className="admin-management-summary" aria-label="Tổng quan nhật ký">
+          <span>
+            <strong>{meta.total}</strong> hoạt động
+          </span>
+        </div>
       </div>
 
       <div className="system-log-filters">
@@ -170,13 +200,22 @@ export default function TrangNhatKyHeThong() {
         {!isLoading && !error && (
           <>
             <div className="table-responsive">
-              <table className="table table-hover align-middle mb-0">
+              <table
+                className="table admin-management-table admin-management-table--system-logs align-middle mb-0"
+                style={{ tableLayout: 'fixed', minWidth: '960px', width: '100%' }}
+              >
+                <colgroup>
+                  <col style={{ width: '16%', minWidth: '150px' }} />
+                  <col style={{ width: '28%', minWidth: '260px' }} />
+                  <col style={{ width: '16%', minWidth: '150px' }} />
+                  <col style={{ width: '40%', minWidth: '350px' }} />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th>Thời gian</th>
-                    <th>Người thực hiện</th>
-                    <th>Phân hệ</th>
-                    <th>Hành động</th>
+                    <th style={{ width: '16%', minWidth: '150px' }}>Thời gian</th>
+                    <th style={{ width: '28%', minWidth: '260px' }}>Người thực hiện</th>
+                    <th style={{ width: '16%', minWidth: '150px' }}>Phân hệ</th>
+                    <th style={{ width: '40%', minWidth: '350px' }}>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,17 +228,33 @@ export default function TrangNhatKyHeThong() {
                           <small className="text-secondary">{date.date}</small>
                         </td>
                         <td>
-                          <div className="d-flex align-items-center gap-3">
+                          <div
+                            className="d-flex align-items-center gap-3"
+                            style={{ minWidth: 0 }}
+                          >
                             {log.avatar ? (
-                              <img src={log.avatar} alt={log.userName} className="system-log-avatar" style={{ objectFit: 'cover' }} />
+                              <img
+                                src={log.avatar}
+                                alt={log.userName}
+                                className="system-log-avatar flex-shrink-0"
+                                style={{ objectFit: 'cover' }}
+                              />
                             ) : (
-                              <span className="system-log-avatar">
+                              <span className="system-log-avatar flex-shrink-0">
                                 {getInitials(log.userName)}
                               </span>
                             )}
-                            <div>
-                              <div className="fw-semibold">{log.userName}</div>
-                              <small className="text-secondary">
+                            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                              <div
+                                className="fw-semibold text-truncate"
+                                title={log.userName}
+                              >
+                                {log.userName}
+                              </div>
+                              <small
+                                className="text-secondary text-truncate d-block"
+                                title={`${log.email || 'Không có email'} · ${log.role}`}
+                              >
                                 {log.email || 'Không có email'} · {log.role}
                               </small>
                             </div>
@@ -207,15 +262,23 @@ export default function TrangNhatKyHeThong() {
                         </td>
                         <td>
                           <span
-                            className={`system-log-module system-log-module--${log.module.toLocaleLowerCase()}`}
+                            className={`system-log-module system-log-module--${log.module.toLocaleLowerCase()} text-nowrap`}
                           >
                             {MODULE_LABELS[log.module]}
                           </span>
                         </td>
                         <td>
-                          <div className="fw-semibold">{log.action}</div>
+                          <div
+                            className="fw-semibold text-truncate"
+                            title={log.action}
+                          >
+                            {log.action}
+                          </div>
                           {log.detail && (
-                            <small className="text-secondary">
+                            <small
+                              className="text-secondary text-truncate d-block"
+                              title={log.detail}
+                            >
                               {log.detail}
                             </small>
                           )}
@@ -226,13 +289,11 @@ export default function TrangNhatKyHeThong() {
 
                   {logs.length === 0 && (
                     <tr>
-                      <td colSpan={4}>
-                        <div className="admin-crud-empty">
-                          <span className="material-symbols-outlined fs-1 mb-2">
-                            manage_search
-                          </span>
-                          <div>Chưa có hoạt động phù hợp.</div>
-                        </div>
+                      <td colSpan={4} className="py-5 text-center text-secondary">
+                        <span className="material-symbols-outlined fs-1 d-block mb-2 text-secondary">
+                          manage_search
+                        </span>
+                        <div>Chưa có hoạt động phù hợp.</div>
                       </td>
                     </tr>
                   )}
@@ -240,34 +301,82 @@ export default function TrangNhatKyHeThong() {
               </table>
             </div>
 
-            <div className="system-log-footer">
-              <span>
-                Hiển thị {logs.length} trong {meta.total} hoạt động
-              </span>
-              {meta.totalPages > 1 && (
-                <div className="d-flex align-items-center gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary"
-                    disabled={meta.page <= 1}
-                    onClick={() => setPage((current) => current - 1)}
-                  >
-                    Trang trước
-                  </button>
-                  <span>
-                    Trang {meta.page}/{meta.totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary"
-                    disabled={meta.page >= meta.totalPages}
-                    onClick={() => setPage((current) => current + 1)}
-                  >
-                    Trang sau
-                  </button>
-                </div>
-              )}
-            </div>
+            {meta.total > 0 && (
+              <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+                <span className="text-secondary small">
+                  Hiển thị {displayedFrom}–{displayedTo} trong tổng số {meta.total} hoạt động
+                </span>
+                <nav
+                  className="align-self-md-auto align-self-start"
+                  aria-label="Phân trang nhật ký hệ thống"
+                >
+                  <ul className="pagination mb-0 flex-wrap">
+                    <li
+                      className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}
+                    >
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-label="Trang trước"
+                        disabled={currentPage <= 1}
+                        onClick={() =>
+                          setPage((current) => Math.max(1, current - 1))
+                        }
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    {pageNumbers.map((pageNumber, index) => (
+                      <Fragment key={pageNumber}>
+                        {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                          <li
+                            className="page-item disabled"
+                            aria-hidden="true"
+                          >
+                            <span className="page-link">…</span>
+                          </li>
+                        )}
+                        <li
+                          className={`page-item ${
+                            pageNumber === currentPage ? 'active' : ''
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            className="page-link"
+                            aria-current={
+                              pageNumber === currentPage ? 'page' : undefined
+                            }
+                            onClick={() => setPage(pageNumber)}
+                          >
+                            {pageNumber}
+                          </button>
+                        </li>
+                      </Fragment>
+                    ))}
+                    <li
+                      className={`page-item ${
+                        currentPage >= totalPages ? 'disabled' : ''
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-label="Trang sau"
+                        disabled={currentPage >= totalPages}
+                        onClick={() =>
+                          setPage((current) =>
+                            Math.min(totalPages, current + 1),
+                          )
+                        }
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </footer>
+            )}
           </>
         )}
       </div>

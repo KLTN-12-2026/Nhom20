@@ -107,6 +107,19 @@
   min-width: 270px;
 }
 
+.admin-management-table--system-logs {
+  min-width: 960px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-management-table--system-logs th,
+.admin-management-table--system-logs td {
+  min-width: 0;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
 .system-log-avatar {
   width: 42px;
   height: 42px;
