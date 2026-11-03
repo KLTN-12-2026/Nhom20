@@ -50,9 +50,11 @@ export function useMedicines(filters: MedicineQuery = {}) {
   const [isStockingIn, setIsStockingIn] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const fetchMedicines = useCallback(async () => {
+  const fetchMedicines = useCallback(async (isInitial = false) => {
     try {
-      setIsLoading(true);
+      if (isInitial) {
+        setIsLoading(true);
+      }
       setError('');
       const response = await medicineApi.getAll({
         page,
@@ -85,7 +87,7 @@ export function useMedicines(filters: MedicineQuery = {}) {
   ]);
 
   useEffect(() => {
-    void fetchMedicines();
+    void fetchMedicines(medicines.length === 0);
   }, [fetchMedicines]);
 
   const fetchMedicineOptions = useCallback(async () => {

@@ -286,8 +286,10 @@ export default function TrangBaoCaoThongKe() {
       <header className="admin-report-heading">
         <div>
           <p className="admin-report-heading__eyebrow">Dữ liệu vận hành</p>
-          <h1>Báo cáo và thống kê</h1>
-          <p>Theo dõi lịch hẹn, lượt khám, doanh thu và chất lượng phục vụ từ dữ liệu thực tế.</p>
+          <h1>BÁO CÁO VÀ THỐNG KÊ</h1>
+          <p className="admin-report-heading__description">
+            Theo dõi lịch hẹn, lượt khám, doanh thu và chất lượng phục vụ từ dữ liệu thực tế.
+          </p>
         </div>
         <div className="admin-report-heading__actions">
           <button type="button" className="btn btn-outline-primary admin-report-refresh" onClick={handlePrintReport} disabled={!data || isLoading}>
@@ -298,7 +300,7 @@ export default function TrangBaoCaoThongKe() {
             <span className="material-symbols-outlined">download</span>
             Xuất Excel
           </button>
-          <button type="button" className="btn btn-outline-primary admin-report-refresh" onClick={() => void reload()} disabled={isLoading}>
+          <button type="button" className="btn btn-primary admin-report-refresh" onClick={() => void reload()} disabled={isLoading}>
             <span className="material-symbols-outlined">refresh</span>
             Làm mới
           </button>

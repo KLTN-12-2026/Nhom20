@@ -22,7 +22,6 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     icon: 'group',
     href: '/admin/nguoi-dung',
   },
-
   {
     label: 'Quản lý bác sĩ',
     icon: 'medical_services',

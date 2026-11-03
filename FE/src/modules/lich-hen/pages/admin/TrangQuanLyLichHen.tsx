@@ -308,7 +308,7 @@ export default function TrangQuanLyLichHen() {
                   <th style={{ width: '10%' }}>Thời gian</th>
                   <th style={{ width: '13%' }}>Trạng thái</th>
                   <th className="text-end text-nowrap" style={{ width: '12%' }}>
-                    Hành động
+                    Thao tác
                   </th>
                 </tr>
               </thead>

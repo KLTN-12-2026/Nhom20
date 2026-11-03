@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
 import { useAppToast } from '@/components/ui/use-app-toast';
@@ -9,7 +9,13 @@ import { useChatAdmin } from '../../hooks/use-chat-admin';
 import type { ChatAdminFilters, ChatAdminSession, ChatSessionFilter, ChatVisitorFilter } from '../../types/chat-admin.types';
 import '../../chat-admin.css';
 
-const DEFAULT_FILTERS: ChatAdminFilters = { search: '', visitorType: '', status: '', page: 1, limit: 12 };
+const DEFAULT_FILTERS: ChatAdminFilters = { search: '', visitorType: '', status: '', page: 1, limit: 10 };
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 const bookingLabel: Record<string, string> = {
   DANG_CHO_XAC_NHAN: 'Chờ xác nhận', DA_XAC_NHAN: 'Đã tạo lịch', DA_HUY: 'Đã hủy',
@@ -69,12 +75,22 @@ export default function TrangQuanLyChatboxAI() {
     void refresh(next);
   };
 
+  const totalPages = Math.max(1, meta.totalPages || 1);
+  const currentPage = Math.min(filters.page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    meta.total === 0 ? 0 : (currentPage - 1) * filters.limit + 1;
+  const displayedTo = Math.min(currentPage * filters.limit, meta.total);
+
   return (
     <div className="chat-admin-page">
       <header className="chat-admin-heading">
         <div>
           <p className="chat-admin-eyebrow">VẬN HÀNH TRỢ LÝ SỐ</p>
-          <h1>Quản lý Chatbox AI</h1>
+          <h1>QUẢN LÝ CHATBOX AI</h1>
           <p>Theo dõi hội thoại thật, yêu cầu đặt lịch và tình trạng phản hồi của trợ lý Smart Clinic.</p>
         </div>
         <button className="btn btn-primary chat-admin-refresh" type="button" disabled={isLoading} onClick={() => void refresh()}>
@@ -106,7 +122,7 @@ export default function TrangQuanLyChatboxAI() {
             <select value={filters.status} onChange={(event) => changeFilter('status', event.target.value as ChatSessionFilter)} aria-label="Trạng thái phiên">
               <option value="">Tất cả trạng thái</option><option value="DANG_HOAT_DONG">Đang hoạt động</option><option value="DA_KET_THUC">Đã kết thúc</option>
             </select>
-            <button type="button" className="btn btn-outline-primary" onClick={submitSearch}>Tìm</button>
+            <button type="button" className="btn btn-primary text-white" onClick={submitSearch}>Tìm</button>
           </div>
           {isLoading ? <div className="chat-admin-empty"><div className="spinner-border text-primary" /><span>Đang tải các phiên Chatbox AI...</span></div> : sessions.length === 0 ? <div className="chat-admin-empty"><span className="material-symbols-outlined">forum</span><strong>Chưa có phiên hội thoại phù hợp</strong><p>Hệ thống sẽ tự ghi nhận khi khách hoặc bệnh nhân bắt đầu trò chuyện.</p></div> : <div className="chat-admin-list">
             {sessions.map((session) => <button className="chat-admin-session" type="button" key={session.id} onClick={() => void openDetail(session)}>
@@ -116,10 +132,59 @@ export default function TrangQuanLyChatboxAI() {
               <span className="material-symbols-outlined chat-admin-chevron">chevron_right</span>
             </button>)}
           </div>}
-          <nav className="chat-admin-pagination" aria-label="Chuyển trang hội thoại">
-            <span>Trang {meta.page}/{meta.totalPages}</span>
-            <div><button type="button" disabled={meta.page <= 1 || isLoading} onClick={() => goPage(meta.page - 1)}><span className="material-symbols-outlined">chevron_left</span></button><button type="button" disabled={meta.page >= meta.totalPages || isLoading} onClick={() => goPage(meta.page + 1)}><span className="material-symbols-outlined">chevron_right</span></button></div>
-          </nav>
+          {meta.total > 0 && (
+            <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 py-3 border-top">
+              <span className="text-secondary small">
+                Hiển thị {displayedFrom}–{displayedTo} trong tổng số {meta.total} phiên
+              </span>
+              <nav aria-label="Phân trang hội thoại">
+                <ul className="pagination pagination-sm mb-0 flex-wrap">
+                  <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang trước"
+                      disabled={currentPage <= 1 || isLoading}
+                      onClick={() => goPage(Math.max(1, currentPage - 1))}
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </button>
+                  </li>
+                  {pageNumbers.map((pageNumber, index) => (
+                    <Fragment key={pageNumber}>
+                      {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                        <li className="page-item disabled" aria-hidden="true">
+                          <span className="page-link">…</span>
+                        </li>
+                      )}
+                      <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                        <button
+                          type="button"
+                          className="page-link"
+                          aria-current={pageNumber === currentPage ? 'page' : undefined}
+                          disabled={isLoading}
+                          onClick={() => goPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
+                  <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang sau"
+                      disabled={currentPage >= totalPages || isLoading}
+                      onClick={() => goPage(Math.min(totalPages, currentPage + 1))}
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </footer>
+          )}
         </div>
         <aside className="chat-admin-side">
           <section className="chat-admin-side-card"><div className="chat-admin-card-icon"><span className="material-symbols-outlined">groups</span></div><h2>Người đang dùng</h2><div className="chat-admin-stat-line"><span>Khách vãng lai</span><strong>{overview?.guestSessionCount ?? 0}</strong></div><div className="chat-admin-stat-line"><span>Bệnh nhân đăng nhập</span><strong>{overview?.patientSessionCount ?? 0}</strong></div></section>

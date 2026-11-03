@@ -10,6 +10,7 @@ import type {
 import '../../system-log.css';
 
 const LOGS_PER_PAGE = 10;
+const LOGS_FETCH_LIMIT = 100;
 
 const MODULE_LABELS: Record<SystemModule, string> = {
   XAC_THUC: 'Xác thực',
@@ -75,28 +76,35 @@ export default function TrangNhatKyHeThong() {
       search: searchTerm.trim() || undefined,
       module: (moduleFilter as SystemModule) || undefined,
       ...getTimeRange(timeFilter),
-      page,
-      limit: LOGS_PER_PAGE,
+      limit: LOGS_FETCH_LIMIT,
     }),
-    [moduleFilter, page, searchTerm, timeFilter],
+    [moduleFilter, searchTerm, timeFilter],
   );
-  const { logs, meta, isLoading, error, reload } = useAuditLogs(query);
+  const { logs, isLoading, error, reload } = useAuditLogs(query);
 
-  const totalPages = Math.max(1, meta.totalPages);
+  const totalPages = Math.max(1, Math.ceil(logs.length / LOGS_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
   const pageNumbers = useMemo(
     () => getPageNumbers(currentPage, totalPages),
     [currentPage, totalPages],
   );
   const displayedFrom =
-    meta.total === 0 ? 0 : (currentPage - 1) * meta.limit + 1;
+    logs.length === 0 ? 0 : (currentPage - 1) * LOGS_PER_PAGE + 1;
   const displayedTo = Math.min(
-    currentPage * meta.limit,
-    meta.total,
+    currentPage * LOGS_PER_PAGE,
+    logs.length,
+  );
+  const visibleLogs = useMemo(
+    () =>
+      logs.slice(
+        (currentPage - 1) * LOGS_PER_PAGE,
+        currentPage * LOGS_PER_PAGE,
+      ),
+    [currentPage, logs],
   );
 
   useEffect(() => {
-    if (page > totalPages) {
+    if (page > totalPages && totalPages > 0) {
       setPage(totalPages);
     }
   }, [page, totalPages]);
@@ -121,7 +129,7 @@ export default function TrangNhatKyHeThong() {
         </div>
         <div className="admin-management-summary" aria-label="Tổng quan nhật ký">
           <span>
-            <strong>{meta.total}</strong> hoạt động
+            <strong>{logs.length}</strong> hoạt động
           </span>
         </div>
       </div>
@@ -219,7 +227,7 @@ export default function TrangNhatKyHeThong() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log) => {
+                  {visibleLogs.map((log) => {
                     const date = formatLogDate(log.occurredAt);
                     return (
                       <tr key={log.id}>
@@ -287,7 +295,7 @@ export default function TrangNhatKyHeThong() {
                     );
                   })}
 
-                  {logs.length === 0 && (
+                  {visibleLogs.length === 0 && (
                     <tr>
                       <td colSpan={4} className="py-5 text-center text-secondary">
                         <span className="material-symbols-outlined fs-1 d-block mb-2 text-secondary">
@@ -301,10 +309,10 @@ export default function TrangNhatKyHeThong() {
               </table>
             </div>
 
-            {meta.total > 0 && (
+            {logs.length > 0 && (
               <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
                 <span className="text-secondary small">
-                  Hiển thị {displayedFrom}–{displayedTo} trong tổng số {meta.total} hoạt động
+                  Hiển thị {displayedFrom}–{displayedTo} trong tổng số {logs.length} hoạt động
                 </span>
                 <nav
                   className="align-self-md-auto align-self-start"

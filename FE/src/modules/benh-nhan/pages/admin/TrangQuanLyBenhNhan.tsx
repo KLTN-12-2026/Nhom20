@@ -146,9 +146,11 @@ export default function TrangQuanLyBenhNhan() {
           />
         </div>
         <button
-          type="button"
-          className="btn btn-outline-primary d-flex align-items-center gap-2 ms-auto"
-          onClick={() => void loadPatients(search)}
+          className="btn btn-primary d-flex align-items-center gap-2 ms-auto text-white"
+          onClick={() => {
+            void loadPatients(search);
+            setPage(1);
+          }}
           disabled={loading}
         >
           <span className="material-symbols-outlined">refresh</span>
@@ -185,24 +187,43 @@ export default function TrangQuanLyBenhNhan() {
             </div>
           </div>
           <div className="table-responsive">
-            <table className="table admin-management-table align-middle mb-0">
+            <table
+              className="table admin-management-table align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1029px', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '13%', minWidth: '135px' }} />
+                <col style={{ width: '18%', minWidth: '180px' }} />
+                <col style={{ width: '9%', minWidth: '92px' }} />
+                <col style={{ width: '7%', minWidth: '72px' }} />
+                <col style={{ width: '11%', minWidth: '110px' }} />
+                <col style={{ width: '9%', minWidth: '90px' }} />
+                <col style={{ width: '11%', minWidth: '110px' }} />
+                <col style={{ width: '9%', minWidth: '90px' }} />
+                <col style={{ width: '13%', minWidth: '150px' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Mã BN</th>
-                  <th>Bệnh nhân</th>
-                  <th>Ngày sinh</th>
-                  <th>Giới tính</th>
-                  <th>Số điện thoại</th>
-                  <th>CCCD</th>
-                  <th>BHYT</th>
-                  <th>Địa chỉ</th>
-                  <th className="text-end">Hành động</th>
+                  <th style={{ width: '13%', minWidth: '135px' }}>Mã BN</th>
+                  <th style={{ width: '18%', minWidth: '180px' }}>Bệnh nhân</th>
+                  <th style={{ width: '9%', minWidth: '92px' }}>Ngày sinh</th>
+                  <th style={{ width: '7%', minWidth: '72px' }}>Giới tính</th>
+                  <th style={{ width: '11%', minWidth: '110px' }}>Số điện thoại</th>
+                  <th style={{ width: '9%', minWidth: '90px' }}>CCCD</th>
+                  <th style={{ width: '11%', minWidth: '110px' }}>BHYT</th>
+                  <th style={{ width: '9%', minWidth: '90px' }}>Địa chỉ</th>
+                  <th
+                    className="text-end text-nowrap"
+                    style={{ width: '13%', minWidth: '150px' }}
+                  >
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {visiblePatients.map((patient) => (
                   <tr key={patient.id}>
-                    <td>
+                    <td className="text-truncate" title={patient.code}>
                       <span className="fw-semibold text-primary">{patient.code}</span>
                     </td>
                     <td>
@@ -226,9 +247,9 @@ export default function TrangQuanLyBenhNhan() {
                     <td>{patient.healthInsuranceNumber || '—'}</td>
                     <td>{patient.address || '—'}</td>
                     <td className="text-end">
-                      <div className="admin-crud-actions justify-content-end">
+                      <div className="admin-crud-actions justify-content-end flex-nowrap">
                         <button
-                          className="btn btn-sm btn-primary"
+                          className="btn btn-sm btn-primary text-nowrap"
                           type="button"
                           onClick={() => void openRecord(patient)}
                         >

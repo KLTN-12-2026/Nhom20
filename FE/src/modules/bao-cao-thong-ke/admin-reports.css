@@ -2,7 +2,7 @@
 /* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 · contrast: pass (40-41) · mobile: pass (34, 49, 50-57) */
 .admin-report-page {
   width: 100%;
-  max-width: 1600px;
+  max-width: 1440px;
   margin: 0 auto;
   padding-bottom: 24px;
 }
@@ -12,30 +12,34 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .admin-report-heading__eyebrow {
-  margin: 0 0 5px;
+  margin: 0 0 6px;
   color: var(--sc-primary);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .admin-report-heading h1 {
   margin: 0;
   color: var(--sc-on-surface);
-  font-size: clamp(1.7rem, 2.1vw, 2.2rem);
-  font-weight: 760;
-  letter-spacing: -0.035em;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: normal;
 }
 
-.admin-report-heading p:not(.admin-report-heading__eyebrow) {
+.admin-report-heading p:not(.admin-report-heading__eyebrow),
+.admin-report-heading__description {
   max-width: 680px;
   margin: 6px 0 0;
   color: var(--sc-on-surface-variant);
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .admin-report-heading__actions {
