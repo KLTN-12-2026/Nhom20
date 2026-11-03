@@ -1,6 +1,6 @@
 .medicine-inventory {
   width: 100%;
-  max-width: 1500px;
+  max-width: 1440px;
   margin: 0 auto;
   color: #101828;
 }
@@ -10,18 +10,18 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .medicine-inventory__eyebrow {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
-  color: #155eef;
-  font-size: 12px;
+  margin: 0 0 6px;
+  color: var(--sc-primary, #165dff);
+  font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -29,21 +29,25 @@
   width: 30px;
   height: 2px;
   border-radius: 999px;
-  background: #155eef;
+  background: var(--sc-primary, #165dff);
 }
 
 .medicine-inventory__header h1 {
   margin: 0;
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  color: var(--sc-on-surface, #0f172a);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: normal;
 }
 
 .medicine-inventory__header p {
   max-width: 650px;
-  margin: 7px 0 0;
-  color: #475467;
-  font-weight: 500;
+  margin: 6px 0 0;
+  color: var(--sc-on-surface-variant, #64748b);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
 }
 
 .medicine-inventory__header-actions {

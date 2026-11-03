@@ -2,17 +2,48 @@
 /* Dashboard management surface. Existing Smart Clinic tokens are deliberately reused. */
 @import './chat-admin.tokens.css';
 .chat-admin-page {
-  max-width: 1480px;
-  padding: clamp(1.25rem, 2.5vw, 2.5rem);
+  width: 100%;
+  max-width: 1440px;
+  padding: 0;
   margin: 0 auto;
   color: var(--sc-on-surface);
   overflow-wrap: anywhere;
 }
 
-.chat-admin-heading { display: flex; gap: 1rem; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
-.chat-admin-eyebrow { margin: 0 0 .35rem; color: var(--sc-primary); font-size: .72rem; font-weight: 800; letter-spacing: .095em; }
-.chat-admin-heading h1 { margin: 0; font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.08; text-wrap: balance; }
-.chat-admin-heading p:not(.chat-admin-eyebrow) { max-width: 45rem; margin: .6rem 0 0; color: var(--sc-on-surface-variant); }
+.chat-admin-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.chat-admin-eyebrow {
+  margin: 0 0 6px;
+  color: var(--sc-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chat-admin-heading h1 {
+  margin: 0;
+  color: var(--sc-on-surface);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-wrap: balance;
+}
+
+.chat-admin-heading p:not(.chat-admin-eyebrow) {
+  max-width: 45rem;
+  margin: 6px 0 0;
+  color: var(--sc-on-surface-variant);
+  font-size: 14px;
+  line-height: 20px;
+}
 .chat-admin-refresh { display: inline-flex; flex: 0 0 auto; gap: .45rem; align-items: center; min-height: 42px; white-space: nowrap; }
 .chat-admin-metrics { display: grid; grid-template-columns: 1fr; gap: .75rem; margin-bottom: 1rem; }
 .chat-admin-metric, .chat-admin-side-card, .chat-admin-sessions { background: var(--sc-surface-container-lowest); border: 1px solid var(--sc-outline-variant); border-radius: 14px; }

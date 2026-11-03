@@ -125,7 +125,7 @@ export default function TrangQuanLyBanGiaoCa() {
           />
         </div>
         <button
-          className="btn btn-outline-primary d-flex align-items-center gap-2 ms-auto"
+          className="btn btn-primary d-flex align-items-center gap-2 ms-auto text-white"
           onClick={() => {
             loadData();
             setPage(1);

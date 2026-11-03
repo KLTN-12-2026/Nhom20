@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { Fragment, useMemo, useState, type FormEvent } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
 import { useAppToast } from '@/components/ui/use-app-toast';
@@ -21,6 +21,14 @@ const EMPTY_FORM: SpecialtyPayload = {
   examinationFee: 0,
   status: 'DANG_HOAT_DONG',
 };
+
+const SPECIALTIES_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('vi-VN', {
@@ -45,6 +53,7 @@ export default function TrangQuanLyChuyenKhoa() {
   } = useSpecialties();
   const { showToast } = useAppToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedSpecialty, setSelectedSpecialty] =
     useState<Specialty | null>(null);
@@ -60,6 +69,16 @@ export default function TrangQuanLyChuyenKhoa() {
         specialty.code.toLocaleLowerCase('vi').includes(search),
     );
   }, [searchTerm, specialties]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSpecialties.length / SPECIALTIES_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(() => getPageNumbers(currentPage, totalPages), [currentPage, totalPages]);
+  const displayedFrom = filteredSpecialties.length === 0 ? 0 : (currentPage - 1) * SPECIALTIES_PER_PAGE + 1;
+  const displayedTo = Math.min(currentPage * SPECIALTIES_PER_PAGE, filteredSpecialties.length);
+  const visibleSpecialties = useMemo(
+    () => filteredSpecialties.slice((currentPage - 1) * SPECIALTIES_PER_PAGE, currentPage * SPECIALTIES_PER_PAGE),
+    [currentPage, filteredSpecialties],
+  );
 
   const closeModal = () => {
     if (isSubmitting) return;
@@ -96,6 +115,7 @@ export default function TrangQuanLyChuyenKhoa() {
           ? await createSpecialty(form)
           : await updateSpecialty(selectedSpecialty!.id, form);
       showToast(message);
+      setPage(1);
       setModalMode(null);
       setSelectedSpecialty(null);
     } catch (requestError) {
@@ -203,7 +223,7 @@ export default function TrangQuanLyChuyenKhoa() {
                 </tr>
               </thead>
               <tbody>
-                {filteredSpecialties.map((specialty) => (
+                {visibleSpecialties.map((specialty) => (
                   <tr key={specialty.id}>
                     <td>
                       <div className="admin-management-entity">
@@ -225,7 +245,7 @@ export default function TrangQuanLyChuyenKhoa() {
                     </td>
                     <td>
                       <div className="admin-crud-actions justify-content-end">
-                        <button className="btn btn-sm btn-outline-primary" onClick={() => openSpecialtyModal('view', specialty)}>
+                        <button className="btn btn-sm btn-primary" onClick={() => openSpecialtyModal('view', specialty)}>
                           <span className="material-symbols-outlined">visibility</span>Chi tiết
                         </button>
                         <button className="btn btn-sm btn-light" onClick={() => openSpecialtyModal('edit', specialty)}>
@@ -243,13 +263,67 @@ export default function TrangQuanLyChuyenKhoa() {
                     </td>
                   </tr>
                 ))}
+                {filteredSpecialties.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-5 text-center text-secondary">
+                      {specialties.length === 0 ? 'Chưa có chuyên khoa nào.' : 'Không tìm thấy chuyên khoa phù hợp.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-          {filteredSpecialties.length === 0 && (
-            <div className="admin-crud-empty py-5">
-              {specialties.length === 0 ? 'Chưa có chuyên khoa nào.' : 'Không tìm thấy chuyên khoa phù hợp.'}
-            </div>
+          {filteredSpecialties.length > 0 && (
+            <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+              <span className="text-secondary small">
+                Hiển thị {displayedFrom}–{displayedTo} trong tổng số {filteredSpecialties.length} chuyên khoa
+              </span>
+              <nav className="align-self-md-auto align-self-start" aria-label="Phân trang chuyên khoa">
+                <ul className="pagination mb-0 flex-wrap">
+                  <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang trước"
+                      disabled={currentPage <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      <span aria-hidden="true">«</span>
+                    </button>
+                  </li>
+                  {pageNumbers.map((pageNumber, index) => (
+                    <Fragment key={pageNumber}>
+                      {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                        <li className="page-item disabled" aria-hidden="true">
+                          <span className="page-link">…</span>
+                        </li>
+                      )}
+                      <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                        <button
+                          type="button"
+                          className="page-link"
+                          aria-current={pageNumber === currentPage ? 'page' : undefined}
+                          onClick={() => setPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
+                  <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang sau"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                    >
+                      <span aria-hidden="true">»</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </footer>
           )}
         </div>
       )}
