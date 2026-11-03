@@ -350,15 +350,26 @@ export default function TrangQuanLyNguoiDung() {
             </div>
           </div>
           <div className="table-responsive">
-            <table className="table admin-management-table align-middle mb-0">
+            <table
+              className="table admin-management-table align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1050px', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '22%', minWidth: '190px' }} />
+                <col style={{ width: '21%', minWidth: '175px' }} />
+                <col style={{ width: '10%', minWidth: '100px' }} />
+                <col style={{ width: '13%', minWidth: '135px' }} />
+                <col style={{ width: '13%', minWidth: '130px' }} />
+                <col style={{ width: '21%', minWidth: '220px' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Người dùng</th>
-                  <th>Liên hệ</th>
-                  <th>Vai trò</th>
-                  <th>Trạng thái</th>
-                  <th>Ngày tạo</th>
-                  <th className="text-end">Hành động</th>
+                  <th style={{ width: '22%', minWidth: '190px' }}>Người dùng</th>
+                  <th style={{ width: '21%', minWidth: '175px' }}>Liên hệ</th>
+                  <th style={{ width: '10%', minWidth: '100px' }}>Vai trò</th>
+                  <th style={{ width: '13%', minWidth: '135px' }}>Trạng thái</th>
+                  <th style={{ width: '13%', minWidth: '130px' }}>Ngày tạo</th>
+                  <th className="text-end" style={{ width: '21%', minWidth: '220px' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -418,39 +429,37 @@ export default function TrangQuanLyNguoiDung() {
                       </span>
                     </td>
                     <td className="text-nowrap">{formatDate(user.createdAt)}</td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        className="btn btn-sm btn-icon border-0"
-                        title="Xem chi tiết"
-                        onClick={() => openUserModal('view', user)}
-                      >
-                        <span className="material-symbols-outlined text-secondary">
-                          visibility
-                        </span>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-icon border-0 ms-1"
-                        title="Sửa thông tin"
-                        onClick={() => openUserModal('edit', user)}
-                      >
-                        <span className="material-symbols-outlined text-secondary">edit</span>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-icon border-0 ms-1"
-                        title={
-                          user.id === currentUser?.id
-                            ? 'Không thể tự xóa tài khoản'
-                            : hasLinkedProfile(user)
-                              ? 'Tài khoản đang gắn hồ sơ nghiệp vụ'
-                              : 'Xóa người dùng'
-                        }
-                        disabled={
-                          user.id === currentUser?.id || hasLinkedProfile(user)
-                        }
-                        onClick={() => openUserModal('delete', user)}
-                      >
-                        <span className="material-symbols-outlined text-danger">delete</span>
-                      </button>
+                    <td>
+                      <div className="admin-crud-actions justify-content-end">
+                        <button
+                          className="btn btn-sm btn-primary text-nowrap"
+                          onClick={() => openUserModal('view', user)}
+                        >
+                          <span className="material-symbols-outlined">visibility</span>Chi tiết
+                        </button>
+                        <button
+                          className="btn btn-sm btn-light text-nowrap"
+                          onClick={() => openUserModal('edit', user)}
+                        >
+                          <span className="material-symbols-outlined">edit</span>Sửa
+                        </button>
+                        <button
+                          className="btn btn-sm btn-light text-danger text-nowrap"
+                          title={
+                            user.id === currentUser?.id
+                              ? 'Không thể tự xóa tài khoản'
+                              : hasLinkedProfile(user)
+                                ? 'Tài khoản đang gắn hồ sơ nghiệp vụ'
+                                : 'Xóa người dùng'
+                          }
+                          disabled={
+                            user.id === currentUser?.id || hasLinkedProfile(user)
+                          }
+                          onClick={() => openUserModal('delete', user)}
+                        >
+                          <span className="material-symbols-outlined">delete</span>Xóa
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
