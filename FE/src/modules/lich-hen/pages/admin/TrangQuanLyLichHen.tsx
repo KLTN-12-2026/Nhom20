@@ -34,16 +34,18 @@ const STATUS_OPTIONS: Array<{ value: AppointmentStatus; label: string }> = [
   { value: 'CHO_XAC_NHAN', label: 'Chờ xác nhận' },
   { value: 'DA_XAC_NHAN', label: 'Đã xác nhận' },
   { value: 'DA_TU_CHOI', label: 'Đã từ chối' },
+  { value: 'DA_HUY', label: 'Đã hủy' },
   { value: 'DA_CHECK_IN', label: 'Đã cấp phiếu' },
+  { value: 'KHONG_DEN', label: 'Không đến' },
 ];
 
 const ALL_STATUS_LABELS: Record<string, string> = {
   CHO_XAC_NHAN: 'Chờ xác nhận',
   DA_XAC_NHAN: 'Đã xác nhận',
   DA_TU_CHOI: 'Đã từ chối',
-  DA_HUY: 'Đã từ chối',
+  DA_HUY: 'Đã hủy',
   DA_CHECK_IN: 'Đã cấp phiếu',
-  KHONG_DEN: 'Đã từ chối',
+  KHONG_DEN: 'Không đến',
 };
 
 function getInitials(name: string) {
@@ -68,6 +70,7 @@ export default function TrangQuanLyLichHen() {
   const { showToast } = useAppToast();
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [isLoadingDoctors, setIsLoadingDoctors] = useState(true);
   const [draftFilters, setDraftFilters] = useState({
     search: '',
     specialtyId: '',
@@ -77,6 +80,15 @@ export default function TrangQuanLyLichHen() {
   });
   const [filters, setFilters] = useState(draftFilters);
   const [page, setPage] = useState(1);
+  const sortedDoctors = useMemo(
+    () =>
+      [...doctors].sort(
+        (first, second) =>
+          first.fullName.localeCompare(second.fullName, 'vi') ||
+          first.code.localeCompare(second.code),
+      ),
+    [doctors],
+  );
   const query = useMemo<AppointmentQuery>(
     () => ({
       search: filters.search || undefined,
@@ -142,18 +154,15 @@ export default function TrangQuanLyLichHen() {
             (item) => item.status === 'DANG_HOAT_DONG',
           ),
         );
-        setDoctors(
-          doctorResponse.data.filter(
-            (item) => item.status === 'DANG_HOAT_DONG',
-          ),
-        );
+        setDoctors(doctorResponse.data);
       })
       .catch((requestError) =>
         showToast(
           getApiErrorMessage(requestError, 'Không thể tải dữ liệu bộ lọc'),
           'danger',
         ),
-      );
+      )
+      .finally(() => setIsLoadingDoctors(false));
   }, [showToast]);
 
   const closeModal = () => {
@@ -169,6 +178,16 @@ export default function TrangQuanLyLichHen() {
   const handleApplyFilters = () => {
     setPage(1);
     setFilters(draftFilters);
+  };
+
+  const handleSelectFilterChange = (
+    key: 'doctorId' | 'specialtyId' | 'status',
+    value: string,
+  ) => {
+    const nextFilters = { ...draftFilters, [key]: value };
+    setDraftFilters(nextFilters);
+    setFilters(nextFilters);
+    setPage(1);
   };
 
   return (
@@ -209,18 +228,23 @@ export default function TrangQuanLyLichHen() {
         <select
           value={draftFilters.doctorId}
           onChange={(event) =>
-            setDraftFilters({ ...draftFilters, doctorId: event.target.value })
+            handleSelectFilterChange('doctorId', event.target.value)
           }
+          disabled={isLoadingDoctors}
         >
-          <option value="">Tất cả bác sĩ</option>
-          {doctors.map((doctor) => (
-            <option value={doctor.id} key={doctor.id}>{doctor.fullName}</option>
+          <option value="">
+            {isLoadingDoctors ? 'Đang tải bác sĩ...' : 'Tất cả bác sĩ'}
+          </option>
+          {sortedDoctors.map((doctor) => (
+            <option value={doctor.id} key={doctor.id}>
+              BS. {doctor.fullName}
+            </option>
           ))}
         </select>
         <select
           value={draftFilters.specialtyId}
           onChange={(event) =>
-            setDraftFilters({ ...draftFilters, specialtyId: event.target.value })
+            handleSelectFilterChange('specialtyId', event.target.value)
           }
         >
           <option value="">Tất cả chuyên khoa</option>
@@ -238,7 +262,7 @@ export default function TrangQuanLyLichHen() {
         <select
           value={draftFilters.status}
           onChange={(event) =>
-            setDraftFilters({ ...draftFilters, status: event.target.value })
+            handleSelectFilterChange('status', event.target.value)
           }
         >
           <option value="">Tất cả trạng thái</option>
