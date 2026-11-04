@@ -232,7 +232,7 @@ export default function TrangVaiTroPhanQuyen() {
           </div>
           <button
             type="button"
-            className="btn btn-outline-primary mt-auto d-flex align-items-center justify-content-center gap-2"
+            className="btn btn-primary mt-auto d-flex align-items-center justify-content-center gap-2"
             onClick={openCreateModal}
           >
             <span className="material-symbols-outlined">add</span>
