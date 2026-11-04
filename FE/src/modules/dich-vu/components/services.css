@@ -16,3 +16,22 @@
 .service-public-state { align-items: center; display: flex; gap: 12px; justify-content: center; min-height: 180px; }
 @media (max-width: 1100px) { .service-public-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .service-public-grid { grid-template-columns: 1fr; } }
+
+/* ===== SERVICE SLIDER ===== */
+.svc-slider-wrap { display: flex; align-items: center; gap: 0; }
+.svc-slider-track {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 8px 4px 12px;
+  flex: 1;
+}
+.svc-slider-track::-webkit-scrollbar { display: none; }
+.svc-slider-item { scroll-snap-align: start; flex-shrink: 0; display: flex; }
+.svc-slider-item > .service-public-card { width: 100%; }
+.svc-slider-wrap .hd-slider-btn { flex-shrink: 0; }
+.svc-slider-wrap .hd-slider-btn--prev { margin-right: 10px; }
+.svc-slider-wrap .hd-slider-btn--next { margin-left: 10px; }
