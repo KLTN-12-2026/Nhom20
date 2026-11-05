@@ -413,7 +413,7 @@ export default function TrangQuanLyBacSi() {
                         </button>
                         <button
                           type="button"
-                          className="btn btn-sm btn-light text-danger text-nowrap"
+                          className="btn btn-sm btn-danger text-white text-nowrap"
                           onClick={() => openDoctorModal('delete', doctor)}
                         >
                           <span className="material-symbols-outlined">delete</span>
