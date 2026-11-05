@@ -30,11 +30,11 @@ export const receptionistSchedulesApi = {
       .then((response) => response.data);
   },
 
-  createAutoSchedule(weekStart: string) {
+  createAutoSchedule(weekStart: string, lyDoThayDoi?: string) {
     return axiosClient
       .post<ApiResponse<ReceptionistDutyPayload>>(
         '/receptionist-schedules/department/auto-schedule',
-        { weekStart },
+        { weekStart, lyDoThayDoi },
       )
       .then((response) => response.data);
   },

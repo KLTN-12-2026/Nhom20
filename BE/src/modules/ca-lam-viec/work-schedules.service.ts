@@ -1277,7 +1277,11 @@ export class WorkSchedulesService {
 
   // Cập nhật dữ liệu cho chức năng: ca làm việc
   // Thuật toán phân trực đặt ở Backend để giao diện không thể tự tạo lịch sai quy tắc.
-  async createReceptionistAutoSchedule(userId: number, weekStartInput: string) {
+  async createReceptionistAutoSchedule(
+    userId: number,
+    weekStartInput: string,
+    lyDoThayDoi?: string,
+  ) {
     const { receptionists, assignments, from, to } =
       await this.loadReceptionistDepartment(userId, weekStartInput);
     if (receptionists.length < 7) {
@@ -1292,8 +1296,13 @@ export class WorkSchedulesService {
       .slice()
       .sort((left, right) => left.id - right.id);
     // Xoay thứ tự theo tuần để cùng một người không bị gán lặp lại đúng ngày trực ở các tuần liên tiếp.
-    const rotationOffset =
+    // Chọn một vòng xoay khác phương án cố định cũ. Vì vậy lần tự phân đầu tiên
+    // của cùng tuần luôn đổi lịch, thay vì báo thành công nhưng không đổi ô nào.
+    const fixedOffset =
       Math.floor(from.getTime() / (7 * 86_400_000)) %
+      orderedReceptionists.length;
+    const rotationOffset =
+      (fixedOffset + 1 + Math.floor(Math.random() * (orderedReceptionists.length - 1))) %
       orderedReceptionists.length;
     const generated = [
       ...orderedReceptionists.slice(rotationOffset),
@@ -1336,8 +1345,17 @@ export class WorkSchedulesService {
       });
 
     this.validateNightCoverage(coverage, from);
+
+    // Một lần bấm là một nghiệp vụ hoàn chỉnh tại Backend. Không để Frontend
+    // tự ghép các request rồi hiện toast thành công khi dữ liệu chưa được lưu.
+    await this.saveReceptionistDraft(userId, {
+      weekStart: this.dateKey(from),
+      lyDoThayDoi,
+      assignments: generated,
+    });
+    await this.publishReceptionist(userId, this.dateKey(from), lyDoThayDoi);
     return {
-      message: 'Đã tạo phương án phân trực đêm',
+      message: 'Đã tự động phân và công bố lịch trực đêm',
       data: {
         weekStart: this.dateKey(from),
         weekEnd: this.dateKey(to),
