@@ -7,6 +7,20 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 export class DoctorReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findPublic() {
+    const reviews = await this.prisma.danhGiaBacSi.findMany({
+      where: { trangThai: TrangThaiDanhGia.DA_HIEN_THI },
+      include: { bacSi: { include: { chuyenKhoa: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    });
+
+    return {
+      message: 'Lấy đánh giá công khai thành công',
+      data: reviews.map((review) => this.toPublicResponse(review)),
+    };
+  }
+
   async findAll(search?: string, status?: TrangThaiDanhGia) {
     const keyword = search?.trim();
     const reviews = await this.prisma.danhGiaBacSi.findMany({
@@ -82,6 +96,19 @@ export class DoctorReviewsService {
         specialty: review.bacSi.chuyenKhoa?.tenChuyenKhoa ?? null,
       },
       visit: { id: review.luotKham.id, code: review.luotKham.maLuotKham },
+    };
+  }
+
+  private toPublicResponse(review: any) {
+    return {
+      id: review.id,
+      rating: review.soSao,
+      comment: review.noiDung,
+      createdAt: review.createdAt,
+      doctor: {
+        name: review.bacSi.hoTen,
+        specialty: review.bacSi.chuyenKhoa?.tenChuyenKhoa ?? null,
+      },
     };
   }
 }

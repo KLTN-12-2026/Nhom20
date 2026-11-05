@@ -294,7 +294,7 @@ export default function TrangQuanLyDanhGiaBacSi() {
                             disabled={updatingId === review.id}
                             onClick={() => void changeStatus(review, 'DA_HIEN_THI')}
                           >
-                            Duyệt
+                            {review.status === 'CHO_DUYET' ? 'Duyệt' : 'Hiển thị lại'}
                           </button>
                         )}
                         {review.status !== 'DA_AN' && (
@@ -392,7 +392,9 @@ export default function TrangQuanLyDanhGiaBacSi() {
                   disabled={updatingId === selected.id}
                   onClick={() => void changeStatus(selected, 'DA_HIEN_THI')}
                 >
-                  Duyệt hiển thị
+                  {selected.status === 'CHO_DUYET'
+                    ? 'Duyệt hiển thị'
+                    : 'Hiển thị lại'}
                 </button>
               )}
               {selected.status !== 'DA_AN' && (

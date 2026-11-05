@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import EmergencyReasonModal from '../../components/EmergencyReasonModal';
 
 import { useAppToast } from '@/components/ui/use-app-toast';
+import { getApiErrorMessage } from '@/services/axios-client';
 
 import { useReceptionistSchedules } from '../../hooks/use-receptionist-schedules';
 import { addScheduleDays, getCurrentMonday } from '../../utils/schedule-date';
@@ -35,6 +36,9 @@ export default function TrangDuyetLichLamViecThuNgan() {
   const [rows, setRows] = useState<ReceptionistDutyRow[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
+  const [scheduleAction, setScheduleAction] = useState<'auto' | 'manual' | null>(
+    null,
+  );
 
   useEffect(() => {
     void fetchDepartmentSchedule(weekStart);
@@ -85,9 +89,10 @@ export default function TrangDuyetLichLamViecThuNgan() {
     );
   };
 
-  const autoSchedule = async () => {
+  const autoSchedule = async (lyDoThayDoi?: string) => {
+    setIsSaving(true);
     try {
-      // Backend tính phương án để dùng cùng một quy tắc ở mọi thiết bị.
+      // Backend tạo phương án, sau đó lưu và công bố để lịch cá nhân nhận được dữ liệu mới.
       const generated = await createAutoSchedule(weekStart);
       const weekStartTime = new Date(`${weekStart}T00:00:00`).getTime();
       const daysByStaff = new Map(
@@ -107,13 +112,35 @@ export default function TrangDuyetLichLamViecThuNgan() {
           dutyDays: daysByStaff.get(row.id) ?? [],
         })),
       );
-      showToast('Đã tạo phương án trực đêm theo quy tắc hệ thống', 'success');
-    } catch {
+      await saveAndPublish({
+        weekStart,
+        lyDoThayDoi,
+        assignments: generated.assignments,
+      });
+      await fetchDepartmentSchedule(weekStart);
+      setIsEmergencyModalOpen(false);
+      setScheduleAction(null);
+      showToast('Đã tự động phân và công bố lịch trực đêm Thu ngân.', 'success');
+    } catch (requestError) {
       showToast(
-        'Không thể tự động phân trực. Kiểm tra số nhân sự và lịch tuần trước.',
+        getApiErrorMessage(
+          requestError,
+          'Không thể tự động phân trực. Kiểm tra số nhân sự và lịch tuần trước.',
+        ),
         'danger',
       );
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const startAutoSchedule = () => {
+    if (departmentSchedule?.published) {
+      setScheduleAction('auto');
+      setIsEmergencyModalOpen(true);
+      return;
+    }
+    void autoSchedule();
   };
 
   const handleSaveWithReason = async (lyDoThayDoi?: string) => {
@@ -149,6 +176,7 @@ export default function TrangDuyetLichLamViecThuNgan() {
       await fetchDepartmentSchedule(weekStart);
       showToast('Đã lưu và công bố lịch trực đêm Thu ngân.', 'success');
       setIsEmergencyModalOpen(false);
+      setScheduleAction(null);
     } catch {
       showToast('Không thể lưu lịch trực. Vui lòng kiểm tra lại dữ liệu.', 'danger');
     } finally {
@@ -158,6 +186,7 @@ export default function TrangDuyetLichLamViecThuNgan() {
 
   const save = () => {
     if (departmentSchedule?.published) {
+      setScheduleAction('manual');
       setIsEmergencyModalOpen(true);
       return;
     }
@@ -182,7 +211,7 @@ export default function TrangDuyetLichLamViecThuNgan() {
             className="btn btn-outline-primary bg-white"
             type="button"
             disabled={isSaving || rows.length === 0}
-            onClick={() => void autoSchedule()}
+            onClick={startAutoSchedule}
           >
             Tự động phân trực
           </button>
@@ -311,8 +340,15 @@ export default function TrangDuyetLichLamViecThuNgan() {
 
       <EmergencyReasonModal
         isOpen={isEmergencyModalOpen}
-        onClose={() => setIsEmergencyModalOpen(false)}
+        onClose={() => {
+          setIsEmergencyModalOpen(false);
+          setScheduleAction(null);
+        }}
         onSubmit={(reason) => {
+          if (scheduleAction === 'auto') {
+            void autoSchedule(reason);
+            return;
+          }
           void handleSaveWithReason(reason);
         }}
       />

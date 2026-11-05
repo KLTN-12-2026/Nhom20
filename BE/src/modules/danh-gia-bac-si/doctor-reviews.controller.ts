@@ -19,12 +19,20 @@ import { DoctorReviewsService } from './doctor-reviews.service';
 
 @ApiTags('Doctor reviews')
 @Controller('doctor-reviews')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
 export class DoctorReviewsController {
   constructor(private readonly doctorReviews: DoctorReviewsService) {}
 
+  // Lấy các đánh giá đã được quản trị viên duyệt để hiển thị công khai trên trang chủ.
+  @Get('public')
+  @ApiOperation({ summary: 'Lấy đánh giá bác sĩ công khai đã duyệt' })
+  @ApiOkResponse()
+  findPublic() {
+    return this.doctorReviews.findPublic();
+  }
+
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Quản trị viên xem danh sách đánh giá bác sĩ' })
   @ApiOkResponse()
   findAll(
@@ -35,6 +43,8 @@ export class DoctorReviewsController {
   }
 
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiOperation({
     summary: 'Quản trị viên duyệt, hiển thị lại hoặc ẩn đánh giá bác sĩ',
   })
