@@ -9,7 +9,7 @@
 
 .admin-report-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 24px;
@@ -357,6 +357,7 @@
 /* Heading – dung admin-crud-heading, bo margin-bottom vi grid da co gap */
 .admin-dashboard-page .admin-crud-heading {
   margin-bottom: 0;
+  align-items: flex-end;
 }
 
 /* Actions buttons ben phai heading */

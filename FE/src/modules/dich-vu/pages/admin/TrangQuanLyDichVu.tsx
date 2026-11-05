@@ -297,7 +297,7 @@ export default function TrangQuanLyDichVu() {
                         </button>
                         <button
                           type="button"
-                          className="btn btn-sm btn-light text-danger text-nowrap"
+                          className="btn btn-sm btn-danger text-white text-nowrap"
                           title="Xóa"
                           onClick={() => open('delete', item)}
                         >
@@ -491,7 +491,7 @@ export default function TrangQuanLyDichVu() {
           title="Chi tiết dịch vụ"
           onClose={close}
           footer={
-            <button className="btn btn-outline-secondary" onClick={close}>
+            <button className="btn btn-primary" onClick={close}>
               Đóng
             </button>
           }

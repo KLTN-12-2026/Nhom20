@@ -13,7 +13,7 @@
 .chat-admin-heading {
   display: flex;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   margin-bottom: 24px;
 }

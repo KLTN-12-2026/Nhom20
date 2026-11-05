@@ -12,7 +12,7 @@ type HoSoKham = {
   patient: { fullName: string; phoneNumber: string };
   diagnosis: string | null;
   conclusion: string | null;
-  submittedAt: string | null;
+  submittedAt: string | null; 
   prescription: {
     items: Array<{
       medicine: { name: string; unit: string };

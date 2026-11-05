@@ -960,15 +960,8 @@ export default function TrangQuanLyKhoThuoc() {
             </dl>
           </div>
           <div className="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" className="btn btn-light" onClick={closeModal}>
+            <button type="button" className="btn btn-primary" onClick={closeModal}>
               Đóng
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => openMedicineModal('edit', selectedMedicine)}
-            >
-              Chỉnh sửa
             </button>
           </div>
         </AppModal>

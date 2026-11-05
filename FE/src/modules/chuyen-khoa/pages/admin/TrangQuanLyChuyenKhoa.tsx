@@ -252,7 +252,7 @@ export default function TrangQuanLyChuyenKhoa() {
                           <span className="material-symbols-outlined">edit</span>Sửa
                         </button>
                         <button
-                          className="btn btn-sm btn-light text-danger"
+                          className="btn btn-sm btn-danger"
                           onClick={() => openSpecialtyModal('delete', specialty)}
                           disabled={specialty.doctorCount > 0}
                           title={specialty.doctorCount > 0 ? `Không thể xóa vì đang có ${specialty.doctorCount} bác sĩ trực thuộc.` : 'Xóa chuyên khoa'}
