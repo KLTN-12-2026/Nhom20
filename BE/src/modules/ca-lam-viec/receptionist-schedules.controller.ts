@@ -67,7 +67,11 @@ export class ReceptionistSchedulesController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: WorkScheduleQueryDto,
   ) {
-    return this.service.createReceptionistAutoSchedule(user.id, dto.weekStart);
+    return this.service.createReceptionistAutoSchedule(
+      user.id,
+      dto.weekStart,
+      dto.lyDoThayDoi,
+    );
   }
 
   @Post('department/publish')

@@ -27,6 +27,7 @@ export default function TrangDuyetLichLamViecThuNgan() {
   const {
     departmentSchedule,
     isLoading,
+    error,
     fetchDepartmentSchedule,
     createAutoSchedule,
     saveAndPublish,
@@ -92,31 +93,8 @@ export default function TrangDuyetLichLamViecThuNgan() {
   const autoSchedule = async (lyDoThayDoi?: string) => {
     setIsSaving(true);
     try {
-      // Backend tạo phương án, sau đó lưu và công bố để lịch cá nhân nhận được dữ liệu mới.
-      const generated = await createAutoSchedule(weekStart);
-      const weekStartTime = new Date(`${weekStart}T00:00:00`).getTime();
-      const daysByStaff = new Map(
-        generated.assignments.map((assignment) => [
-          assignment.staffId,
-          assignment.dutyDates.map((date) =>
-            Math.round(
-              (new Date(`${date}T00:00:00`).getTime() - weekStartTime) /
-                86_400_000,
-            ),
-          ),
-        ]),
-      );
-      setRows((current) =>
-        current.map((row) => ({
-          ...row,
-          dutyDays: daysByStaff.get(row.id) ?? [],
-        })),
-      );
-      await saveAndPublish({
-        weekStart,
-        lyDoThayDoi,
-        assignments: generated.assignments,
-      });
+      await createAutoSchedule(weekStart, lyDoThayDoi);
+      // Toast chỉ hiển thị sau khi API GET đọc lại đúng lịch Backend vừa công bố.
       await fetchDepartmentSchedule(weekStart);
       setIsEmergencyModalOpen(false);
       setScheduleAction(null);
@@ -268,7 +246,9 @@ export default function TrangDuyetLichLamViecThuNgan() {
       </div>
 
       <section className="doctor-panel overflow-hidden">
-        {isLoading ? (
+        {error ? (
+          <div className="p-5 text-center text-danger">{error}</div>
+        ) : isLoading ? (
           <div className="p-5 text-center">Đang tải lịch làm việc...</div>
         ) : (
           <div className="table-responsive">
