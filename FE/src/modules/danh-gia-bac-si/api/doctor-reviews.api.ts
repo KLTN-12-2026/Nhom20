@@ -14,7 +14,21 @@ export interface DoctorReview {
   visit: { id: number; code: string };
 }
 
+export interface PublicDoctorReview {
+  id: number;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  doctor: { name: string; specialty: string | null };
+}
+
 export const doctorReviewsApi = {
+  async getPublic() {
+    const response = await axiosClient.get<ApiResponse<PublicDoctorReview[]>>(
+      '/doctor-reviews/public',
+    );
+    return response.data;
+  },
   async getAll(params: { search?: string; status?: DoctorReviewStatus | '' }) {
     const response = await axiosClient.get<ApiResponse<DoctorReview[]>>('/doctor-reviews', { params });
     return response.data;

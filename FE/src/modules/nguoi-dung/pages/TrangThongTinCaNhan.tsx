@@ -268,7 +268,7 @@ export default function TrangThongTinCaNhan() {
           <span className="badge-status-active">Đang hoạt động</span>
           {profile.avatarUrl && (
             <button
-              className="btn btn-sm btn-outline-danger mt-3"
+              className="btn btn-sm btn-danger mt-3"
               onClick={() => void handleRemoveAvatar()}
               disabled={isSaving}
             >
@@ -611,7 +611,7 @@ export default function TrangThongTinCaNhan() {
               </div>
               <div className="col-12 text-end">
                 <button
-                  className="btn btn-outline-primary px-4"
+                  className="btn btn-primary px-4"
                   type="submit"
                   disabled={isSaving}
                 >
