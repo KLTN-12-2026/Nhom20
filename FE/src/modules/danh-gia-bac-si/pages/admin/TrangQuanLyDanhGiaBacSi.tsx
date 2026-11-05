@@ -399,7 +399,7 @@ export default function TrangQuanLyDanhGiaBacSi() {
               )}
               {selected.status !== 'DA_AN' && (
                 <button
-                  className="btn btn-outline-danger"
+                  className="btn btn-danger"
                   disabled={updatingId === selected.id}
                   onClick={() => void changeStatus(selected, 'DA_AN')}
                 >

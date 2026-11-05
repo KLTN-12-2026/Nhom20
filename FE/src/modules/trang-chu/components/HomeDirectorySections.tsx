@@ -108,7 +108,7 @@ export default function HomeDirectorySections() {
             <h2>Chăm sóc đúng nhu cầu</h2>
             <p className="text-secondary mb-0">Thông tin và mức phí được cập nhật trực tiếp từ hệ thống.</p>
           </div>
-          <Link className="btn btn-outline-primary" to="/chuyen-khoa">Xem tất cả chuyên khoa</Link>
+          <Link className="btn btn-primary" to="/chuyen-khoa">Xem tất cả chuyên khoa</Link>
         </div>
 
         {specialtyState.isLoading && (
@@ -170,7 +170,7 @@ export default function HomeDirectorySections() {
             <h2>Chuyên môn rõ ràng, thông tin minh bạch</h2>
             <p className="text-secondary mb-0">Chọn bác sĩ theo đúng chuyên khoa bạn cần.</p>
           </div>
-          <Link className="btn btn-outline-primary" to="/doi-ngu-bac-si">Xem toàn bộ bác sĩ</Link>
+          <Link className="btn btn-primary" to="/doi-ngu-bac-si">Xem toàn bộ bác sĩ</Link>
         </div>
         {doctorState.isLoading && (
           <div className="public-page-empty"><div className="spinner-border text-primary" />Đang tải bác sĩ...</div>
@@ -193,7 +193,7 @@ export default function HomeDirectorySections() {
                     <div className="public-doctor-card__meta">
                       <span>{doctor.experienceYears} năm kinh nghiệm</span>
                     </div>
-                    <Link className="btn btn-outline-primary mt-auto" to={`/dat-lich?chuyenKhoaId=${doctor.specialty.id}`}>Đặt lịch khám</Link>
+                    <Link className="btn btn-primary mt-auto" to={`/dat-lich?chuyenKhoaId=${doctor.specialty.id}`}>Đặt lịch khám</Link>
                   </div>
                 </article>
               ))}
