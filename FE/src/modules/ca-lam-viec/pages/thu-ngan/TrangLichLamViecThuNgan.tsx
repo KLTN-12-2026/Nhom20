@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { axiosClient } from '@/services/axios-client';
+import { useRealtimeEvent } from '@/hooks/use-realtime-event';
 import { addScheduleDays, getCurrentMonday } from '../../utils/schedule-date';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 import '@/modules/bac-si/doctor-workspace.css';
@@ -22,13 +23,36 @@ export default function TrangLichLamViecThuNgan() {
   const [data, setData] = useState<ReceptionistPersonalSchedule | null>(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadSchedule = useCallback(async () => {
     setData(null);
     setError('');
-    axiosClient.get('/receptionist-schedules/me', { params: { weekStart } })
-      .then((response) => setData(response.data.data as ReceptionistPersonalSchedule))
-      .catch((requestError) => setError(requestError?.response?.data?.message || 'Không thể tải lịch làm việc'));
+    try {
+      const response = await axiosClient.get('/receptionist-schedules/me', {
+        params: { weekStart },
+      });
+      setData(response.data.data as ReceptionistPersonalSchedule);
+    } catch (requestError: unknown) {
+      const apiError = requestError as {
+        response?: { data?: { message?: string } };
+      };
+      setError(apiError.response?.data?.message || 'Không thể tải lịch làm việc');
+    }
   }, [weekStart]);
+
+  useEffect(() => {
+    void loadSchedule();
+  }, [loadSchedule]);
+
+  const handleSchedulePublished = useCallback(
+    (payload: { weekStart: string }) => {
+      if (payload.weekStart === weekStart) {
+        void loadSchedule();
+      }
+    },
+    [loadSchedule, weekStart],
+  );
+
+  useRealtimeEvent('work_schedule.published', handleSchedulePublished);
 
   return (
     <div className="doctor-page">

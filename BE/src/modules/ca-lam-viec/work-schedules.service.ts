@@ -1288,9 +1288,17 @@ export class WorkSchedulesService {
 
     const previousSunday = this.dateKey(this.addDays(from, -1));
     const coverage = Array.from({ length: 7 }, () => 0);
-    const generated = receptionists
+    const orderedReceptionists = receptionists
       .slice()
-      .sort((left, right) => left.id - right.id)
+      .sort((left, right) => left.id - right.id);
+    // Xoay thứ tự theo tuần để cùng một người không bị gán lặp lại đúng ngày trực ở các tuần liên tiếp.
+    const rotationOffset =
+      Math.floor(from.getTime() / (7 * 86_400_000)) %
+      orderedReceptionists.length;
+    const generated = [
+      ...orderedReceptionists.slice(rotationOffset),
+      ...orderedReceptionists.slice(0, rotationOffset),
+    ]
       .map((staff) => {
         const hadDutyPreviousSunday = assignments.some(
           (item) =>
