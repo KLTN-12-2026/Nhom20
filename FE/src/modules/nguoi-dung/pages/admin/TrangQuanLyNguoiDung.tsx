@@ -444,7 +444,7 @@ export default function TrangQuanLyNguoiDung() {
                           <span className="material-symbols-outlined">edit</span>Sửa
                         </button>
                         <button
-                          className="btn btn-sm btn-light text-danger text-nowrap"
+                          className="btn btn-sm btn-danger text-white text-nowrap"
                           title={
                             user.id === currentUser?.id
                               ? 'Không thể tự xóa tài khoản'
