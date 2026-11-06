@@ -284,7 +284,7 @@ export default function TrangLichSuCapThuoc() {
           footer={
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-primary"
               onClick={() => setSelectedItem(null)}
             >
               Đóng
