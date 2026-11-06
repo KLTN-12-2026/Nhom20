@@ -485,20 +485,22 @@ export default function TrangQuanLyNguoiDung() {
                           </button>
                         )}
                         {canDelete && (
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-danger text-white"
-                            aria-label={`Xóa ${user.fullName}`}
-                            title={user.id === currentUser?.id
-                              ? 'Không thể tự xóa tài khoản'
-                              : hasLinkedProfile(user)
-                                ? 'Tài khoản đã gắn hồ sơ nghiệp vụ; có thể dùng nút Khóa'
-                                : 'Xóa tài khoản'}
-                            disabled={user.id === currentUser?.id || hasLinkedProfile(user)}
-                            onClick={() => openUserModal('delete', user)}
-                          >
-                            <span className="material-symbols-outlined">delete</span>
-                          </button>
+                          <span title={user.hasBusinessData ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.' : user.id === currentUser?.id ? 'Không thể tự xóa tài khoản' : undefined}>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-danger text-white"
+                              aria-label={`Xóa ${user.fullName}`}
+                              title={user.id === currentUser?.id
+                                ? 'Không thể tự xóa tài khoản'
+                                : user.hasBusinessData
+                                  ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.'
+                                  : 'Xóa tài khoản'}
+                              disabled={user.id === currentUser?.id || user.hasBusinessData}
+                              onClick={() => openUserModal('delete', user)}
+                            >
+                              <span className="material-symbols-outlined">delete</span>
+                            </button>
+                          </span>
                         )}
                       </div>
                     </td>

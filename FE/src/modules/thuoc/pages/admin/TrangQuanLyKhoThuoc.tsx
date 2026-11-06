@@ -13,7 +13,6 @@ import AppModal from '@/components/ui/AppModal';
 import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { useAuthStore } from '@/stores/auth.store';
-import { isDepartmentHeadEmail } from '@/utils/department-head';
 import { hasPermission } from '@/utils/permissions';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 
@@ -132,7 +131,7 @@ export default function TrangQuanLyKhoThuoc() {
   const isAdmin =
     location.pathname.startsWith('/admin') ||
     (user?.roles?.includes('ADMIN') && !user?.roles?.includes('PHARMACIST'));
-  const isDepartmentHead = isDepartmentHeadEmail(user?.email);
+  const isDepartmentHead = Boolean(user?.isPharmacyHead);
 
   const { showToast } = useAppToast();
   const [activeTab, setActiveTab] = useState<MedicineTab>('ALL');

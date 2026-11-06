@@ -108,7 +108,13 @@ export default function TrangVaiTroPhanQuyen() {
     try {
       const response = await savePermissions(
         selectedRole.id,
-        selectedPermissionIds,
+        isAdministrator
+          ? selectedPermissionIds.filter((id) => !modules.some((module) =>
+              module.code === 'THUOC' && module.permissions.some((permission) =>
+                permission.id === id && permission.action !== 'view',
+              ),
+            ))
+          : selectedPermissionIds,
       );
       if (response.sessionRefreshFailed) {
         showToast('Đã lưu quyền. Vui lòng tải lại trang để cập nhật phiên đăng nhập.', 'warning');
@@ -316,23 +322,26 @@ export default function TrangVaiTroPhanQuyen() {
                             isAdministrator && permission &&
                               ['VAI_TRO.VIEW', 'VAI_TRO.UPDATE'].includes(permission.code),
                           );
+                          const isPharmacistOnly = Boolean(isAdministrator && module.code === 'THUOC' && action.key !== 'view');
                           return (
-                            <td className="text-center" key={action.key}>
+                            <td className="text-center" key={action.key} title={isPharmacistOnly ? 'Quyền Thêm/Sửa/Xóa thuốc thuộc thẩm quyền chuyên môn của Dược sĩ' : undefined}>
                               <input
                                 type="checkbox"
                                 className="form-check-input permission-switch"
                                 checked={Boolean(
-                                  permission &&
+                                  !isPharmacistOnly && permission &&
                                     (isProtectedAdminPermission ||
                                       selectedPermissionIds.includes(permission.id)),
                                 )}
-                                disabled={!permission || isProtectedAdminPermission || isSaving}
+                                disabled={!permission || isProtectedAdminPermission || isPharmacistOnly || isSaving}
                                 onChange={() => {
                                   if (permission) togglePermission(permission.id);
                                 }}
                                 aria-label={`${module.name} - ${action.label}${!permission?.implemented ? ' - Chưa hỗ trợ' : ''}`}
                                 title={
-                                  !permission
+                                  isPharmacistOnly
+                                    ? 'Quyền Thêm/Sửa/Xóa thuốc thuộc thẩm quyền chuyên môn của Dược sĩ'
+                                    : !permission
                                     ? 'Thao tác này chưa được hỗ trợ'
                                     : isProtectedAdminPermission
                                       ? 'Quyền này được giữ để tránh tự khóa phân quyền'

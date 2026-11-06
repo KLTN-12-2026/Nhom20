@@ -28,6 +28,12 @@ export class PermissionsGuard implements CanActivate {
       .switchToHttp()
       .getRequest<{ user?: AuthenticatedUser }>();
     const user = request.user;
+    // Quản trị viên chỉ được xem thuốc, kể cả khi cấu hình cũ còn quyền sửa.
+    if (user?.roles.includes('ADMIN') && requiredPermissions?.some((permission) =>
+      ['THUOC.CREATE', 'THUOC.UPDATE', 'THUOC.DELETE'].includes(permission),
+    )) {
+      throw new ForbiddenException('Thao tác quản lý thuốc thuộc thẩm quyền của dược sĩ');
+    }
     if (permissionsByRole) {
       const hasRolePermission = user?.roles.some((role) => {
         const permission = permissionsByRole[role];

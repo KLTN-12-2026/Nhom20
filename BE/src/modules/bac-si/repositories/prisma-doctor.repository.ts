@@ -15,6 +15,15 @@ const doctorInclude = {
       email: true,
       anhDaiDienUrl: true,
       anhDaiDienPublicId: true,
+      benhNhan: { select: { id: true } },
+      _count: { select: {
+        phieuHangChoDaGoi: true, phieuHangChoXacNhan: true, donThuocDaCap: true,
+        donThuocDaTuChoi: true, giaoDichKho: true, hoaDonDaTao: true,
+        thanhToanDaThu: true, lichHenDaXacNhan: true, duLieuYTeDaGhi: true,
+        tienSuBenhDaGhi: true, canhBaoDaXuLy: true, phanCongCa: true,
+        caDaSapXep: true, caDaDuyet: true, donViDangQuanLy: true,
+        caDaBanGiao: true, caDaNhanBanGiao: true, goiYThuocDaDuyet: true, phienChat: true,
+      } },
     },
   },
   chuyenKhoa: {
@@ -223,6 +232,7 @@ export class PrismaDoctorRepository implements DoctorRepository {
         select: { nguoiDungId: true },
       });
       await transaction.bacSi.delete({ where: { id } });
+      await transaction.nhanVien.deleteMany({ where: { nguoiDungId: current.nguoiDungId } });
       await transaction.nguoiDung.delete({
         where: { id: current.nguoiDungId },
       });

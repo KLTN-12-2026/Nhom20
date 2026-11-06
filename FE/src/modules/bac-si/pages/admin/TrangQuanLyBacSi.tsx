@@ -414,14 +414,16 @@ export default function TrangQuanLyBacSi() {
                           <span className="material-symbols-outlined">edit</span>
                           Sửa
                         </button>}
-                        {hasPermission(user, 'BAC_SI.DELETE') && <button
+                        {hasPermission(user, 'BAC_SI.DELETE') && <span title={doctor.hasBusinessData ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.' : undefined}><button
                           type="button"
                           className="btn btn-sm btn-danger text-white text-nowrap"
+                          disabled={doctor.hasBusinessData}
+                          title={doctor.hasBusinessData ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.' : 'Xóa bác sĩ'}
                           onClick={() => openDoctorModal('delete', doctor)}
                         >
                           <span className="material-symbols-outlined">delete</span>
                           Xóa
-                        </button>}
+                        </button></span>}
                       </div>
                     </td>
                   </tr>

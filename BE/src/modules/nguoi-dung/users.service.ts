@@ -278,9 +278,9 @@ export class UsersService {
       throw new ForbiddenException('Bạn không thể tự xóa tài khoản của mình');
     }
     const user = await this.getExisting(id);
-    if (this.hasLinkedProfile(user)) {
+    if (this.hasBusinessData(user)) {
       throw new BadRequestException(
-        'Không thể xóa tài khoản đã gắn hồ sơ bác sĩ, nhân viên hoặc bệnh nhân',
+        'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.',
       );
     }
     try {
@@ -421,6 +421,11 @@ export class UsersService {
     return Boolean(user.bacSi || user.nhanVien || user.benhNhan);
   }
 
+  private hasBusinessData(user: ManagedUser) {
+    return Boolean(user.benhNhan || Object.values(user._count).some((count) => count > 0) ||
+      (user.bacSi && Object.values(user.bacSi._count).some((count) => count > 0)));
+  }
+
   private toResponse(user: ManagedUser) {
     return {
       id: user.id,
@@ -446,6 +451,7 @@ export class UsersService {
         staff: Boolean(user.nhanVien),
         patient: Boolean(user.benhNhan),
       },
+      hasBusinessData: this.hasBusinessData(user),
       lastLoginAt: user.lanDangNhapCuoi,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
