@@ -7,8 +7,8 @@ import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
 
 import { dispensingApi } from '../../api/dispensing.api';
-import PharmacyPageHeader from '../../components/PharmacyPageHeader';
 import type { DispensingPrescription } from '../../types/dispensing.types';
+import '@/components/ui/admin-crud.css';
 import '../../pharmacist-workspace.css';
 
 export default function TrangDonThuocChoCap() {
@@ -45,8 +45,18 @@ export default function TrangDonThuocChoCap() {
     }
   };
 
-  return <div className="pharmacy-page">
-    <PharmacyPageHeader title="Đơn thuốc chờ cấp" description="Đơn mới sẽ tự xuất hiện khi bác sĩ hoàn tất khám và kê đơn." />
-    <section className="pharmacy-panel"><div className="pharmacy-filter"><div className="input-group"><span className="input-group-text"><span className="material-symbols-outlined">search</span></span><input className="form-control" placeholder="Tìm mã đơn, bệnh nhân hoặc bác sĩ..." value={search} onChange={(event) => setSearch(event.target.value)} /></div></div><div className="table-responsive"><table className="table pharmacy-table"><thead><tr><th>Mã đơn</th><th>Bệnh nhân</th><th>Bác sĩ</th><th>Số thuốc</th><th>Thời gian</th><th>Thao tác</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><strong className="text-primary">{item.code}</strong></td><td><div className="pharmacy-person"><div><strong>{item.patient.fullName}</strong><small>{item.patient.code}</small></div></div></td><td><div className="pharmacy-person"><div><strong>{item.doctor.fullName}</strong><small>{item.doctor.specialty}</small></div></div></td><td>{item.items.length}</td><td><strong>{dinhDangNgayGio(item.createdAt).split(' ')[0]}</strong><small>{dinhDangNgayGio(item.createdAt).split(' ')[1]}</small></td><td><button className="btn btn-sm btn-primary" disabled={isLoading} onClick={() => void handleAccept(item.id)}>Tiếp nhận</button></td></tr>)}</tbody></table></div></section>
-  </div>;
+  return (
+    <div className="pharmacy-page admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Tiếp nhận đơn thuốc</p>
+          <h1>ĐƠN THUỐC CHỜ CẤP</h1>
+          <p className="admin-management-description">
+            Hiển thị các đơn thuốc mới được bác sĩ kê và chờ dược sĩ tiếp nhận, cấp phát.
+          </p>
+        </div>
+      </header>
+      <section className="pharmacy-panel"><div className="pharmacy-filter"><div className="input-group"><span className="input-group-text"><span className="material-symbols-outlined">search</span></span><input className="form-control" placeholder="Tìm mã đơn, bệnh nhân hoặc bác sĩ..." value={search} onChange={(event) => setSearch(event.target.value)} /></div></div><div className="table-responsive"><table className="table pharmacy-table"><thead><tr><th>Mã đơn</th><th>Bệnh nhân</th><th>Bác sĩ</th><th>Số thuốc</th><th>Thời gian</th><th>Thao tác</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><strong className="text-primary">{item.code}</strong></td><td><div className="pharmacy-person"><div><strong>{item.patient.fullName}</strong><small>{item.patient.code}</small></div></div></td><td><div className="pharmacy-person"><div><strong>{item.doctor.fullName}</strong><small>{item.doctor.specialty}</small></div></div></td><td>{item.items.length}</td><td><strong>{dinhDangNgayGio(item.createdAt).split(' ')[0]}</strong><small>{dinhDangNgayGio(item.createdAt).split(' ')[1]}</small></td><td><button className="btn btn-sm btn-primary" disabled={isLoading} onClick={() => void handleAccept(item.id)}>Tiếp nhận</button></td></tr>)}</tbody></table></div></section>
+    </div>
+  );
 }

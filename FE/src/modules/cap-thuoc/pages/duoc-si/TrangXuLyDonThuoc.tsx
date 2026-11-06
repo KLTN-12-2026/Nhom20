@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import AppModal from '@/components/ui/AppModal';
+import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 import { maHoaNoiDung, moCuaSoIn } from '@/utils/in-an';
 import { dispensingApi } from '../../api/dispensing.api';
-import PharmacyPageHeader from '../../components/PharmacyPageHeader';
 import type {
   BatchAllocationDto,
   DispensingPrescription,
@@ -141,16 +141,24 @@ export default function TrangXuLyDonThuoc() {
   };
 
   return (
-    <div className="pharmacy-page">
-      <PharmacyPageHeader
-        title={`Cấp thuốc · ${prescription.code}`}
-        description="Dược sĩ kiểm tra thuốc, chủ động chọn lô còn hạn trước khi cấp."
-        actions={
-          <Link className="btn btn-outline-secondary" to="/duoc-si/dang-xu-ly">
-            Quay lại
+    <div className="pharmacy-page admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Quy trình cấp phát thuốc</p>
+          <h1>CẤP THUỐC · {prescription.code}</h1>
+          <p className="admin-management-description">
+            Dược sĩ kiểm tra thuốc, chủ động chọn lô còn hạn trước khi cấp.
+          </p>
+        </div>
+        <div>
+          <Link className="btn btn-primary d-inline-flex align-items-center gap-1 text-white" to="/duoc-si/dang-xu-ly">
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+              arrow_back
+            </span>
+            <span>Quay lại</span>
           </Link>
-        }
-      />
+        </div>
+      </header>
 
       <div className="pharmacy-detail-grid">
         <section className="pharmacy-panel">
@@ -244,14 +252,14 @@ export default function TrangXuLyDonThuoc() {
           />
           <button
             type="button"
-            className="btn btn-outline-primary w-100 mb-2"
+            className="btn btn-primary text-white w-100 mb-2"
             onClick={handlePrintInstructions}
           >
             In hướng dẫn thuốc
           </button>
           <button
             type="button"
-            className="btn btn-outline-danger w-100 mb-2"
+            className="btn btn-danger text-white w-100 mb-2"
             disabled={isSubmitting}
             onClick={() => setIsRefusalModalOpen(true)}
           >

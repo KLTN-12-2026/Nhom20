@@ -10,6 +10,7 @@ import {
 import { useLocation } from 'react-router-dom';
 
 import AppModal from '@/components/ui/AppModal';
+import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { useAuthStore } from '@/stores/auth.store';
 import { isDepartmentHeadEmail } from '@/utils/department-head';
@@ -91,16 +92,32 @@ const getPageNumbers = (currentPage: number, totalPages: number) => {
 
 const getStockState = (medicine: Medicine) => {
   if (medicine.trangThai === 'NGUNG_HOAT_DONG') {
-    return { className: 'inactive', label: 'Ngừng kinh doanh' };
+    return {
+      className: 'inactive',
+      badgeClass: 'badge-status-neutral',
+      label: 'Ngừng kinh doanh',
+    };
   }
   if (medicine.soLuongTon === 0) {
-    return { className: 'out', label: 'Hết hàng' };
+    return {
+      className: 'out',
+      badgeClass: 'badge-status-locked',
+      label: 'Hết hàng',
+    };
   }
   if (medicine.soLuongTon <= medicine.mucTonToiThieu) {
-    return { className: 'low', label: 'Sắp hết hàng' };
+    return {
+      className: 'low',
+      badgeClass: 'badge-status-pending',
+      label: 'Sắp hết hàng',
+    };
   }
   return {
     className: medicine.trangThai === 'DANG_HOAT_DONG' ? 'active' : 'inactive',
+    badgeClass:
+      medicine.trangThai === 'DANG_HOAT_DONG'
+        ? 'badge-status-active'
+        : 'badge-status-neutral',
     label:
       medicine.trangThai === 'DANG_HOAT_DONG'
         ? 'Đang kinh doanh'
@@ -307,19 +324,18 @@ export default function TrangQuanLyKhoThuoc() {
   };
 
   return (
-    <div className="medicine-inventory">
-      <header className="medicine-inventory__header">
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
         <div>
-          <div className="medicine-inventory__eyebrow">
-            QUẢN LÝ KHO THUỐC
-          </div>
+          <p className="admin-management-eyebrow">
+            Quản lý kho thuốc
+          </p>
           <h1>DANH MỤC THUỐC</h1>
-          <p>
-            Quản lý biệt dược, hoạt chất, giá bán và số lượng tồn kho của phòng
-            khám.
+          <p className="admin-management-description">
+            Quản lý thông tin thuốc, hoạt chất, giá bán và số lượng tồn kho.
           </p>
         </div>
-        <div className="medicine-inventory__header-actions">
+        <div className="d-flex flex-wrap align-items-center gap-2">
           <button
             type="button"
             className="btn btn-primary d-flex align-items-center gap-2 text-white"
@@ -336,7 +352,7 @@ export default function TrangQuanLyKhoThuoc() {
             <>
               <button
                 type="button"
-                className="btn btn-outline-primary"
+                className="btn btn-outline-primary d-flex align-items-center gap-2"
                 onClick={() => openStockInModal()}
                 disabled={medicineOptions.length === 0}
               >
@@ -345,7 +361,7 @@ export default function TrangQuanLyKhoThuoc() {
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary d-flex align-items-center gap-2"
                 onClick={openCreateModal}
               >
                 <span className="material-symbols-outlined">add_circle</span>
@@ -471,28 +487,28 @@ export default function TrangQuanLyKhoThuoc() {
           <div className="table-responsive">
             <table
               className="table medicine-inventory__table mb-0"
-              style={{ tableLayout: 'fixed', minWidth: '1140px', width: '100%' }}
+              style={{ tableLayout: 'fixed', minWidth: '1100px', width: '100%' }}
             >
               <colgroup>
-                <col style={{ width: '20%', minWidth: '200px' }} />
-                <col style={{ width: '9%', minWidth: '90px' }} />
-                <col style={{ width: '13%', minWidth: '130px' }} />
-                <col style={{ width: '11%', minWidth: '110px' }} />
-                <col style={{ width: '9%', minWidth: '90px' }} />
-                <col style={{ width: '10%', minWidth: '105px' }} />
-                <col style={{ width: '11%', minWidth: '115px' }} />
-                <col style={{ width: '17%', minWidth: '210px' }} />
+                <col style={{ width: '21%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '6%' }} />
+                <col style={{ width: '5%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '20%' }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: '20%', minWidth: '200px' }}>Sản phẩm</th>
-                  <th style={{ width: '9%', minWidth: '90px' }}>Mã</th>
-                  <th style={{ width: '13%', minWidth: '130px' }}>Hoạt chất</th>
-                  <th style={{ width: '11%', minWidth: '110px' }}>Giá bán</th>
-                  <th className="text-center" style={{ width: '9%', minWidth: '90px' }}>Tồn kho</th>
-                  <th style={{ width: '10%', minWidth: '105px' }}>Hạn sử dụng</th>
-                  <th style={{ width: '11%', minWidth: '115px' }}>Trạng thái</th>
-                  <th className="text-end text-nowrap" style={{ width: '17%', minWidth: '210px' }}>Thao tác</th>
+                  <th>Sản phẩm</th>
+                  <th>Mã</th>
+                  <th>Hoạt chất</th>
+                  <th>Giá bán</th>
+                  <th className="text-center">Tồn kho</th>
+                  <th>Hạn sử dụng</th>
+                  <th>Trạng thái</th>
+                  <th className="text-end text-nowrap">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -595,7 +611,7 @@ export default function TrangQuanLyKhoThuoc() {
                         <td className="text-nowrap">{formatDate(medicine.hanSuDung)}</td>
                         <td>
                           <span
-                            className={`medicine-inventory__status is-${stockState.className} text-nowrap`}
+                            className={`${stockState.badgeClass} text-nowrap`}
                           >
                             {stockState.label}
                           </span>
@@ -635,7 +651,7 @@ export default function TrangQuanLyKhoThuoc() {
                                 {isDepartmentHead && (
                                   <button
                                     type="button"
-                                    className="btn btn-sm btn-light text-danger text-nowrap"
+                                    className="btn btn-sm btn-danger text-nowrap"
                                     title="Xóa thuốc"
                                     aria-label={`Xóa ${medicine.tenThuoc}`}
                                     onClick={() =>

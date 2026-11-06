@@ -8,8 +8,9 @@ import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
 
 import { dispensingApi } from '../../api/dispensing.api';
 import { medicinesApi, type MedicineBatchRow } from '../../api/medicines.api';
-import PharmacyPageHeader from '../../components/PharmacyPageHeader';
 import type { DispensingPrescription } from '../../types/dispensing.types';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '../../pharmacist-workspace.css';
 
 export default function TrangTongQuanDuocSi() {
@@ -21,7 +22,10 @@ export default function TrangTongQuanDuocSi() {
 
   const load = useCallback(async () => {
     try {
-      const [prescriptions, medicineBatches] = await Promise.all([dispensingApi.getPending(), medicinesApi.batches()]);
+      const [prescriptions, medicineBatches] = await Promise.all([
+        dispensingApi.getPending(),
+        medicinesApi.batches(),
+      ]);
       setPending(prescriptions.data.data.items);
       setBatches(medicineBatches.data.data);
     } catch (error) {
@@ -29,7 +33,9 @@ export default function TrangTongQuanDuocSi() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
   useRealtimeEvent('prescription.created', load);
 
   const accept = async (id: number) => {
@@ -39,19 +45,152 @@ export default function TrangTongQuanDuocSi() {
       await dispensingApi.accept(id);
       navigate(`/duoc-si/dang-xu-ly/${id}`);
     } catch (error) {
-      showToast(getApiErrorMessage(error, 'Không thể tiếp nhận đơn thuốc'), 'danger');
+      showToast(
+        getApiErrorMessage(error, 'Không thể tiếp nhận đơn thuốc'),
+        'danger',
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  return <div className="pharmacy-page">
-    <PharmacyPageHeader title="Tổng quan nhà thuốc" description="Đơn thuốc mới và tình trạng tồn kho được cập nhật từ hệ thống." />
-    <div className="pharmacy-stats">
-      <article><span className="material-symbols-outlined">pending_actions</span><div><strong>{pending.length}</strong><small>Đơn chờ cấp</small></div></article>
-      <article><span className="material-symbols-outlined">inventory_2</span><div><strong>{batches.filter((batch) => batch.status === 'SẮP HẾT HẠN').length}</strong><small>Lô sắp hết hạn</small></div></article>
-      <article><span className="material-symbols-outlined">production_quantity_limits</span><div><strong>{batches.filter((batch) => batch.status === 'HẾT HÀNG').length}</strong><small>Thuốc hết hàng</small></div></article>
+  const expiringBatchesCount = batches.filter(
+    (batch) => batch.status === 'SẮP HẾT HẠN',
+  ).length;
+  const outOfStockCount = batches.filter(
+    (batch) => batch.status === 'HẾT HÀNG',
+  ).length;
+
+  return (
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Vận hành nhà thuốc</p>
+          <h1>TỔNG QUAN NHÀ THUỐC</h1>
+          <p className="admin-management-description">
+            Theo dõi đơn thuốc chờ cấp, lô thuốc sắp hết hạn và tình trạng thuốc hết hàng.
+          </p>
+        </div>
+      </header>
+
+      <section className="medicine-inventory__stats">
+        <article>
+          <span className="material-symbols-outlined">pending_actions</span>
+          <div>
+            <small>Đơn chờ cấp</small>
+            <strong>{pending.length}</strong>
+          </div>
+        </article>
+        <article className="is-warning">
+          <span className="material-symbols-outlined">event_busy</span>
+          <div>
+            <small>Lô sắp hết hạn</small>
+            <strong>{expiringBatchesCount}</strong>
+          </div>
+        </article>
+        <article>
+          <span className="material-symbols-outlined">
+            production_quantity_limits
+          </span>
+          <div>
+            <small>Thuốc hết hàng</small>
+            <strong>{outOfStockCount}</strong>
+          </div>
+        </article>
+      </section>
+
+      <section className="medicine-inventory__card">
+        <div className="medicine-inventory__tabs justify-content-between">
+          <div className="fw-bold fs-6 text-dark d-flex align-items-center gap-2">
+            <span className="material-symbols-outlined text-primary">
+              receipt_long
+            </span>
+            <span>Đơn thuốc mới nhất (chờ dược sĩ tiếp nhận)</span>
+          </div>
+          <Link
+            className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 text-white"
+            to="/duoc-si/don-cho-cap"
+          >
+            <span>Xem tất cả</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+              arrow_forward
+            </span>
+          </Link>
+        </div>
+
+        <div className="table-responsive">
+          <table
+            className="table medicine-inventory__table mb-0"
+            style={{ minWidth: '850px', width: '100%' }}
+          >
+            <thead>
+              <tr>
+                <th style={{ width: '15%' }}>Mã đơn</th>
+                <th style={{ width: '30%' }}>Bệnh nhân</th>
+                <th style={{ width: '30%' }}>Bác sĩ</th>
+                <th style={{ width: '15%' }}>Thời gian</th>
+                <th className="text-end" style={{ width: '10%' }}>
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {pending.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-4 text-center text-secondary">
+                    Hiện chưa có đơn thuốc nào đang chờ tiếp nhận.
+                  </td>
+                </tr>
+              ) : (
+                pending.slice(0, 5).map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <span className="medicine-inventory__code">
+                        {item.code}
+                      </span>
+                    </td>
+                    <td>
+                      <div>
+                        <strong className="text-dark">{item.patient.fullName}</strong>
+                        <small className="d-block text-secondary">
+                          Mã BN: {item.patient.code}
+                        </small>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <strong className="text-dark">{item.doctor.fullName}</strong>
+                        <small className="d-block text-secondary">
+                          Khoa: {item.doctor.specialty}
+                        </small>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="text-nowrap text-secondary">
+                        {dinhDangNgayGio(item.createdAt)}
+                      </span>
+                    </td>
+                    <td className="text-end">
+                      <div className="admin-crud-actions justify-content-end">
+                        <button
+                          className="btn btn-sm btn-primary text-nowrap"
+                          disabled={isLoading}
+                          onClick={() => void accept(item.id)}
+                        >
+                          <span className="material-symbols-outlined">
+                            check_circle
+                          </span>
+                          Tiếp nhận
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
-    <section className="pharmacy-panel"><div className="pharmacy-panel__header"><div><h2>Đơn thuốc mới nhất</h2><p>Danh sách đang chờ dược sĩ tiếp nhận.</p></div><Link className="btn btn-outline-primary" to="/duoc-si/don-cho-cap">Xem tất cả</Link></div><div className="table-responsive"><table className="table pharmacy-table"><thead><tr><th>Mã đơn</th><th>Bệnh nhân</th><th>Bác sĩ</th><th>Thời gian</th><th /></tr></thead><tbody>{pending.slice(0, 3).map((item) => <tr key={item.id}><td><strong className="text-primary">{item.code}</strong></td><td><div className="pharmacy-person"><div><strong>{item.patient.fullName}</strong><small>{item.patient.code}</small></div></div></td><td><div className="pharmacy-person"><div><strong>{item.doctor.fullName}</strong><small>{item.doctor.specialty}</small></div></div></td><td><strong>{dinhDangNgayGio(item.createdAt).split(' ')[0]}</strong><small>{dinhDangNgayGio(item.createdAt).split(' ')[1]}</small></td><td className="text-end"><button className="btn btn-sm btn-primary" disabled={isLoading} onClick={() => void accept(item.id)}>Tiếp nhận</button></td></tr>)}</tbody></table></div></section>
-  </div>;
+  );
 }

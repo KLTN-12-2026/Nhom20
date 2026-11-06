@@ -1,21 +1,30 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
+import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
 
 import { dispensingApi } from '../../api/dispensing.api';
-import PharmacyPageHeader from '../../components/PharmacyPageHeader';
 import type { DispensingPrescription } from '../../types/dispensing.types';
 import '../../pharmacist-workspace.css';
 
 type StatusFilterTab = 'ALL' | 'DA_CAP_THUOC' | 'TU_CHOI_CAP_THUOC';
 
+const ITEMS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
+
 export default function TrangLichSuCapThuoc() {
   const { showToast } = useAppToast();
   const [search, setSearch] = useState('');
   const [statusTab, setStatusTab] = useState<StatusFilterTab>('ALL');
+  const [page, setPage] = useState(1);
   const [rows, setRows] = useState<DispensingPrescription[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<DispensingPrescription | null>(null);
@@ -63,12 +72,45 @@ export default function TrangLichSuCapThuoc() {
     return rows;
   }, [rows, statusTab]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    filteredRows.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const displayedTo = Math.min(currentPage * ITEMS_PER_PAGE, filteredRows.length);
+  const paginatedRows = useMemo(
+    () =>
+      filteredRows.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+      ),
+    [currentPage, filteredRows],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusTab]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   return (
-    <div className="pharmacy-page">
-      <PharmacyPageHeader
-        title="Lịch sử cấp thuốc"
-        description="Tra cứu các đơn thuốc đã hoàn tất hoặc đã từ chối cấp."
-      />
+    <div className="pharmacy-page admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Theo dõi cấp phát thuốc</p>
+          <h1>LỊCH SỬ CẤP THUỐC</h1>
+          <p className="admin-management-description">
+            Tra cứu các đơn thuốc đã hoàn tất hoặc bị từ chối cấp phát.
+          </p>
+        </div>
+      </header>
       <section className="pharmacy-panel">
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
           <div className="pharmacy-filter m-0" style={{ maxWidth: 360, flex: '1 1 280px' }}>
@@ -119,7 +161,7 @@ export default function TrangLichSuCapThuoc() {
                   </td>
                 </tr>
               )}
-              {filteredRows.map((item) => {
+              {paginatedRows.map((item) => {
                 const isRefused = item.status === 'TU_CHOI_CAP_THUOC';
                 const pharmacistName =
                   item.pharmacist?.fullName ??
@@ -175,6 +217,60 @@ export default function TrangLichSuCapThuoc() {
             </tbody>
           </table>
         </div>
+        {filteredRows.length > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {filteredRows.length} đơn thuốc
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang lịch sử cấp thuốc">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <span aria-hidden="true">«</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === currentPage ? 'page' : undefined}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={currentPage >= totalPages}
+                    onClick={() =>
+                      setPage((current) => Math.min(totalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">»</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        )}
         {loading && (
           <div className="text-secondary small mt-2">Đang tải dữ liệu...</div>
         )}

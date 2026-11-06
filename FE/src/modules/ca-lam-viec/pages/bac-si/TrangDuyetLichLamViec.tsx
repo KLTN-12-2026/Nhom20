@@ -4,6 +4,7 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { useWorkSchedules } from '../../hooks/use-work-schedules';
 import { addScheduleDays, getCurrentMonday } from '../../utils/schedule-date';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
+import '@/components/ui/admin-crud.css';
 import '@/modules/bac-si/doctor-workspace.css';
 
 interface DoctorDutyRow {
@@ -193,31 +194,33 @@ export default function TrangDuyetLichLamViec() {
   }
 
   return (
-    <div className="doctor-page">
-      <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div className="doctor-page admin-crud-page">
+      <header className="admin-crud-heading">
         <div>
-          <div className="doctor-page__eyebrow">Dành cho trưởng khoa</div>
-          <h1 className="doctor-page__title">Phân lịch trực đêm</h1>
-          <p className="doctor-page__description">Phân hai ca trực mỗi tuần cho bác sĩ trong khoa; ngày nghỉ bù được tính tự động.</p>
+          <p className="admin-management-eyebrow">Dành cho trưởng khoa</p>
+          <h1>PHÂN LỊCH TRỰC ĐÊM</h1>
+          <p className="admin-management-description">
+            Phân hai ca trực mỗi tuần cho bác sĩ trong khoa; ngày nghỉ bù được tính tự động.
+          </p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap align-items-center gap-2">
           <button 
-            className="btn btn-outline-primary bg-white" 
+            className="btn btn-outline-primary bg-white d-inline-flex align-items-center gap-1" 
             disabled={isSaving || rows.length === 0} 
             onClick={handleAutoSchedule}
           >
-            <span className="material-symbols-outlined align-bottom fs-5 me-1">magic_button</span>
-            Tự động xếp lịch
+            <span className="material-symbols-outlined fs-5">magic_button</span>
+            <span>Tự động xếp lịch</span>
           </button>
           <button 
-            className="btn btn-primary" 
+            className="btn btn-primary d-inline-flex align-items-center gap-1 text-white" 
             disabled={isSaving || rows.length === 0} 
             onClick={handleSave}
           >
-            {isSaving ? 'Đang lưu...' : (departmentSchedule?.published ? 'Cập nhật lại lịch đã công bố' : 'Lưu và công bố lịch')}
+            <span>{isSaving ? 'Đang lưu...' : (departmentSchedule?.published ? 'Cập nhật lại lịch đã công bố' : 'Lưu và công bố lịch')}</span>
           </button>
         </div>
-      </div>
+      </header>
 
       <div className="row g-3 mb-4">
         <div className="col-md-4"><div className="doctor-stat"><div><div className="doctor-stat__value">{rows.length}</div><div className="doctor-stat__label">Bác sĩ trong khoa</div></div></div></div>
