@@ -23,6 +23,7 @@ import type { AuthenticatedUser } from '../../common/auth/authenticated-user.typ
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { DoctorQueryDto } from './dto/doctor-query.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
@@ -59,6 +60,7 @@ export class DoctorsController {
   }
 
   @Post()
+  @Permissions('BAC_SI.CREATE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Tạo bác sĩ kèm tài khoản DOCTOR' })
@@ -71,6 +73,7 @@ export class DoctorsController {
   }
 
   @Patch(':id')
+  @Permissions('BAC_SI.UPDATE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Cập nhật bác sĩ và tài khoản liên kết' })
@@ -84,6 +87,7 @@ export class DoctorsController {
   }
 
   @Delete(':id')
+  @Permissions('BAC_SI.DELETE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @HttpCode(200)

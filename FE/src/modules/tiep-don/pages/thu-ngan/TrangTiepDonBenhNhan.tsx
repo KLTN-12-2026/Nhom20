@@ -8,6 +8,8 @@ import { specialtyApi } from '@/modules/chuyen-khoa/api/specialty.api';
 import type { Specialty } from '@/modules/chuyen-khoa/types/specialty.types';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 import ReceptionistPageHeader from '../../components/ReceptionistPageHeader';
 import { useReception } from '../../hooks/use-reception';
 import type { ReceptionTicketData } from '../../types/reception-ticket.types';
@@ -207,6 +209,9 @@ function BirthDateField({ value, onChange }: { value: string; onChange: (value: 
 
 export default function TrangTiepDonBenhNhan() {
   const { showToast } = useAppToast();
+  const user = useAuthStore((state) => state.user);
+  const canCreateReception = hasPermission(user, 'TIEP_DON.CREATE');
+  const canCreatePatient = hasPermission(user, 'BENH_NHAN.CREATE');
   const navigate = useNavigate();
   const [mode, setMode] = useState<PatientMode>('existing');
   const [search, setSearch] = useState('');
@@ -338,6 +343,11 @@ export default function TrangTiepDonBenhNhan() {
   };
 
   const issueTicket = async () => {
+    if (!canCreateReception) return;
+    if (!selectedPatient && !canCreatePatient) {
+      showToast('Bạn không có quyền thêm bệnh nhân mới', 'warning');
+      return;
+    }
     if (!isConfirmed) return;
     if (isCompleted) return;
     if (!form.specialty || !form.doctor || !form.reason.trim()) {
@@ -475,7 +485,7 @@ export default function TrangTiepDonBenhNhan() {
                 <span className="material-symbols-outlined me-2">history</span>
                 Bệnh nhân cũ
               </button>
-              <button
+              {canCreatePatient && <button
                 type="button"
                 className={`btn ${mode === 'new' ? 'btn-primary' : 'btn-outline-primary'
                   }`}
@@ -483,7 +493,7 @@ export default function TrangTiepDonBenhNhan() {
               >
                 <span className="material-symbols-outlined me-2">person_add</span>
                 Bệnh nhân mới
-              </button>
+              </button>}
             </div>
           </div>
 
@@ -576,7 +586,9 @@ export default function TrangTiepDonBenhNhan() {
                     Nhập thông tin để bắt đầu tra cứu
                   </strong>
                   <div className="mt-1">
-                    Nếu chưa có hồ sơ, chọn tab “Bệnh nhân mới”.
+                    {canCreatePatient
+                      ? 'Nếu chưa có hồ sơ, chọn tab “Bệnh nhân mới”.'
+                      : 'Bạn chưa được cấp quyền thêm bệnh nhân mới. Vui lòng liên hệ quản trị viên.'}
                   </div>
                 </div>
               )}
@@ -1066,7 +1078,7 @@ export default function TrangTiepDonBenhNhan() {
                   </button>
                 ) : (
                   <div className="d-flex flex-wrap gap-2">
-                    <button
+                    {canCreateReception && <button
                       type="button"
                       className="btn btn-outline-primary"
                       disabled={isConfirmed}
@@ -1076,8 +1088,8 @@ export default function TrangTiepDonBenhNhan() {
                         {isConfirmed ? 'check_circle' : 'fact_check'}
                       </span>
                       {isConfirmed ? 'Đã xác nhận' : 'Xác nhận'}
-                    </button>
-                    <button
+                    </button>}
+                    {canCreateReception && <button
                       type="button"
                       className="btn btn-primary"
                       disabled={!isConfirmed || isCompleted || isSubmitting}
@@ -1091,7 +1103,7 @@ export default function TrangTiepDonBenhNhan() {
                         : isCompleted
                           ? 'Đã cấp phiếu'
                           : 'Cấp phiếu'}
-                    </button>
+                    </button>}
                     <button
                       type="button"
                       className="btn btn-outline-dark"

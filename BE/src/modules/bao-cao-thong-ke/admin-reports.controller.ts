@@ -4,6 +4,7 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { AdminReportQueryDto } from './dto/admin-report-query.dto';
 import { AdminReportsService } from './admin-reports.service';
 
@@ -15,6 +16,7 @@ export class AdminReportsController {
   constructor(private readonly reportsService: AdminReportsService) {}
 
   @Get('overview')
+  @Permissions('BAO_CAO.VIEW')
   @ApiOperation({
     summary: 'Quản trị viên xem báo cáo thống kê theo khoảng ngày',
   })

@@ -15,6 +15,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { SePayWebhookDto } from './dto/sepay-webhook.dto';
 import { ThanhToanService } from './thanh-toan.service';
 
@@ -50,6 +51,7 @@ export class ThanhToanController {
   @Get('hoa-don')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('RECEPTIONIST')
+  @Permissions('HOA_DON.VIEW')
   // Chức năng: Thanh toán — xem danh sách hóa đơn
   async getInvoices() {
     return this.thanhToanService.getInvoices();
@@ -58,6 +60,7 @@ export class ThanhToanController {
   @Post('hoa-don/:id/tien-mat')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('RECEPTIONIST')
+  @Permissions('HOA_DON.UPDATE')
   // Chức năng: Thanh toán — ghi nhận tiền mặt
   async collectCash(
     @Param('id') id: string,
@@ -70,6 +73,7 @@ export class ThanhToanController {
   @Post('hoa-don/:id/chuyen-khoan')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('RECEPTIONIST')
+  @Permissions('HOA_DON.UPDATE')
   // Chức năng: Thanh toán — ghi nhận chuyển khoản thủ công để kiểm thử API
   async collectTransfer(
     @Param('id') id: string,

@@ -5,6 +5,7 @@ export interface RolePermission {
   code: string;
   name: string;
   action: PermissionAction;
+  implemented: boolean;
 }
 
 export interface PermissionModule {

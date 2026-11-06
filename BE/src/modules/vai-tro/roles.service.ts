@@ -17,26 +17,31 @@ import {
   type RoleRepository,
 } from './repositories/role.repository.interface';
 
-const MODULE_METADATA: Record<string, { name: string; icon: string }> = {
-  NGUOI_DUNG: { name: 'Quản lý người dùng', icon: 'group' },
-  BENH_AN: { name: 'Hồ sơ bệnh án', icon: 'medical_services' },
-  LICH_HEN: { name: 'Lịch hẹn', icon: 'event' },
-  THUOC: { name: 'Quản lý thuốc', icon: 'medication' },
-  HOA_DON: { name: 'Hóa đơn và thanh toán', icon: 'payments' },
-  BAC_SI: { name: 'Quản lý bác sĩ', icon: 'stethoscope' },
-  BENH_NHAN: { name: 'Quản lý bệnh nhân', icon: 'person' },
-  CHUYEN_KHOA: { name: 'Quản lý chuyên khoa', icon: 'category' },
-  DICH_VU: { name: 'Quản lý dịch vụ', icon: 'medical_information' },
-  TIEP_DON: { name: 'Tiếp đón bệnh nhân', icon: 'person_add' },
-  CAP_THUOC: { name: 'Cấp thuốc', icon: 'medication_liquid' },
-  LICH_LAM_VIEC: { name: 'Lịch làm việc', icon: 'calendar_month' },
-  BAN_GIAO_CA: { name: 'Bàn giao ca', icon: 'assignment_turned_in' },
-  BAO_CAO: { name: 'Báo cáo và thống kê', icon: 'analytics' },
-  DANH_GIA_BAC_SI: { name: 'Đánh giá bác sĩ', icon: 'star_rate' },
-  CHATBOX_AI: { name: 'Quản lý Chatbox AI', icon: 'smart_toy' },
-  NHAT_KY_HE_THONG: { name: 'Nhật ký hệ thống', icon: 'history' },
-  VAI_TRO: { name: 'Vai trò và phân quyền', icon: 'security' },
-  CAI_DAT_HE_THONG: { name: 'Cài đặt hệ thống', icon: 'settings' },
+type PermissionAction = 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE';
+
+// Phân biệt quyền có tác dụng thực tế với quyền trong danh mục chưa có thao tác.
+const MODULE_METADATA: Record<
+  string,
+  { name: string; icon: string; actions: PermissionAction[] }
+> = {
+  NGUOI_DUNG: { name: 'Quản lý người dùng', icon: 'group', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
+  BAC_SI: { name: 'Quản lý bác sĩ', icon: 'stethoscope', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
+  BENH_NHAN: { name: 'Quản lý bệnh nhân', icon: 'person', actions: ['VIEW', 'CREATE'] },
+  BENH_AN: { name: 'Hồ sơ bệnh án', icon: 'medical_services', actions: ['VIEW'] },
+  CHUYEN_KHOA: { name: 'Quản lý chuyên khoa', icon: 'category', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
+  DICH_VU: { name: 'Quản lý dịch vụ', icon: 'medical_information', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
+  THUOC: { name: 'Quản lý thuốc', icon: 'medication', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
+  LICH_HEN: { name: 'Lịch hẹn', icon: 'event', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
+  TIEP_DON: { name: 'Tiếp đón bệnh nhân', icon: 'person_add', actions: ['VIEW', 'CREATE'] },
+  HOA_DON: { name: 'Hóa đơn và thanh toán', icon: 'payments', actions: ['VIEW', 'UPDATE'] },
+  CAP_THUOC: { name: 'Cấp thuốc', icon: 'medication_liquid', actions: ['VIEW', 'UPDATE'] },
+  LICH_LAM_VIEC: { name: 'Lịch làm việc', icon: 'calendar_month', actions: ['VIEW', 'UPDATE'] },
+  BAN_GIAO_CA: { name: 'Bàn giao ca', icon: 'assignment_turned_in', actions: ['VIEW', 'CREATE', 'UPDATE'] },
+  BAO_CAO: { name: 'Báo cáo và thống kê', icon: 'analytics', actions: ['VIEW'] },
+  DANH_GIA_BAC_SI: { name: 'Đánh giá bác sĩ', icon: 'star_rate', actions: ['VIEW', 'UPDATE'] },
+  CHATBOX_AI: { name: 'Quản lý Chatbox AI', icon: 'smart_toy', actions: ['VIEW'] },
+  NHAT_KY_HE_THONG: { name: 'Nhật ký hệ thống', icon: 'history', actions: ['VIEW'] },
+  VAI_TRO: { name: 'Vai trò và phân quyền', icon: 'security', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
 };
 
 @Injectable()
@@ -70,6 +75,9 @@ export class RolesService {
                 code: permission.maQuyen,
                 name: permission.tenQuyen,
                 action: action.toLowerCase(),
+                implemented: metadata.actions.includes(
+                  action.toUpperCase() as PermissionAction,
+                ),
               };
             }),
         })),

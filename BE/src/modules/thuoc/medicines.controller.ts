@@ -20,6 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user.type';
 import { CreateMedicineDto } from './dto/create-medicine.dto';
@@ -36,12 +37,14 @@ export class MedicinesController {
 
   @Get()
   @Roles('ADMIN', 'PHARMACIST', 'DOCTOR')
+  @Permissions('THUOC.VIEW')
   findAll(@Query() query: MedicineQueryDto) {
     return this.medicinesService.findAll(query);
   }
 
   @Get('batches')
   @Roles('ADMIN', 'PHARMACIST')
+  @Permissions('THUOC.VIEW')
   // Chức năng: Quản lý thuốc — xem tồn kho theo từng lô
   findBatches(@Query('search') search?: string) {
     return this.medicinesService.findBatches(search);
@@ -49,12 +52,14 @@ export class MedicinesController {
 
   @Get(':id')
   @Roles('ADMIN', 'PHARMACIST', 'DOCTOR')
+  @Permissions('THUOC.VIEW')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.medicinesService.findOne(id);
   }
 
   @Post()
   @Roles('PHARMACIST')
+  @Permissions('THUOC.CREATE')
   create(
     @Body() createMedicineDto: CreateMedicineDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -64,6 +69,7 @@ export class MedicinesController {
 
   @Patch(':id')
   @Roles('PHARMACIST')
+  @Permissions('THUOC.UPDATE')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMedicineDto: UpdateMedicineDto,
@@ -74,6 +80,7 @@ export class MedicinesController {
 
   @Post(':id/stock-in')
   @Roles('PHARMACIST')
+  @Permissions('THUOC.UPDATE')
   stockIn(
     @Param('id', ParseIntPipe) id: number,
     @Body() stockInDto: StockInDto,
@@ -84,6 +91,7 @@ export class MedicinesController {
 
   @Post(':id/image')
   @Roles('PHARMACIST')
+  @Permissions('THUOC.UPDATE')
   @UseInterceptors(
     FileInterceptor('image', { limits: { fileSize: 5 * 1024 * 1024 } }),
   )
@@ -97,6 +105,7 @@ export class MedicinesController {
 
   @Delete(':id/image')
   @Roles('PHARMACIST')
+  @Permissions('THUOC.UPDATE')
   @HttpCode(HttpStatus.OK)
   removeImage(
     @Param('id', ParseIntPipe) id: number,
@@ -107,6 +116,7 @@ export class MedicinesController {
 
   @Delete(':id')
   @Roles('PHARMACIST')
+  @Permissions('THUOC.DELETE')
   @HttpCode(HttpStatus.OK) // Xóa thì trả về 200
   remove(
     @Param('id', ParseIntPipe) id: number,

@@ -8,6 +8,8 @@ import { paymentApi } from '../../api/payment.api';
 import { dinhDangNgay, dinhDangNgayGio, giaTriInputNgay } from '@/utils/dinh-dang-ngay';
 import { inBillRawBT58mm, inBillSunmi58mm, khoiDongMayInSunmi, maHoaNoiDung, moCuaSoInBill58mm } from '@/utils/in-an';
 import '@/modules/tiep-don/receptionist-workspace.css';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 type PaymentMethod = 'TIEN_MAT' | 'CHUYEN_KHOAN';
 type InvoiceStatus = 'Chưa thanh toán' | 'Thanh toán một phần' | 'Đã thanh toán' | 'Đã hủy';
@@ -64,6 +66,8 @@ function toIsoDate(value: string) {
 }
 
 export default function TrangQuanLyThanhToan() {
+  const user = useAuthStore((state) => state.user);
+  const canUpdate = hasPermission(user, 'HOA_DON.UPDATE');
   const { showToast } = useAppToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
@@ -518,7 +522,7 @@ export default function TrangQuanLyThanhToan() {
                     <td className="text-end">
                       <div className="d-inline-flex gap-1">
                         <button className="btn btn-sm btn-primary text-white" onClick={() => openInvoice(invoice)}>
-                          {invoice.status === 'Đã thanh toán' ? 'Xem chi tiết' : 'Thu tiền'}
+                          {invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}
                         </button>
                         <button
                           type="button"
@@ -583,9 +587,9 @@ export default function TrangQuanLyThanhToan() {
                       onClick={() => openInvoice(invoice)}
                     >
                       <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                        {invoice.status === 'Đã thanh toán' ? 'visibility' : 'payments'}
+                        {invoice.status === 'Đã thanh toán' || !canUpdate ? 'visibility' : 'payments'}
                       </span>
-                      {invoice.status === 'Đã thanh toán' ? 'Xem chi tiết' : 'Thu tiền'}
+                      {invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}
                     </button>
                     <button
                       type="button"
@@ -670,7 +674,7 @@ export default function TrangQuanLyThanhToan() {
           </div>
         </div>
         <div className="col-md-7">
-          {remaining > 0 ? (
+          {remaining > 0 && canUpdate ? (
             <>
               <label className="form-label fw-semibold">Phương thức cho lần thu mới</label>
               <div className="d-flex flex-wrap gap-2 mb-3">
@@ -737,6 +741,8 @@ export default function TrangQuanLyThanhToan() {
                 </div>
               )}
             </>
+          ) : remaining > 0 ? (
+            <div className="text-secondary">Bạn không có quyền thu tiền.</div>
           ) : (
             <div className="reception-payment-readonly">
               <span className="material-symbols-outlined">verified</span>
@@ -776,7 +782,7 @@ export default function TrangQuanLyThanhToan() {
           <span className="material-symbols-outlined me-1" style={{ fontSize: 18 }}>receipt_long</span>
           In bill 58mm
         </button>
-        {remaining > 0 && (
+        {remaining > 0 && canUpdate && (
           method === 'TIEN_MAT' ? (
             <button
               type="button"

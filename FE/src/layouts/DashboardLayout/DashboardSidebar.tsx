@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import type { MenuItem } from '@/config/menu.config';
 import { useAuthStore } from '@/stores/auth.store';
 import { isDepartmentHeadEmail } from '@/utils/department-head';
+import { hasPermission } from '@/utils/permissions';
 
 interface DashboardSidebarProps {
   navigationItems: MenuItem[];
@@ -73,6 +74,7 @@ export default function DashboardSidebar({
       {/* Navigation */}
       <nav className="d-flex flex-column gap-1 flex-grow-1">
         {navigationItems.filter(item => {
+          if (!hasPermission(user, item.permission)) return false;
           if (!item.departmentHeadOnly) return true;
           return isDepartmentHeadEmail(user?.email);
         }).map((menuItem) => {

@@ -11,6 +11,8 @@ import type {
   SpecialtyPayload,
 } from '../../types/specialty.types';
 import { getSpecialtyIcon } from '@/utils/icon-mapper';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
 
@@ -42,6 +44,7 @@ function formatNumber(value: number) {
 }
 
 export default function TrangQuanLyChuyenKhoa() {
+  const user = useAuthStore((state) => state.user);
   const {
     specialties,
     isLoading,
@@ -177,14 +180,14 @@ export default function TrangQuanLyChuyenKhoa() {
             placeholder="Tìm kiếm chuyên khoa..."
           />
         </div>
-        <button
+        {hasPermission(user, 'CHUYEN_KHOA.CREATE') && <button
           type="button"
           className="btn btn-primary d-flex align-items-center gap-2"
           onClick={openCreateModal}
         >
           <span className="material-symbols-outlined">add</span>
           Thêm chuyên khoa
-        </button>
+        </button>}
       </div>
 
       {isLoading && (
@@ -248,17 +251,17 @@ export default function TrangQuanLyChuyenKhoa() {
                         <button className="btn btn-sm btn-primary" onClick={() => openSpecialtyModal('view', specialty)}>
                           <span className="material-symbols-outlined">visibility</span>Chi tiết
                         </button>
-                        <button className="btn btn-sm btn-light" onClick={() => openSpecialtyModal('edit', specialty)}>
+                        {hasPermission(user, 'CHUYEN_KHOA.UPDATE') && <button className="btn btn-sm btn-light" onClick={() => openSpecialtyModal('edit', specialty)}>
                           <span className="material-symbols-outlined">edit</span>Sửa
-                        </button>
-                        <button
+                        </button>}
+                        {hasPermission(user, 'CHUYEN_KHOA.DELETE') && <button
                           className="btn btn-sm btn-danger"
                           onClick={() => openSpecialtyModal('delete', specialty)}
                           disabled={specialty.doctorCount > 0}
                           title={specialty.doctorCount > 0 ? `Không thể xóa vì đang có ${specialty.doctorCount} bác sĩ trực thuộc.` : 'Xóa chuyên khoa'}
                         >
                           <span className="material-symbols-outlined">delete</span>Xóa
-                        </button>
+                        </button>}
                       </div>
                     </td>
                   </tr>

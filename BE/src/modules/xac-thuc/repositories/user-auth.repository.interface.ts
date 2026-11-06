@@ -3,7 +3,11 @@ import { Prisma } from '@prisma/client';
 export const authUserInclude = {
   nguoiDungVaiTro: {
     include: {
-      vaiTro: true,
+      vaiTro: {
+        include: {
+          quyen: { include: { quyen: true } },
+        },
+      },
     },
   },
 } satisfies Prisma.NguoiDungInclude;

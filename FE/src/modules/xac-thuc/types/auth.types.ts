@@ -5,6 +5,7 @@ export interface AuthenticatedUser {
   phoneNumber: string | null;
   avatarUrl: string | null;
   roles: string[];
+  permissions: string[];
 }
 
 export interface LoginPayload {

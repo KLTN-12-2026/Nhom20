@@ -5,6 +5,8 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import '@/components/ui/admin-crud.css';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 import { doctorReviewsApi, type DoctorReview, type DoctorReviewStatus } from '../../api/doctor-reviews.api';
 
@@ -25,6 +27,8 @@ const statusLabels: Record<DoctorReviewStatus, string> = {
 const date = (value: string) => dinhDangNgayGio(value);
 
 export default function TrangQuanLyDanhGiaBacSi() {
+  const user = useAuthStore((state) => state.user);
+  const canUpdate = hasPermission(user, 'DANH_GIA_BAC_SI.UPDATE');
   const { showToast } = useAppToast();
   const [allReviews, setAllReviews] = useState<DoctorReview[]>([]);
   const [search, setSearch] = useState('');
@@ -287,7 +291,7 @@ export default function TrangQuanLyDanhGiaBacSi() {
                           <span className="material-symbols-outlined">visibility</span>
                           Chi tiết
                         </button>
-                        {review.status !== 'DA_HIEN_THI' && (
+                        {canUpdate && review.status !== 'DA_HIEN_THI' && (
                           <button
                             type="button"
                             className="btn btn-sm btn-success text-nowrap"
@@ -297,7 +301,7 @@ export default function TrangQuanLyDanhGiaBacSi() {
                             {review.status === 'CHO_DUYET' ? 'Duyệt' : 'Hiển thị lại'}
                           </button>
                         )}
-                        {review.status !== 'DA_AN' && (
+                        {canUpdate && review.status !== 'DA_AN' && (
                           <button
                             type="button"
                             className="btn btn-sm btn-danger text-nowrap"
@@ -386,7 +390,7 @@ export default function TrangQuanLyDanhGiaBacSi() {
               <button className="btn btn-outline-secondary" onClick={() => setSelected(null)}>
                 Đóng
               </button>
-              {selected.status !== 'DA_HIEN_THI' && (
+              {canUpdate && selected.status !== 'DA_HIEN_THI' && (
                 <button
                   className="btn btn-success"
                   disabled={updatingId === selected.id}
@@ -397,7 +401,7 @@ export default function TrangQuanLyDanhGiaBacSi() {
                     : 'Hiển thị lại'}
                 </button>
               )}
-              {selected.status !== 'DA_AN' && (
+              {canUpdate && selected.status !== 'DA_AN' && (
                 <button
                   className="btn btn-danger"
                   disabled={updatingId === selected.id}

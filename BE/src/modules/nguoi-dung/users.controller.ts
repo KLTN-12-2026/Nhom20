@@ -24,6 +24,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -39,6 +40,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('role-options')
+  @Permissions('NGUOI_DUNG.VIEW')
   @ApiOperation({ summary: 'Lấy vai trò dùng cho biểu mẫu người dùng' })
   @ApiOkResponse()
   getRoleOptions() {
@@ -47,6 +49,7 @@ export class UsersController {
 
   @Get()
   @Roles('ADMIN', 'TIEP_DON_THU_NGAN', 'QUAN_TRI_VIEN', 'BAC_SI', 'DUOC_SI') // override class roles for this endpoint
+  @Permissions('NGUOI_DUNG.VIEW')
   @ApiOperation({ summary: 'Lấy danh sách người dùng' })
   @ApiOkResponse()
   findAll(@Query() query: UserQueryDto) {
@@ -54,6 +57,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @Permissions('NGUOI_DUNG.VIEW')
   @ApiOperation({ summary: 'Lấy chi tiết người dùng' })
   @ApiOkResponse()
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -61,6 +65,7 @@ export class UsersController {
   }
 
   @Post()
+  @Permissions('NGUOI_DUNG.CREATE')
   @ApiOperation({ summary: 'Thêm người dùng' })
   @ApiCreatedResponse()
   create(
@@ -71,6 +76,7 @@ export class UsersController {
   }
 
   @Post(':id/avatar')
+  @Permissions('NGUOI_DUNG.UPDATE')
   @UseInterceptors(
     FileInterceptor('avatar', { limits: { fileSize: 5 * 1024 * 1024 } }),
   )
@@ -85,6 +91,7 @@ export class UsersController {
   }
 
   @Delete(':id/avatar')
+  @Permissions('NGUOI_DUNG.UPDATE')
   @HttpCode(200)
   @ApiOperation({ summary: 'Xóa ảnh đại diện người dùng' })
   @ApiOkResponse()
@@ -96,6 +103,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @Permissions('NGUOI_DUNG.UPDATE')
   @ApiOperation({ summary: 'Cập nhật người dùng' })
   @ApiOkResponse()
   update(
@@ -107,6 +115,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @Permissions('NGUOI_DUNG.DELETE')
   @HttpCode(200)
   @ApiOperation({ summary: 'Xóa người dùng' })
   @ApiOkResponse()

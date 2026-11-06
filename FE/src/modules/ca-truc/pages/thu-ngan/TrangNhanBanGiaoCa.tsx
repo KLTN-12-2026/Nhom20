@@ -5,6 +5,8 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import ReceptionistPageHeader from '@/modules/tiep-don/components/ReceptionistPageHeader';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 import '@/modules/tiep-don/receptionist-workspace.css';
 
 type PendingHandover = {
@@ -32,6 +34,8 @@ function formatDate(value: string | null) {
 }
 
 export default function TrangNhanBanGiaoCa() {
+  const user = useAuthStore((state) => state.user);
+  const canConfirm = hasPermission(user, 'BAN_GIAO_CA.UPDATE');
   const { showToast } = useAppToast();
   const [handovers, setHandovers] = useState<PendingHandover[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,7 +96,7 @@ export default function TrangNhanBanGiaoCa() {
               <td>{formatDate(item.submittedAt)}</td>
               <td>{money(item.actualCash)}</td>
               <td className={item.difference ? 'text-danger fw-semibold' : 'text-success fw-semibold'}>{money(item.difference)}</td>
-              <td className="text-end"><button type="button" className="btn btn-primary btn-sm" onClick={() => setSelected(item)}>Xem & xác nhận</button></td>
+              <td className="text-end"><button type="button" className="btn btn-primary btn-sm" onClick={() => setSelected(item)}>{canConfirm ? 'Xem & xác nhận' : 'Xem chi tiết'}</button></td>
             </tr>)}
           </tbody>
         </table>
@@ -103,7 +107,7 @@ export default function TrangNhanBanGiaoCa() {
       size="lg"
       title="Xác nhận nhận bàn giao"
       onClose={() => !isConfirming && setSelected(null)}
-      footer={<><button type="button" className="btn btn-outline-secondary" disabled={isConfirming} onClick={() => setSelected(null)}>Quay lại</button><button type="button" className="btn btn-primary" disabled={isConfirming} onClick={() => void confirmReceipt()}>{isConfirming ? 'Đang xác nhận...' : 'Xác nhận đã nhận ca'}</button></>}
+      footer={<><button type="button" className="btn btn-outline-secondary" disabled={isConfirming} onClick={() => setSelected(null)}>Quay lại</button>{canConfirm && <button type="button" className="btn btn-primary" disabled={isConfirming} onClick={() => void confirmReceipt()}>{isConfirming ? 'Đang xác nhận...' : 'Xác nhận đã nhận ca'}</button>}</>}
     >
       <div className="row g-3">
         <div className="col-md-6"><small className="text-secondary d-block">Người bàn giao</small><strong>{selected.sender}</strong></div>

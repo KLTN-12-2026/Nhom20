@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   HinhThucKham,
   Prisma,
@@ -240,6 +240,12 @@ export class PrismaReceptionRepository implements ReceptionRepository {
                 where: { soDienThoai: data.patient.phoneNumber },
                 orderBy: { id: 'asc' },
               });
+              // Không ghi đè hồ sơ có sẵn chỉ bằng quyền thêm bệnh nhân mới.
+              if (existing && !data.canUpdatePatient) {
+                throw new ForbiddenException(
+                  'Số điện thoại đã có hồ sơ. Hãy chọn bệnh nhân cũ hoặc xin quyền sửa bệnh nhân.',
+                );
+              }
               const patient = existing
                 ? await transaction.benhNhan.update({
                     where: { id: existing.id },

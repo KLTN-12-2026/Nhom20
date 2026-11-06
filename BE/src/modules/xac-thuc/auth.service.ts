@@ -298,6 +298,15 @@ export class AuthService {
       phoneNumber: user.soDienThoai,
       avatarUrl: user.anhDaiDienUrl,
       roles: user.nguoiDungVaiTro.map((userRole) => userRole.vaiTro.maVaiTro),
+      permissions: [
+        ...new Set(
+          user.nguoiDungVaiTro.flatMap((userRole) =>
+            userRole.vaiTro.quyen.map((rolePermission) =>
+              rolePermission.quyen.maQuyen,
+            ),
+          ),
+        ),
+      ],
     };
   }
 }
