@@ -9,14 +9,17 @@ import { Request } from 'express';
 
 import type { AuthenticatedUser } from './authenticated-user.type';
 import { ROLES_KEY } from './roles.decorator';
+import { PermissionsGuard } from './permissions.guard';
 
 interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
 }
 
 @Injectable()
-export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+export class RolesGuard extends PermissionsGuard implements CanActivate {
+  constructor(reflector: Reflector) {
+    super(reflector);
+  }
 
   canActivate(context: ExecutionContext) {
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(
@@ -25,7 +28,7 @@ export class RolesGuard implements CanActivate {
     );
 
     if (!requiredRoles?.length) {
-      return true;
+      return super.canActivate(context);
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
@@ -36,6 +39,8 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Bạn không có quyền thực hiện thao tác này');
     }
 
-    return true;
+    // Chỉ kiểm tra quyền chi tiết sau JwtAuthGuard đã xác thực và gắn request.user.
+    // Guard toàn cục chạy trước JWT sẽ chặn nhầm cả quản trị viên.
+    return super.canActivate(context);
   }
 }

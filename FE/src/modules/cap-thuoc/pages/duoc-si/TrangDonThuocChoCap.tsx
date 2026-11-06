@@ -5,6 +5,8 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { useRealtimeEvent } from '@/hooks/use-realtime-event';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 import { dispensingApi } from '../../api/dispensing.api';
 import type { DispensingPrescription } from '../../types/dispensing.types';
@@ -12,6 +14,8 @@ import '@/components/ui/admin-crud.css';
 import '../../pharmacist-workspace.css';
 
 export default function TrangDonThuocChoCap() {
+  const user = useAuthStore((state) => state.user);
+  const canUpdate = hasPermission(user, 'CAP_THUOC.UPDATE');
   const navigate = useNavigate();
   const { showToast } = useAppToast();
   const [search, setSearch] = useState('');
@@ -56,7 +60,7 @@ export default function TrangDonThuocChoCap() {
           </p>
         </div>
       </header>
-      <section className="pharmacy-panel"><div className="pharmacy-filter"><div className="input-group"><span className="input-group-text"><span className="material-symbols-outlined">search</span></span><input className="form-control" placeholder="Tìm mã đơn, bệnh nhân hoặc bác sĩ..." value={search} onChange={(event) => setSearch(event.target.value)} /></div></div><div className="table-responsive"><table className="table pharmacy-table"><thead><tr><th>Mã đơn</th><th>Bệnh nhân</th><th>Bác sĩ</th><th>Số thuốc</th><th>Thời gian</th><th>Thao tác</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><strong className="text-primary">{item.code}</strong></td><td><div className="pharmacy-person"><div><strong>{item.patient.fullName}</strong><small>{item.patient.code}</small></div></div></td><td><div className="pharmacy-person"><div><strong>{item.doctor.fullName}</strong><small>{item.doctor.specialty}</small></div></div></td><td>{item.items.length}</td><td><strong>{dinhDangNgayGio(item.createdAt).split(' ')[0]}</strong><small>{dinhDangNgayGio(item.createdAt).split(' ')[1]}</small></td><td><button className="btn btn-sm btn-primary" disabled={isLoading} onClick={() => void handleAccept(item.id)}>Tiếp nhận</button></td></tr>)}</tbody></table></div></section>
+      <section className="pharmacy-panel"><div className="pharmacy-filter"><div className="input-group"><span className="input-group-text"><span className="material-symbols-outlined">search</span></span><input className="form-control" placeholder="Tìm mã đơn, bệnh nhân hoặc bác sĩ..." value={search} onChange={(event) => setSearch(event.target.value)} /></div></div><div className="table-responsive"><table className="table pharmacy-table"><thead><tr><th>Mã đơn</th><th>Bệnh nhân</th><th>Bác sĩ</th><th>Số thuốc</th><th>Thời gian</th><th>Thao tác</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><strong className="text-primary">{item.code}</strong></td><td><div className="pharmacy-person"><div><strong>{item.patient.fullName}</strong><small>{item.patient.code}</small></div></div></td><td><div className="pharmacy-person"><div><strong>{item.doctor.fullName}</strong><small>{item.doctor.specialty}</small></div></div></td><td>{item.items.length}</td><td><strong>{dinhDangNgayGio(item.createdAt).split(' ')[0]}</strong><small>{dinhDangNgayGio(item.createdAt).split(' ')[1]}</small></td><td>{canUpdate && <button className="btn btn-sm btn-primary" disabled={isLoading} onClick={() => void handleAccept(item.id)}>Tiếp nhận</button>}</td></tr>)}</tbody></table></div></section>
     </div>
   );
 }

@@ -20,6 +20,7 @@ import {
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user.type';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -44,6 +45,7 @@ export class ServicesController {
     return this.services.findOne(id);
   }
   @Post()
+  @Permissions('DICH_VU.CREATE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiCreatedResponse()
@@ -54,6 +56,7 @@ export class ServicesController {
     return this.services.create(dto, user.id);
   }
   @Patch(':id')
+  @Permissions('DICH_VU.UPDATE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiOkResponse()
@@ -65,6 +68,7 @@ export class ServicesController {
     return this.services.update(id, dto, user.id);
   }
   @Delete(':id')
+  @Permissions('DICH_VU.DELETE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @HttpCode(200)

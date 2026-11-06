@@ -8,6 +8,8 @@ import ReceptionistStatCard from '@/modules/tiep-don/components/ReceptionistStat
 import type { ReceptionTicketData } from '@/modules/tiep-don/types/reception-ticket.types';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgay, dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 import { useAppointments } from '../../hooks/use-appointments';
 import { APPOINTMENT_SOURCE_LABELS, type Appointment, type AppointmentStatus } from '../../types/appointment.types';
 import '@/modules/tiep-don/receptionist-workspace.css';
@@ -63,6 +65,8 @@ function toIsoDate(value: string) {
 }
 
 export default function TrangLichHenThuNgan() {
+  const user = useAuthStore((state) => state.user);
+  const canUpdate = hasPermission(user, 'LICH_HEN.UPDATE');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { showToast } = useAppToast();
@@ -280,7 +284,7 @@ export default function TrangLichHenThuNgan() {
                 >
                   <span className="material-symbols-outlined">visibility</span>
                 </button>
-                {appointment.status === 'CHO_XAC_NHAN' && (
+                {canUpdate && appointment.status === 'CHO_XAC_NHAN' && (
                   <>
                     <button
                       className="btn btn-sm btn-danger reception-action-btn"
@@ -298,7 +302,7 @@ export default function TrangLichHenThuNgan() {
                     </button>
                   </>
                 )}
-                {appointment.status === 'DA_XAC_NHAN' && (
+                {canUpdate && appointment.status === 'DA_XAC_NHAN' && (
                   <>
                     <button
                       className="btn btn-sm btn-danger reception-action-btn"
@@ -395,7 +399,7 @@ export default function TrangLichHenThuNgan() {
                 </dd>
               </dl>
 
-              {!cancelAction && (selected.status === 'CHO_XAC_NHAN' || selected.status === 'DA_XAC_NHAN') && (
+              {canUpdate && !cancelAction && (selected.status === 'CHO_XAC_NHAN' || selected.status === 'DA_XAC_NHAN') && (
                 <div className="mt-3">
                   <label className="form-label fw-semibold" htmlFor="appointment-doctor">
                     Bác sĩ tiếp nhận * <small className="text-secondary fw-normal">(chỉ hiển thị bác sĩ đang làm ngày {formatDate(selected.appointmentDate)})</small>
@@ -423,10 +427,10 @@ export default function TrangLichHenThuNgan() {
                 </div>
               )}
 
-              {!cancelAction && selected.status === 'CHO_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'CHO_XAC_NHAN' && (
                 <div className="doctor-note mt-3">Xác nhận lịch trước. Chỉ cấp phiếu khi bệnh nhân đã có mặt tại phòng khám.</div>
               )}
-              {!cancelAction && selected.status === 'DA_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'DA_XAC_NHAN' && (
                 <div className="doctor-note mt-3">Bệnh nhân đã được xác nhận. Kiểm tra bệnh nhân có mặt rồi cấp phiếu.</div>
               )}
               {!cancelAction && selected.ticket && (
@@ -458,7 +462,7 @@ export default function TrangLichHenThuNgan() {
             <div className="modal-footer">
               <button className="btn btn-outline-secondary" onClick={closeAppointment}>Đóng</button>
 
-              {!cancelAction && selected.status === 'CHO_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'CHO_XAC_NHAN' && (
                 <button
                   className="btn btn-primary"
                   disabled={isSubmitting || !selectedDoctorId || isLoadingDoctors}
@@ -468,7 +472,7 @@ export default function TrangLichHenThuNgan() {
                 </button>
               )}
 
-              {!cancelAction && selected.status === 'DA_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'DA_XAC_NHAN' && (
                 <button
                   className="btn btn-primary"
                   disabled={isSubmitting || !selectedDoctorId || isLoadingDoctors}
@@ -488,7 +492,7 @@ export default function TrangLichHenThuNgan() {
                 <button className="btn btn-outline-secondary" onClick={() => setCancelAction(null)}>Quay lại</button>
               )}
 
-              {cancelAction && (
+              {canUpdate && cancelAction && (
                 <button
                   className="btn btn-danger"
                   disabled={isSubmitting || !cancelReason.trim()}

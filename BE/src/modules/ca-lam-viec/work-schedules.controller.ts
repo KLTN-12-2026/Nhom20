@@ -14,6 +14,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { SaveDutyScheduleDto } from './dto/save-duty-schedule.dto';
 import { WorkScheduleQueryDto } from './dto/work-schedule-query.dto';
 import { WorkSchedulesService } from './work-schedules.service';
@@ -26,6 +27,7 @@ export class WorkSchedulesController {
   constructor(private readonly service: WorkSchedulesService) {}
 
   @Get('me')
+  @Permissions('LICH_LAM_VIEC.VIEW')
   findMine(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: WorkScheduleQueryDto,
@@ -34,6 +36,7 @@ export class WorkSchedulesController {
   }
 
   @Get('department')
+  @Permissions('LICH_LAM_VIEC.VIEW')
   findDepartment(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: WorkScheduleQueryDto,
@@ -42,6 +45,7 @@ export class WorkSchedulesController {
   }
 
   @Put('department/draft')
+  @Permissions('LICH_LAM_VIEC.UPDATE')
   saveDraft(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: SaveDutyScheduleDto,
@@ -50,6 +54,7 @@ export class WorkSchedulesController {
   }
 
   @Post('department/publish')
+  @Permissions('LICH_LAM_VIEC.UPDATE')
   publish(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: WorkScheduleQueryDto,

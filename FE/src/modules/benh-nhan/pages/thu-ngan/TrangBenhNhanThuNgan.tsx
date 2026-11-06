@@ -4,6 +4,8 @@ import ReceptionistPageHeader from '@/modules/tiep-don/components/ReceptionistPa
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 import '@/modules/tiep-don/receptionist-workspace.css';
 
 interface Patient {
@@ -19,6 +21,7 @@ interface Patient {
 
 export default function TrangBenhNhanThuNgan() {
   const { showToast } = useAppToast();
+  const user = useAuthStore((state) => state.user);
   const [search, setSearch] = useState('');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,7 +52,7 @@ export default function TrangBenhNhanThuNgan() {
         title="Quản lý bệnh nhân"
         description="Tra cứu hồ sơ bệnh nhân trực tiếp từ cơ sở dữ liệu."
         actions={
-          <Link className="btn btn-primary" to="/thu-ngan/tiep-don">
+          hasPermission(user, 'TIEP_DON.CREATE') && hasPermission(user, 'BENH_NHAN.CREATE') && <Link className="btn btn-primary" to="/thu-ngan/tiep-don">
             <span className="material-symbols-outlined me-2">person_add</span>
             Thêm bệnh nhân mới
           </Link>

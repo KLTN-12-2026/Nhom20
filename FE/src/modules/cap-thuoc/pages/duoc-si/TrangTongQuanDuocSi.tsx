@@ -5,6 +5,8 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { useRealtimeEvent } from '@/hooks/use-realtime-event';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 import { dispensingApi } from '../../api/dispensing.api';
 import { medicinesApi, type MedicineBatchRow } from '../../api/medicines.api';
@@ -14,6 +16,7 @@ import '@/modules/thuoc/medicine-inventory.css';
 import '../../pharmacist-workspace.css';
 
 export default function TrangTongQuanDuocSi() {
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const { showToast } = useAppToast();
   const [pending, setPending] = useState<DispensingPrescription[]>([]);
@@ -172,7 +175,7 @@ export default function TrangTongQuanDuocSi() {
                     </td>
                     <td className="text-end">
                       <div className="admin-crud-actions justify-content-end">
-                        <button
+                        {hasPermission(user, 'CAP_THUOC.UPDATE') && <button
                           className="btn btn-sm btn-primary text-nowrap"
                           disabled={isLoading}
                           onClick={() => void accept(item.id)}
@@ -181,7 +184,7 @@ export default function TrangTongQuanDuocSi() {
                             check_circle
                           </span>
                           Tiếp nhận
-                        </button>
+                        </button>}
                       </div>
                     </td>
                   </tr>

@@ -17,6 +17,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { ChatAIService } from './chat-ai.service';
 import { ChatAdminQueryDto } from './dto/chat-admin-query.dto';
 import { CreateChatSessionDto } from './dto/create-chat-session.dto';
@@ -35,6 +36,7 @@ export class ChatAIController {
   @Get('admin/overview')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
+  @Permissions('CHATBOX_AI.VIEW')
   @ApiOperation({ summary: 'Tong quan van hanh Chatbox AI cho quan tri vien' })
   getAdminOverview() {
     return this.chatAIService.getAdminOverview();
@@ -43,6 +45,7 @@ export class ChatAIController {
   @Get('admin/sessions')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
+  @Permissions('CHATBOX_AI.VIEW')
   @ApiOperation({ summary: 'Danh sach phien Chatbox AI cho quan tri vien' })
   getAdminSessions(@Query() query: ChatAdminQueryDto) {
     return this.chatAIService.getAdminSessions(query);
@@ -51,6 +54,7 @@ export class ChatAIController {
   @Get('admin/sessions/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
+  @Permissions('CHATBOX_AI.VIEW')
   @ApiOperation({ summary: 'Chi tiet mot phien Chatbox AI cho quan tri vien' })
   getAdminSessionDetail(@Param('id', ParseIntPipe) id: number) {
     return this.chatAIService.getAdminSessionDetail(id);

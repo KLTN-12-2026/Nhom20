@@ -44,7 +44,7 @@ function ServiceCard({ item }: { item: ReturnType<typeof useServices>['services'
   );
 }
 
-export default function ServiceCards({ limit }: { limit?: number }) {
+export default function ServiceCards() {
   const { services, isLoading, error, reload } = useServices('DANG_HOAT_DONG');
   const [page, setPage] = useState(1);
 

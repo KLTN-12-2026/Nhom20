@@ -17,6 +17,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { UpdateRolePermissionsDto } from './dto/update-role-permissions.dto';
@@ -30,12 +31,14 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
+  @Permissions('VAI_TRO.VIEW')
   @ApiOkResponse()
   findAll() {
     return this.rolesService.findAll();
   }
 
   @Post()
+  @Permissions('VAI_TRO.CREATE')
   @ApiCreatedResponse()
   create(
     @Body() dto: CreateRoleDto,
@@ -45,6 +48,7 @@ export class RolesController {
   }
 
   @Patch(':id')
+  @Permissions('VAI_TRO.UPDATE')
   @ApiOkResponse()
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -55,6 +59,7 @@ export class RolesController {
   }
 
   @Put(':id/permissions')
+  @Permissions('VAI_TRO.UPDATE')
   @ApiOkResponse()
   updatePermissions(
     @Param('id', ParseIntPipe) id: number,
@@ -65,6 +70,7 @@ export class RolesController {
   }
 
   @Delete(':id')
+  @Permissions('VAI_TRO.DELETE')
   @ApiOkResponse()
   remove(
     @Param('id', ParseIntPipe) id: number,

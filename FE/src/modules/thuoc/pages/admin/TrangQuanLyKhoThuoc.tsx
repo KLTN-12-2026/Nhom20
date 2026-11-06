@@ -14,6 +14,7 @@ import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { useAuthStore } from '@/stores/auth.store';
 import { isDepartmentHeadEmail } from '@/utils/department-head';
+import { hasPermission } from '@/utils/permissions';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 
 import { useMedicines } from '../../hooks/use-medicines';
@@ -350,7 +351,7 @@ export default function TrangQuanLyKhoThuoc() {
           </button>
           {!isAdmin && (
             <>
-              <button
+              {hasPermission(user, 'THUOC.UPDATE') && <button
                 type="button"
                 className="btn btn-outline-primary d-flex align-items-center gap-2"
                 onClick={() => openStockInModal()}
@@ -358,15 +359,15 @@ export default function TrangQuanLyKhoThuoc() {
               >
                 <span className="material-symbols-outlined">inventory</span>
                 Nhập kho
-              </button>
-              <button
+              </button>}
+              {hasPermission(user, 'THUOC.CREATE') && <button
                 type="button"
                 className="btn btn-primary d-flex align-items-center gap-2"
                 onClick={openCreateModal}
               >
                 <span className="material-symbols-outlined">add_circle</span>
                 Thêm thuốc mới
-              </button>
+              </button>}
             </>
           )}
         </div>
@@ -634,7 +635,7 @@ export default function TrangQuanLyKhoThuoc() {
                             </button>
                             {!isAdmin && (
                               <>
-                                <button
+                                {hasPermission(user, 'THUOC.UPDATE') && <button
                                   type="button"
                                   className="btn btn-sm btn-light text-nowrap"
                                   title="Chỉnh sửa"
@@ -647,8 +648,8 @@ export default function TrangQuanLyKhoThuoc() {
                                     edit
                                   </span>
                                   Sửa
-                                </button>
-                                {isDepartmentHead && (
+                                </button>}
+                                {isDepartmentHead && hasPermission(user, 'THUOC.DELETE') && (
                                   <button
                                     type="button"
                                     className="btn btn-sm btn-danger text-nowrap"

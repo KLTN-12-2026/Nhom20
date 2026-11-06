@@ -7,6 +7,8 @@ import { useSpecialties } from '@/modules/chuyen-khoa/hooks/use-specialties';
 import { useServices } from '../../hooks/use-services';
 import type { MedicalService, ServicePayload, ServiceStatus } from '../../types/service.types';
 import { getServiceIcon } from '@/utils/icon-mapper';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 type ModalMode = 'create' | 'view' | 'edit' | 'delete' | null;
 const SERVICES_PER_PAGE = 10;
@@ -25,6 +27,7 @@ function formatNumberWithDots(val: number) {
 }
 
 export default function TrangQuanLyDichVu() {
+  const user = useAuthStore((state) => state.user);
   const { services, isLoading, error, reload, createService, updateService, removeService } = useServices();
   const { specialties } = useSpecialties();
   const { showToast } = useAppToast();
@@ -183,9 +186,9 @@ export default function TrangQuanLyDichVu() {
             <option value="DANG_HOAT_DONG">Đang hoạt động</option>
             <option value="NGUNG_HOAT_DONG">Ngừng hoạt động</option>
           </select>
-          <button className="btn btn-primary d-flex align-items-center gap-2 ms-auto" onClick={openCreate}>
+          {hasPermission(user, 'DICH_VU.CREATE') && <button className="btn btn-primary d-flex align-items-center gap-2 ms-auto" onClick={openCreate}>
             <span className="material-symbols-outlined">add</span>Thêm dịch vụ
-          </button>
+          </button>}
         </div>
       </div>
       {isLoading && (
@@ -286,7 +289,7 @@ export default function TrangQuanLyDichVu() {
                           <span className="material-symbols-outlined">visibility</span>
                           Chi tiết
                         </button>
-                        <button
+                        {hasPermission(user, 'DICH_VU.UPDATE') && <button
                           type="button"
                           className="btn btn-sm btn-light text-nowrap"
                           title="Sửa"
@@ -294,8 +297,8 @@ export default function TrangQuanLyDichVu() {
                         >
                           <span className="material-symbols-outlined">edit</span>
                           Sửa
-                        </button>
-                        <button
+                        </button>}
+                        {hasPermission(user, 'DICH_VU.DELETE') && <button
                           type="button"
                           className="btn btn-sm btn-danger text-white text-nowrap"
                           title="Xóa"
@@ -303,7 +306,7 @@ export default function TrangQuanLyDichVu() {
                         >
                           <span className="material-symbols-outlined">delete</span>
                           Xóa
-                        </button>
+                        </button>}
                       </div>
                     </td>
                   </tr>

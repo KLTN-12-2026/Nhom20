@@ -290,7 +290,7 @@ export class ReceptionsService {
   }
 
   // Tạo mới dữ liệu cho chức năng: tiếp đón
-  async create(dto: CreateReceptionDto, currentUserId: number) {
+  async create(dto: CreateReceptionDto, currentUserId: number, canUpdatePatient: boolean) {
     if (!dto.patientId) {
       if (
         !dto.fullName ||
@@ -332,6 +332,7 @@ export class ReceptionsService {
     }
     const reception = await this.receptionRepository.create({
       patientId: dto.patientId,
+      canUpdatePatient,
       ...(!dto.patientId
         ? {
             patient: {

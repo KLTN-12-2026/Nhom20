@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { getApiErrorMessage } from '@/services/axios-client';
+import { authApi } from '@/modules/xac-thuc/api/auth.api';
+import { useAuthStore } from '@/stores/auth.store';
 
 import { roleApi } from '../api/role.api';
 import type {
@@ -53,7 +55,17 @@ export function useRoles() {
   const savePermissions = async (id: number, permissionIds: number[]) => {
     const response = await roleApi.savePermissions(id, permissionIds);
     await loadConfiguration();
-    return response;
+    let sessionRefreshFailed = false;
+    const { accessToken, user, setSession } = useAuthStore.getState();
+    if (accessToken && user?.roles.includes(response.data.code)) {
+      try {
+        const currentUser = await authApi.getMe();
+        setSession(accessToken, currentUser.data);
+      } catch {
+        sessionRefreshFailed = true;
+      }
+    }
+    return { ...response, sessionRefreshFailed };
   };
 
   const removeRole = async (id: number) => {

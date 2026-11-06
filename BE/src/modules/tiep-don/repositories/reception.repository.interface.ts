@@ -55,6 +55,7 @@ export type FollowUpWithRelations = Prisma.HoSoKhamGetPayload<{
 
 export interface CreateReceptionData {
   patientId?: number;
+  canUpdatePatient: boolean;
   patient?: {
     code: string;
     fullName: string;

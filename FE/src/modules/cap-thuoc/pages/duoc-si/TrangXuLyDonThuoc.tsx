@@ -7,6 +7,8 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 import { maHoaNoiDung, moCuaSoIn } from '@/utils/in-an';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 import { dispensingApi } from '../../api/dispensing.api';
 import type {
   BatchAllocationDto,
@@ -17,6 +19,8 @@ import '../../pharmacist-workspace.css';
 type AllocationMap = Record<number, BatchAllocationDto[]>;
 
 export default function TrangXuLyDonThuoc() {
+  const user = useAuthStore((state) => state.user);
+  const canUpdate = hasPermission(user, 'CAP_THUOC.UPDATE');
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useAppToast();
@@ -257,22 +261,22 @@ export default function TrangXuLyDonThuoc() {
           >
             In hướng dẫn thuốc
           </button>
-          <button
+          {canUpdate && <button
             type="button"
             className="btn btn-danger text-white w-100 mb-2"
             disabled={isSubmitting}
             onClick={() => setIsRefusalModalOpen(true)}
           >
             Từ chối cấp thuốc
-          </button>
-          <button
+          </button>}
+          {canUpdate && <button
             type="button"
             className="btn btn-primary w-100"
             disabled={!allChecked || isSubmitting}
             onClick={() => void handleDispense()}
           >
             {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất & chuyển Thu ngân'}
-          </button>
+          </button>}
         </aside>
       </div>
 

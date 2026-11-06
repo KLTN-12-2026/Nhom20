@@ -17,6 +17,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { AppointmentQueryDto } from './dto/appointment-query.dto';
 import { CreateGuestAppointmentDto } from './dto/create-guest-appointment.dto';
 import { CreatePatientAppointmentDto } from './dto/create-patient-appointment.dto';
@@ -48,6 +49,7 @@ export class AppointmentsController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
+  @Permissions('LICH_HEN.VIEW')
   @ApiOkResponse()
   findAll(@Query() query: AppointmentQueryDto) {
     return this.appointmentsService.findAll(query);
@@ -56,6 +58,7 @@ export class AppointmentsController {
   @Get('doctor/me')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('DOCTOR')
+  @Permissions('LICH_HEN.VIEW')
   @ApiOkResponse()
   findDoctorAppointments(
     @Query() query: AppointmentQueryDto,
@@ -70,6 +73,7 @@ export class AppointmentsController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
+  @Permissions('LICH_HEN.VIEW')
   @ApiOkResponse()
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.findOne(id);
@@ -78,6 +82,7 @@ export class AppointmentsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
+  @Permissions('LICH_HEN.CREATE')
   @ApiCreatedResponse()
   createByStaff(
     @Body() dto: CreateGuestAppointmentDto,
@@ -89,6 +94,7 @@ export class AppointmentsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
+  @Permissions('LICH_HEN.UPDATE')
   @ApiOkResponse()
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -101,6 +107,7 @@ export class AppointmentsController {
   @Post(':id/check-in')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
+  @Permissions('LICH_HEN.UPDATE')
   @ApiCreatedResponse()
   checkIn(
     @Param('id', ParseIntPipe) id: number,
@@ -112,6 +119,7 @@ export class AppointmentsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
+  @Permissions('LICH_HEN.DELETE')
   @ApiOkResponse()
   remove(
     @Param('id', ParseIntPipe) id: number,

@@ -6,6 +6,7 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { hasPermission } from '@/utils/permissions';
 
 import { useUsers } from '../../hooks/use-users';
 import type {
@@ -77,6 +78,9 @@ export default function TrangQuanLyNguoiDung() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const setSession = useAuthStore((state) => state.setSession);
   const { showToast } = useAppToast();
+  const canCreate = hasPermission(currentUser, 'NGUOI_DUNG.CREATE');
+  const canUpdate = hasPermission(currentUser, 'NGUOI_DUNG.UPDATE');
+  const canDelete = hasPermission(currentUser, 'NGUOI_DUNG.DELETE');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -312,14 +316,16 @@ export default function TrangQuanLyNguoiDung() {
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          className="btn btn-primary d-flex align-items-center gap-2 ms-auto"
-          onClick={openCreateModal}
-        >
-          <span className="material-symbols-outlined">add</span>
-          Thêm người dùng
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            className="btn btn-primary d-flex align-items-center gap-2 ms-auto"
+            onClick={openCreateModal}
+          >
+            <span className="material-symbols-outlined">add</span>
+            Thêm người dùng
+          </button>
+        )}
       </div>
 
       {isLoading && (
@@ -437,28 +443,32 @@ export default function TrangQuanLyNguoiDung() {
                         >
                           <span className="material-symbols-outlined">visibility</span>Chi tiết
                         </button>
-                        <button
-                          className="btn btn-sm btn-light text-nowrap"
-                          onClick={() => openUserModal('edit', user)}
-                        >
-                          <span className="material-symbols-outlined">edit</span>Sửa
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger text-white text-nowrap"
-                          title={
-                            user.id === currentUser?.id
-                              ? 'Không thể tự xóa tài khoản'
-                              : hasLinkedProfile(user)
-                                ? 'Tài khoản đang gắn hồ sơ nghiệp vụ'
-                                : 'Xóa người dùng'
-                          }
-                          disabled={
-                            user.id === currentUser?.id || hasLinkedProfile(user)
-                          }
-                          onClick={() => openUserModal('delete', user)}
-                        >
-                          <span className="material-symbols-outlined">delete</span>Xóa
-                        </button>
+                        {canUpdate && (
+                          <button
+                            className="btn btn-sm btn-light text-nowrap"
+                            onClick={() => openUserModal('edit', user)}
+                          >
+                            <span className="material-symbols-outlined">edit</span>Sửa
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            className="btn btn-sm btn-danger text-white text-nowrap"
+                            title={
+                              user.id === currentUser?.id
+                                ? 'Không thể tự xóa tài khoản'
+                                : hasLinkedProfile(user)
+                                  ? 'Tài khoản đang gắn hồ sơ nghiệp vụ'
+                                  : 'Xóa người dùng'
+                            }
+                            disabled={
+                              user.id === currentUser?.id || hasLinkedProfile(user)
+                            }
+                            onClick={() => openUserModal('delete', user)}
+                          >
+                            <span className="material-symbols-outlined">delete</span>Xóa
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -6,6 +6,8 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { useSpecialties } from '@/modules/chuyen-khoa/hooks/use-specialties';
 import { userApi } from '@/modules/nguoi-dung/api/user.api';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 import { useDoctors } from '../../hooks/use-doctors';
 import type {
@@ -48,6 +50,7 @@ function getInitials(fullName: string) {
 }
 
 export default function TrangQuanLyBacSi() {
+  const user = useAuthStore((state) => state.user);
   const {
     doctors,
     isLoading,
@@ -251,7 +254,7 @@ export default function TrangQuanLyBacSi() {
             placeholder="Tìm theo tên, mã, email hoặc chuyên khoa..."
           />
         </div>
-        <button
+        {hasPermission(user, 'BAC_SI.CREATE') && <button
           type="button"
           className="btn btn-primary d-flex align-items-center gap-2"
           onClick={openCreateModal}
@@ -264,7 +267,7 @@ export default function TrangQuanLyBacSi() {
         >
           <span className="material-symbols-outlined">add</span>
           Thêm bác sĩ
-        </button>
+        </button>}
       </div>
 
       {isLoading && (
@@ -403,22 +406,22 @@ export default function TrangQuanLyBacSi() {
                           <span className="material-symbols-outlined">visibility</span>
                           Chi tiết
                         </button>
-                        <button
+                        {hasPermission(user, 'BAC_SI.UPDATE') && <button
                           type="button"
                           className="btn btn-sm btn-light text-nowrap"
                           onClick={() => openDoctorModal('edit', doctor)}
                         >
                           <span className="material-symbols-outlined">edit</span>
                           Sửa
-                        </button>
-                        <button
+                        </button>}
+                        {hasPermission(user, 'BAC_SI.DELETE') && <button
                           type="button"
                           className="btn btn-sm btn-danger text-white text-nowrap"
                           onClick={() => openDoctorModal('delete', doctor)}
                         >
                           <span className="material-symbols-outlined">delete</span>
                           Xóa
-                        </button>
+                        </button>}
                       </div>
                     </td>
                   </tr>
