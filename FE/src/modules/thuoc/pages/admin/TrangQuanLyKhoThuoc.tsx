@@ -325,7 +325,7 @@ export default function TrangQuanLyKhoThuoc() {
 
   return (
     <div className="medicine-inventory admin-crud-page">
-      <header className="admin-crud-heading">
+      <header className="admin-crud-heading align-items-end">
         <div>
           <p className="admin-management-eyebrow">
             Quản lý kho thuốc

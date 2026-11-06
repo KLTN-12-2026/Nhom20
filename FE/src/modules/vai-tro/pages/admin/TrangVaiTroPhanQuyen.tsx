@@ -182,9 +182,15 @@ export default function TrangVaiTroPhanQuyen() {
 
   return (
     <div className="admin-crud-page">
-      <div className="admin-crud-heading">
-        <h1>VAI TRÒ VÀ PHÂN QUYỀN</h1>
-      </div>
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Quản trị truy cập</p>
+          <h1>VAI TRÒ VÀ PHÂN QUYỀN</h1>
+          <p className="admin-management-description">
+            Quản lý vai trò người dùng, thiết lập quyền hạn và kiểm soát phạm vi truy cập các chức năng trong hệ thống.
+          </p>
+        </div>
+      </header>
 
       {error && (
         <div className="alert alert-danger" role="alert">
