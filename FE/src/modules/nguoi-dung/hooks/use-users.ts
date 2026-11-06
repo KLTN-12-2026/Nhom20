@@ -53,6 +53,12 @@ export function useUsers(params?: { roleCode?: string; search?: string; status?:
     return response;
   };
 
+  const setUserLock = async (id: number, locked: boolean) => {
+    const response = await userApi.setLock(id, locked);
+    await loadUsers();
+    return response;
+  };
+
   const removeUser = async (id: number) => {
     const response = await userApi.remove(id);
     await loadUsers();
@@ -79,6 +85,7 @@ export function useUsers(params?: { roleCode?: string; search?: string; status?:
     reload: loadUsers,
     createUser,
     updateUser,
+    setUserLock,
     removeUser,
     uploadUserAvatar,
     removeUserAvatar,

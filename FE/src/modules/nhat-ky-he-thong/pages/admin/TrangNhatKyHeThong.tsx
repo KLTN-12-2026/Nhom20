@@ -3,6 +3,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import '@/components/ui/admin-crud.css';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 import { useAuditLogs } from '../../hooks/use-audit-logs';
+import { formatLogDetail } from '../../utils/format-log-detail';
 import type {
   AuditLogQuery,
   SystemModule,
@@ -229,6 +230,7 @@ export default function TrangNhatKyHeThong() {
                 <tbody>
                   {visibleLogs.map((log) => {
                     const date = formatLogDate(log.occurredAt);
+                    const detail = formatLogDetail(log);
                     return (
                       <tr key={log.id}>
                         <td className="text-nowrap">
@@ -282,12 +284,12 @@ export default function TrangNhatKyHeThong() {
                           >
                             {log.action}
                           </div>
-                          {log.detail && (
+                          {detail && (
                             <small
                               className="text-secondary text-truncate d-block"
-                              title={log.detail}
+                              title={detail}
                             >
-                              {log.detail}
+                              {detail}
                             </small>
                           )}
                         </td>

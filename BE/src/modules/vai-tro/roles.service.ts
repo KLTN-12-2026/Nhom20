@@ -24,7 +24,7 @@ const MODULE_METADATA: Record<
   string,
   { name: string; icon: string; actions: PermissionAction[] }
 > = {
-  NGUOI_DUNG: { name: 'Quản lý người dùng', icon: 'group', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
+  NGUOI_DUNG: { name: 'Quản lý nhân sự', icon: 'group', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
   BAC_SI: { name: 'Quản lý bác sĩ', icon: 'stethoscope', actions: ['VIEW', 'CREATE', 'UPDATE', 'DELETE'] },
   BENH_NHAN: { name: 'Quản lý bệnh nhân', icon: 'person', actions: ['VIEW', 'CREATE'] },
   BENH_AN: { name: 'Hồ sơ bệnh án', icon: 'medical_services', actions: ['VIEW'] },
