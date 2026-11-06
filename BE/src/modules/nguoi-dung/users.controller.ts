@@ -29,6 +29,7 @@ import type { AuthenticatedUser } from '../../common/auth/authenticated-user.typ
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SetUserLockDto } from './dto/set-user-lock.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UsersService } from './users.service';
 
@@ -100,6 +101,18 @@ export class UsersController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ) {
     return this.usersService.removeAvatar(id, currentUser.id);
+  }
+
+  @Patch(':id/lock')
+  @Permissions('NGUOI_DUNG.UPDATE')
+  @ApiOperation({ summary: 'Khóa hoặc mở khóa tài khoản' })
+  @ApiOkResponse()
+  setLock(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SetUserLockDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.usersService.setLock(id, dto.locked, currentUser.id);
   }
 
   @Patch(':id')

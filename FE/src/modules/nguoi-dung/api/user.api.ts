@@ -36,6 +36,14 @@ export const userApi = {
     return response.data;
   },
 
+  async setLock(id: number, locked: boolean) {
+    const response = await axiosClient.patch<ApiResponse<ManagedUser>>(
+      `/users/${id}/lock`,
+      { locked },
+    );
+    return response.data;
+  },
+
   async remove(id: number) {
     const response = await axiosClient.delete<ApiResponse<{ id: number }>>(
       `/users/${id}`,

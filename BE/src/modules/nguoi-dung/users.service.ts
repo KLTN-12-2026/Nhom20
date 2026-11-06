@@ -257,6 +257,21 @@ export class UsersService {
     };
   }
 
+  // Khóa tài khoản nhưng vẫn giữ hồ sơ và lịch sử nghiệp vụ.
+  async setLock(id: number, locked: boolean, currentUserId: number) {
+    const current = await this.getExisting(id);
+    if (!locked && current.trangThai !== TrangThaiNguoiDung.BI_KHOA) {
+      throw new BadRequestException('Tài khoản không ở trạng thái bị khóa');
+    }
+    if (locked && current.trangThai !== TrangThaiNguoiDung.DANG_HOAT_DONG) {
+      throw new BadRequestException('Chỉ có thể khóa tài khoản đang hoạt động');
+    }
+    const result = await this.update(id, {
+      status: locked ? TrangThaiNguoiDung.BI_KHOA : TrangThaiNguoiDung.DANG_HOAT_DONG,
+    }, currentUserId);
+    return { ...result, message: locked ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản' };
+  }
+
   // Xóa dữ liệu cho chức năng: người dùng
   async remove(id: number, currentUserId: number) {
     if (id === currentUserId) {
