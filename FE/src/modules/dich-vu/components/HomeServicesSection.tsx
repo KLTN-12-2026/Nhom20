@@ -12,7 +12,7 @@ export default function HomeServicesSection() {
             <h2>Chọn dịch vụ phù hợp</h2>
             <p className="text-secondary mb-0">Mức phí và chuyên khoa được đồng bộ từ hệ thống quản lý.</p>
           </div>
-          <Link to="/dich-vu" className="btn btn-outline-primary">Xem tất cả dịch vụ</Link>
+          <Link to="/dich-vu" className="btn btn-primary">Xem tất cả dịch vụ</Link>
         </div>
         <ServiceCards />
       </div>

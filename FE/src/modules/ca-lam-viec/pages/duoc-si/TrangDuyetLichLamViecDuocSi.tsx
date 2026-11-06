@@ -187,12 +187,12 @@ export default function TrangDuyetLichLamViecDuocSi() {
 
   return (
     <div className="medicine-inventory admin-crud-page">
-      <header className="admin-crud-heading">
+      <header className="admin-crud-heading align-items-end">
         <div>
-          <p className="admin-management-eyebrow">Dành cho trưởng bộ phận Dược</p>
+          <p className="admin-management-eyebrow">Điều phối lịch làm việc</p>
           <h1>PHÂN LỊCH TRỰC ĐÊM</h1>
           <p className="admin-management-description">
-            Phân hai ca trực mỗi tuần cho nhân sự khoa Dược; ngày nghỉ bù được tính tự động.
+            Phân công và quản lý lịch trực đêm của bác sĩ trong khoa; tự động tính toán ngày nghỉ bù theo quy định.
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
