@@ -39,6 +39,7 @@ describe('Danh mục phân quyền', () => {
     const repository = {
       findById: jest.fn().mockResolvedValue(role),
       countPermissions: jest.fn().mockResolvedValue(2),
+      findPermissions: jest.fn().mockResolvedValue([]),
       replacePermissions: jest.fn().mockResolvedValue(role),
     };
     const auditLogs = { record: jest.fn().mockResolvedValue(undefined) };
@@ -52,5 +53,17 @@ describe('Danh mục phân quyền', () => {
     expect(repository.replacePermissions).toHaveBeenCalledWith(1, [1, 3]);
     expect(result.data.permissionIds).toEqual([1, 3]);
     expect(result.message).toBe('Lưu cấu hình phân quyền thành công');
+  });
+
+  it('không cho cấp quyền sửa thuốc cho ADMIN qua API', async () => {
+    const repository = {
+      findById: jest.fn().mockResolvedValue({ maVaiTro: 'ADMIN' }),
+      countPermissions: jest.fn().mockResolvedValue(1),
+      findPermissions: jest.fn().mockResolvedValue([{ id: 7, maQuyen: 'THUOC.UPDATE' }]),
+      replacePermissions: jest.fn(),
+    };
+    const service = new RolesService(repository as unknown as RoleRepository, {} as AuditLogsService);
+    await expect(service.updatePermissions(1, { permissionIds: [7] }, 10)).rejects.toThrow('thuộc thẩm quyền của dược sĩ');
+    expect(repository.replacePermissions).not.toHaveBeenCalled();
   });
 });

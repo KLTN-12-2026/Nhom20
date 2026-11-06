@@ -194,15 +194,11 @@ export class PrismaMedicineRepository implements MedicineRepository {
         nguoiDungId: userId,
         chucVu: 'TRUONG_DON_VI',
         trangThai: TrangThaiChung.DANG_HOAT_DONG,
+        ngayBatDau: { lte: new Date() },
+        OR: [{ ngayKetThuc: null }, { ngayKetThuc: { gte: new Date() } }],
+        donViLamViec: { maDonVi: 'BO_PHAN_DUOC', trangThai: TrangThaiChung.DANG_HOAT_DONG },
       },
     });
-    if (manager) return true;
-
-    const user = await this.prisma.nguoiDung.findUnique({
-      where: { id: userId },
-      select: { email: true },
-    });
-    const email = user?.email?.toLowerCase() ?? '';
-    return email.startsWith('truongkhoa.') || email === 'duocsi@gmail.com';
+    return Boolean(manager);
   }
 }

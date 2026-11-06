@@ -18,14 +18,14 @@ export class PrismaUserAuthRepository implements UserAuthRepository {
       where: isEmail
         ? { email: { equals: identifier.toLowerCase(), mode: 'insensitive' } }
         : { soDienThoai: identifier },
-      include: authUserInclude,
+      include: authUserInclude(),
     }) as Promise<AuthUser | null>;
   }
 
   findById(id: number) {
     return this.prisma.nguoiDung.findUnique({
       where: { id },
-      include: authUserInclude,
+      include: authUserInclude(),
     }) as Promise<AuthUser | null>;
   }
 

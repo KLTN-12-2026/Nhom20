@@ -33,6 +33,7 @@ export interface ManagedUser {
     staff: boolean;
     patient: boolean;
   };
+  hasBusinessData: boolean;
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;

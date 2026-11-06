@@ -6,6 +6,7 @@ export interface AuthenticatedUser {
   avatarUrl: string | null;
   roles: string[];
   permissions: string[];
+  isPharmacyHead?: boolean;
 }
 
 export interface LoginPayload {

@@ -1,6 +1,16 @@
 import { Prisma } from '@prisma/client';
 
-export const authUserInclude = {
+export const authUserInclude = () => ({
+  donViDangQuanLy: {
+    where: {
+      chucVu: 'TRUONG_DON_VI',
+      trangThai: 'DANG_HOAT_DONG',
+      ngayBatDau: { lte: new Date() },
+      OR: [{ ngayKetThuc: null }, { ngayKetThuc: { gte: new Date() } }],
+      donViLamViec: { maDonVi: 'BO_PHAN_DUOC', trangThai: 'DANG_HOAT_DONG' },
+    },
+    select: { id: true },
+  },
   nguoiDungVaiTro: {
     include: {
       vaiTro: {
@@ -10,10 +20,10 @@ export const authUserInclude = {
       },
     },
   },
-} satisfies Prisma.NguoiDungInclude;
+} satisfies Prisma.NguoiDungInclude);
 
 export type AuthUser = Prisma.NguoiDungGetPayload<{
-  include: typeof authUserInclude;
+  include: ReturnType<typeof authUserInclude>;
 }>;
 
 export interface UserAuthRepository {

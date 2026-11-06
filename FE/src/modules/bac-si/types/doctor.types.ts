@@ -18,6 +18,7 @@ export interface Doctor {
     name: string;
   };
   examinationCount: number;
+  hasBusinessData: boolean;
   ratingCount: number;
   averageRating: number | null;
   createdAt: string;

@@ -227,6 +227,10 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async delete(id: number) {
-    await this.prisma.nguoiDung.delete({ where: { id } });
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.bacSi.deleteMany({ where: { nguoiDungId: id } });
+      await transaction.nhanVien.deleteMany({ where: { nguoiDungId: id } });
+      await transaction.nguoiDung.delete({ where: { id } });
+    });
   }
 }

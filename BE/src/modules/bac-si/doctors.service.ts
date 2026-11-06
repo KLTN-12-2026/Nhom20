@@ -141,15 +141,10 @@ export class DoctorsService {
   // Xóa dữ liệu cho chức năng: bác sĩ
   async remove(id: number, currentUserId: number) {
     const doctor = await this.getExisting(id);
-    const relatedRecordCount =
-      doctor._count.luotKham +
-      doctor._count.hoSoKham +
-      doctor._count.donThuoc +
-      doctor._count.lichHen +
-      doctor._count.danhGia;
+    const relatedRecordCount = this.relatedRecordCount(doctor);
     if (relatedRecordCount > 0) {
       throw new BadRequestException(
-        `Không thể xóa bác sĩ vì đang có ${relatedRecordCount} lịch hẹn, lượt khám hoặc hồ sơ chuyên môn liên quan. Hãy chuyển bác sĩ sang trạng thái ngừng hoạt động.`,
+        'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.',
       );
     }
     try {
@@ -262,11 +257,18 @@ export class DoctorsService {
         name: doctor.chuyenKhoa.tenChuyenKhoa,
       },
       examinationCount: doctor._count.luotKham,
+      hasBusinessData: this.relatedRecordCount(doctor) > 0,
       ratingCount,
       averageRating:
         averageRating === null ? null : Number(averageRating.toFixed(1)),
       createdAt: doctor.createdAt,
       updatedAt: doctor.updatedAt,
     };
+  }
+
+  private relatedRecordCount(doctor: DoctorWithRelations) {
+    return Object.values(doctor._count).reduce((sum, count) => sum + count, 0) +
+      Object.values(doctor.nguoiDung._count).reduce((sum, count) => sum + count, 0) +
+      Number(Boolean(doctor.nguoiDung.benhNhan));
   }
 }

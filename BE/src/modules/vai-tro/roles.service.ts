@@ -143,6 +143,13 @@ export class RolesService {
     if (permissionCount !== dto.permissionIds.length) {
       throw new BadRequestException('Danh sách quyền có quyền không tồn tại');
     }
+    if (current.maVaiTro === 'ADMIN') {
+      const permissions = await this.roleRepository.findPermissions();
+      if (permissions.some((permission) => dto.permissionIds.includes(permission.id) &&
+        ['THUOC.CREATE', 'THUOC.UPDATE', 'THUOC.DELETE'].includes(permission.maQuyen))) {
+        throw new BadRequestException('Quyền thêm, sửa và xóa thuốc thuộc thẩm quyền của dược sĩ');
+      }
+    }
     const role = await this.roleRepository.replacePermissions(
       id,
       dto.permissionIds,
