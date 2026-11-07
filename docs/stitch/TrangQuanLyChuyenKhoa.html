@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý chuyên khoa - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --primary: #0c56d0;
+        --ink: #041b3c;
+        --muted: #434654;
+        --line: #c3c6d6;
+        --bg: #f9f9ff;
+        --surface-low: #f1f3ff;
+        --surface-high: #e0e8ff;
+        --sidebar: 280px;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, sans-serif; font-size: 14px; }
+      .material-symbols-outlined { font-size: 22px; vertical-align: middle; }
+      .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 50; width: var(--sidebar); display: flex; flex-direction: column; padding: 24px 16px; overflow-y: auto; border-right: 1px solid var(--line); background: #fff; }
+      .brand { display: flex; align-items: center; gap: 12px; padding: 0 12px; margin-bottom: 28px; }
+      .brand-icon { color: var(--primary); font-size: 34px !important; }
+      .brand h1 { margin: 0; color: var(--primary); font-size: 20px; font-weight: 700; }
+      .brand p { margin: 0; color: var(--muted); font-size: 12px; }
+      .sidebar-nav { display: flex; flex: 1; flex-direction: column; gap: 3px; }
+      .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; }
+      .sidebar-link:hover { color: var(--ink); background: var(--surface-low); }
+      .sidebar-link.active { color: var(--ink); background: var(--surface-high); font-weight: 700; }
+      .sidebar-link.settings { margin-top: auto; }
+      .app-shell { min-height: 100vh; margin-left: var(--sidebar); }
+      .topbar { position: sticky; top: 0; z-index: 40; height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.92); backdrop-filter: blur(12px); }
+      .header-search { position: relative; width: min(380px, 45vw); }
+      .header-search .material-symbols-outlined { position: absolute; top: 50%; left: 14px; color: #737685; transform: translateY(-50%); }
+      .header-search input { height: 44px; padding-left: 44px; border-color: var(--line); border-radius: 999px; background: var(--surface-low); }
+      .user-area { display: flex; align-items: center; gap: 12px; }
+      .role-badge { padding: 5px 10px; border-radius: 6px; color: white; background: var(--primary); font-size: 11px; font-weight: 700; }
+      .avatar { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; color: var(--primary); background: var(--surface-high); font-weight: 700; }
+      main { padding: 32px; }
+      .page { width: 100%; max-width: 1440px; margin: 0 auto; }
+      .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+      .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+      .page-heading h1 { margin: 6px 0; font-size: 28px; line-height: 36px; font-weight: 700; }
+      .page-heading p { margin: 0; color: var(--muted); }
+      .summary { display: flex; gap: 10px; }
+      .summary-item { min-width: 112px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: center; }
+      .summary-item strong { display: block; color: var(--primary); font-size: 20px; }
+      .summary-item span { color: var(--muted); font-size: 12px; }
+      .toolbar { display: grid; grid-template-columns: minmax(280px, 1fr) 210px auto; gap: 12px; margin-bottom: 18px; }
+      .search-box, .filter-box { position: relative; }
+      .search-box .material-symbols-outlined, .filter-box .material-symbols-outlined { position: absolute; top: 50%; left: 12px; z-index: 2; color: #737685; transform: translateY(-50%); pointer-events: none; }
+      .search-box input, .filter-box select { height: 44px; padding-left: 42px; border-color: var(--line); background-color: var(--surface-low); }
+      .btn-primary { border-color: var(--primary); background: var(--primary); }
+      .btn-primary:hover { border-color: #0947aa; background: #0947aa; }
+      .add-btn { height: 44px; padding-inline: 16px; border-radius: 8px; white-space: nowrap; }
+      .table-card { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 2px 8px rgba(29,48,82,.06); }
+      .table-card th { padding: 14px 18px; color: var(--muted); background: var(--surface-low); font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+      .table-card td { padding: 16px 18px; border-color: #e2e4eb; vertical-align: middle; }
+      .specialty-cell { display: flex; align-items: center; gap: 12px; min-width: 230px; }
+      .specialty-icon { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 12px; color: var(--primary); background: var(--surface-high); }
+      .specialty-icon.green { color: #047857; background: #d1fae5; }
+      .specialty-icon.orange { color: #9a4c00; background: #ffedd5; }
+      .specialty-icon.purple { color: #6b21a8; background: #f3e8ff; }
+      .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+      .status-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+      .status-active { color: #006d4a; background: #d8f7e9; }
+      .status-active::before { background: #12a36f; }
+      .status-inactive { color: #555b66; background: #eceef3; }
+      .status-inactive::before { background: #7b8090; }
+      .doctor-stack { display: flex; align-items: center; }
+      .doctor-mini { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; margin-right: -7px; border: 2px solid white; border-radius: 50%; color: var(--primary); background: var(--surface-high); font-size: 10px; font-weight: 700; }
+      .doctor-count { margin-left: 12px; color: var(--muted); }
+      .action-btn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent; color: var(--muted); background: transparent; }
+      .action-btn:hover { border-color: var(--line); color: var(--primary); background: var(--surface-low); }
+      .action-btn .material-symbols-outlined { font-size: 19px; }
+      .table-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-top: 1px solid var(--line); color: var(--muted); }
+      .page-link { min-width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; border: 1px solid var(--line); color: var(--ink); }
+      .page-link.active { border-color: var(--primary); color: white; background: var(--primary); }
+      .modal-content { border: 0; border-radius: 16px; }
+      @media (max-width: 1100px) { :root { --sidebar: 88px; } .brand div, .sidebar-link span:last-child { display: none; } .brand { justify-content: center; padding-inline: 0; } .sidebar-link { justify-content: center; } }
+      @media (max-width: 768px) { :root { --sidebar: 0px; } .sidebar { display: none; } .topbar { padding: 0 16px; } .header-search { width: min(240px, 55vw); } main { padding: 20px 16px; } .page-heading { flex-direction: column; } .summary { width: 100%; } .summary-item { flex: 1; min-width: 0; } .toolbar { grid-template-columns: 1fr; } .add-btn { width: 100%; } .table-footer { align-items: flex-start; gap: 12px; flex-direction: column; } }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="material-symbols-outlined brand-icon">medical_services</span>
+        <div><h1>Smart Clinic AI</h1><p>Quản trị hệ thống</p></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">dashboard</span><span>Tổng quan</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">group</span><span>Quản lý nhân sự</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">medical_services</span><span>Quản lý bác sĩ</span></a>
+        <a class="sidebar-link active" href="#"><span class="material-symbols-outlined">category</span><span>Quản lý chuyên khoa</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">event</span><span>Quản lý lịch hẹn</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">medical_information</span><span>Quản lý dịch vụ</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">medication</span><span>Quản lý kho thuốc</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">analytics</span><span>Báo cáo và thống kê</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">history</span><span>Nhật ký hệ thống</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">security</span><span>Vai trò và phân quyền</span></a>
+        <a class="sidebar-link settings" href="#"><span class="material-symbols-outlined">settings</span><span>Cài đặt hệ thống</span></a>
+      </nav>
+    </aside>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="header-search">
+          <span class="material-symbols-outlined">search</span>
+          <input class="form-control" type="search" placeholder="Tìm kiếm hệ thống..." />
+        </div>
+        <div class="user-area">
+          <span class="material-symbols-outlined text-secondary">notifications</span>
+          <span class="role-badge">QUẢN TRỊ VIÊN</span>
+          <span class="avatar">MQ</span>
+        </div>
+      </header>
+
+      <main>
+        <div class="page">
+          <section class="page-heading">
+            <div>
+              <div class="eyebrow"><span class="material-symbols-outlined">category</span>Danh mục lâm sàng</div>
+              <h1>QUẢN LÝ CHUYÊN KHOA</h1>
+              <p>Theo dõi chuyên khoa, phí khám và nhân sự đang phụ trách.</p>
+            </div>
+            <div class="summary">
+              <div class="summary-item"><strong>8</strong><span>chuyên khoa</span></div>
+              <div class="summary-item"><strong>7</strong><span>đang hoạt động</span></div>
+              <div class="summary-item"><strong>32</strong><span>bác sĩ</span></div>
+            </div>
+          </section>
+
+          <section class="toolbar">
+            <div class="search-box">
+              <span class="material-symbols-outlined">search</span>
+              <input id="searchInput" class="form-control" type="search" placeholder="Tìm theo tên hoặc mã chuyên khoa..." />
+            </div>
+            <div class="filter-box">
+              <span class="material-symbols-outlined">filter_list</span>
+              <select id="statusFilter" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Ngừng hoạt động</option>
+              </select>
+            </div>
+            <button class="btn btn-primary add-btn" type="button" data-bs-toggle="modal" data-bs-target="#specialtyModal">
+              <span class="material-symbols-outlined me-1">add</span>Thêm chuyên khoa
+            </button>
+          </section>
+
+          <section class="table-card">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr><th>Chuyên khoa</th><th>Mã</th><th>Nhân sự</th><th>Phí khám</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr>
+                </thead>
+                <tbody id="specialtyRows">
+                  <tr data-status="active" data-search="noi tong quat noi total">
+                    <td><div class="specialty-cell"><span class="specialty-icon"><span class="material-symbols-outlined">cardiology</span></span><div><div class="fw-semibold">Nội tổng quát</div><small class="text-secondary">Khám và điều trị nội khoa</small></div></div></td>
+                    <td><span class="font-monospace fw-semibold text-secondary">CK001</span></td>
+                    <td><div class="doctor-stack"><span class="doctor-mini">MA</span><span class="doctor-mini">TH</span><span class="doctor-mini">LH</span><span class="doctor-count">8 bác sĩ</span></div></td>
+                    <td class="fw-semibold">200.000 ₫</td>
+                    <td><span class="status-badge status-active">Đang hoạt động</span></td>
+                    <td class="text-end"><button class="btn action-btn" title="Xem"><span class="material-symbols-outlined">visibility</span></button><button class="btn action-btn" title="Sửa" data-bs-toggle="modal" data-bs-target="#specialtyModal"><span class="material-symbols-outlined">edit</span></button><button class="btn action-btn" title="Xóa"><span class="material-symbols-outlined">delete</span></button></td>
+                  </tr>
+                  <tr data-status="active" data-search="tim mach cardiac">
+                    <td><div class="specialty-cell"><span class="specialty-icon orange"><span class="material-symbols-outlined">ecg_heart</span></span><div><div class="fw-semibold">Tim mạch</div><small class="text-secondary">Chẩn đoán và điều trị tim mạch</small></div></div></td>
+                    <td><span class="font-monospace fw-semibold text-secondary">CK002</span></td>
+                    <td><div class="doctor-stack"><span class="doctor-mini">ND</span><span class="doctor-mini">PT</span><span class="doctor-count">6 bác sĩ</span></div></td>
+                    <td class="fw-semibold">250.000 ₫</td>
+                    <td><span class="status-badge status-active">Đang hoạt động</span></td>
+                    <td class="text-end"><button class="btn action-btn" title="Xem"><span class="material-symbols-outlined">visibility</span></button><button class="btn action-btn" title="Sửa" data-bs-toggle="modal" data-bs-target="#specialtyModal"><span class="material-symbols-outlined">edit</span></button><button class="btn action-btn" title="Xóa"><span class="material-symbols-outlined">delete</span></button></td>
+                  </tr>
+                  <tr data-status="active" data-search="nhi khoa pediatrics">
+                    <td><div class="specialty-cell"><span class="specialty-icon green"><span class="material-symbols-outlined">child_care</span></span><div><div class="fw-semibold">Nhi khoa</div><small class="text-secondary">Khám và chăm sóc trẻ em</small></div></div></td>
+                    <td><span class="font-monospace fw-semibold text-secondary">CK003</span></td>
+                    <td><div class="doctor-stack"><span class="doctor-mini">TA</span><span class="doctor-mini">MV</span><span class="doctor-mini">KA</span><span class="doctor-count">5 bác sĩ</span></div></td>
+                    <td class="fw-semibold">180.000 ₫</td>
+                    <td><span class="status-badge status-active">Đang hoạt động</span></td>
+                    <td class="text-end"><button class="btn action-btn" title="Xem"><span class="material-symbols-outlined">visibility</span></button><button class="btn action-btn" title="Sửa" data-bs-toggle="modal" data-bs-target="#specialtyModal"><span class="material-symbols-outlined">edit</span></button><button class="btn action-btn" title="Xóa"><span class="material-symbols-outlined">delete</span></button></td>
+                  </tr>
+                  <tr data-status="inactive" data-search="da lieu dermatology">
+                    <td><div class="specialty-cell"><span class="specialty-icon purple"><span class="material-symbols-outlined">dermatology</span></span><div><div class="fw-semibold">Da liễu</div><small class="text-secondary">Chẩn đoán và điều trị da</small></div></div></td>
+                    <td><span class="font-monospace fw-semibold text-secondary">CK004</span></td>
+                    <td><div class="doctor-stack"><span class="doctor-mini">BH</span><span class="doctor-count">1 bác sĩ</span></div></td>
+                    <td class="fw-semibold">220.000 ₫</td>
+                    <td><span class="status-badge status-inactive">Ngừng hoạt động</span></td>
+                    <td class="text-end"><button class="btn action-btn" title="Xem"><span class="material-symbols-outlined">visibility</span></button><button class="btn action-btn" title="Sửa" data-bs-toggle="modal" data-bs-target="#specialtyModal"><span class="material-symbols-outlined">edit</span></button><button class="btn action-btn" title="Xóa"><span class="material-symbols-outlined">delete</span></button></td>
+                  </tr>
+                  <tr data-status="active" data-search="than kinh neurology">
+                    <td><div class="specialty-cell"><span class="specialty-icon"><span class="material-symbols-outlined">neurology</span></span><div><div class="fw-semibold">Thần kinh</div><small class="text-secondary">Khám và điều trị thần kinh</small></div></div></td>
+                    <td><span class="font-monospace fw-semibold text-secondary">CK005</span></td>
+                    <td><div class="doctor-stack"><span class="doctor-mini">QN</span><span class="doctor-mini">DL</span><span class="doctor-count">4 bác sĩ</span></div></td>
+                    <td class="fw-semibold">280.000 ₫</td>
+                    <td><span class="status-badge status-active">Đang hoạt động</span></td>
+                    <td class="text-end"><button class="btn action-btn" title="Xem"><span class="material-symbols-outlined">visibility</span></button><button class="btn action-btn" title="Sửa" data-bs-toggle="modal" data-bs-target="#specialtyModal"><span class="material-symbols-outlined">edit</span></button><button class="btn action-btn" title="Xóa"><span class="material-symbols-outlined">delete</span></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-footer">
+              <span id="resultCount">Hiển thị 1–5 trên tổng số 8 chuyên khoa</span>
+              <nav><ul class="pagination pagination-sm mb-0"><li class="page-item"><button class="page-link" aria-label="Previous"><span class="material-symbols-outlined">chevron_left</span></button></li><li class="page-item"><button class="page-link active">1</button></li><li class="page-item"><button class="page-link">2</button></li><li class="page-item"><button class="page-link" aria-label="Next"><span class="material-symbols-outlined">chevron_right</span></button></li></ul></nav>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal fade" id="specialtyModal" tabindex="-1" aria-labelledby="specialtyModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="specialtyModalLabel">Thêm chuyên khoa</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-4"><label class="form-label fw-semibold">Mã chuyên khoa</label><input class="form-control" placeholder="CK006" /></div>
+              <div class="col-md-8"><label class="form-label fw-semibold">Tên chuyên khoa</label><input class="form-control" placeholder="Ví dụ: Ngoại khoa" /></div>
+              <div class="col-md-6"><label class="form-label fw-semibold">Phí khám</label><div class="input-group"><input class="form-control" type="number" placeholder="200000" /><span class="input-group-text">₫</span></div></div>
+              <div class="col-md-6"><label class="form-label fw-semibold">Trạng thái</label><select class="form-select"><option>Đang hoạt động</option><option>Ngừng hoạt động</option></select></div>
+              <div class="col-12"><label class="form-label fw-semibold">Mô tả</label><textarea class="form-control" rows="3" placeholder="Nhập mô tả chuyên khoa..."></textarea></div>
+            </div>
+          </div>
+          <div class="modal-footer border-0"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Lưu chuyên khoa</button></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const searchInput = document.getElementById("searchInput");
+      const statusFilter = document.getElementById("statusFilter");
+      const rows = [...document.querySelectorAll("#specialtyRows tr")];
+      function filterRows() {
+        const term = searchInput.value.toLowerCase().trim();
+        const status = statusFilter.value;
+        let visible = 0;
+        rows.forEach((row) => {
+          const matchesTerm = !term || row.dataset.search.includes(term) || row.textContent.toLowerCase().includes(term);
+          const matchesStatus = !status || row.dataset.status === status;
+          row.hidden = !(matchesTerm && matchesStatus);
+          if (!row.hidden) visible++;
+        });
+        document.getElementById("resultCount").textContent =
+          visible ? `Hiển thị 1–${visible} trên tổng số ${visible} chuyên khoa` : "Không có chuyên khoa phù hợp";
+      }
+      searchInput.addEventListener("input", filterRows);
+      statusFilter.addEventListener("change", filterRows);
+    </script>
+  </body>
+</html>
