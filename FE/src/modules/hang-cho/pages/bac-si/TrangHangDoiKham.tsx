@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
 
 import { queueApi } from '../../api/queue.api';
@@ -62,24 +64,29 @@ export default function TrangHangDoiKham() {
   };
 
   return (
-    <div className="doctor-page">
-      <div className="d-flex flex-wrap justify-content-between gap-3 mb-4">
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading align-items-end">
         <div>
-          <div className="doctor-page__eyebrow">Bệnh nhân đã tiếp nhận</div>
-          <h1 className="doctor-page__title">Hàng đợi khám</h1>
-          <p className="doctor-page__description">
-            Danh sách tự cập nhật ngay khi lễ tân cấp phiếu cho đúng bác sĩ.
+          <p className="admin-management-eyebrow">
+            Tiếp nhận khám bệnh
+          </p>
+          <h1>HÀNG ĐỢI KHÁM</h1>
+          <p className="admin-management-description">
+            Danh sách bệnh nhân được cập nhật tự động sau khi hoàn tất tiếp nhận và phân công bác sĩ tại quầy lễ tân.
           </p>
         </div>
-        <button
-          className="btn btn-outline-primary align-self-start d-flex align-items-center gap-2"
-          onClick={() => void reload()}
-          disabled={isLoading}
-        >
-          <span className="material-symbols-outlined">refresh</span>
-          Làm mới
-        </button>
-      </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-primary d-flex align-items-center gap-2 text-white"
+            onClick={() => void reload()}
+            disabled={isLoading}
+          >
+            <span className="material-symbols-outlined">refresh</span>
+            Làm mới
+          </button>
+        </div>
+      </header>
 
       <div className="row g-3 mb-4">
         <div className="col-sm-6 col-lg-4">

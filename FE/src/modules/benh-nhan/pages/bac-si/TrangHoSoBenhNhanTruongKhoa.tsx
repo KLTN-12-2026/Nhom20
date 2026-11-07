@@ -3,6 +3,8 @@ import AppModal from '@/components/ui/AppModal';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
 import '../../patients.css';
 
@@ -117,20 +119,30 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
   };
 
   return (
-    <div className="doctor-page">
-      <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div className="medicine-inventory admin-crud-page">
+      <div className="admin-crud-heading">
         <div>
-          <div className="doctor-page__eyebrow">
-            Bác sĩ trưởng khoa {managedSpecialty ? `• Khoa ${managedSpecialty}` : ''}
-          </div>
-          <h1 className="doctor-page__title">Hồ sơ bệnh nhân của khoa</h1>
-          <p className="doctor-page__description">
-            Danh sách bệnh nhân và lịch sử khám bệnh thuộc chuyên khoa bạn phụ trách.
+          <p className="admin-management-eyebrow">
+            Quản lý bệnh nhân chuyên khoa {managedSpecialty ? `• Khoa ${managedSpecialty}` : ''}
+          </p>
+          <h1>HỒ SƠ BỆNH NHÂN CỦA KHOA</h1>
+          <p className="admin-management-description">
+            Quản lý danh sách bệnh nhân, tra cứu thông tin hồ sơ và lịch sử khám bệnh thuộc chuyên khoa phụ trách.
           </p>
         </div>
-        <div className="patient-management__search">
+        <div className="admin-management-summary" aria-label="Tổng quan bệnh nhân">
+          <span>
+            <strong>{patients.length}</strong> bệnh nhân
+          </span>
+        </div>
+      </div>
+
+      <div className="admin-crud-toolbar">
+        <div className="admin-crud-search">
           <span className="material-symbols-outlined">search</span>
           <input
+            type="search"
+            className="form-control"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm theo tên, mã hoặc số điện thoại..."
@@ -138,55 +150,90 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
         </div>
       </div>
 
-      <section className="patient-table-card">
+      <section className="admin-management-table-card">
         <div className="table-responsive">
-          <table className="table patient-table align-middle mb-0">
+          <table
+            className="table admin-management-table align-middle mb-0"
+            style={{ tableLayout: 'fixed', minWidth: '1029px', width: '100%' }}
+          >
+            <colgroup>
+              <col style={{ width: '13%', minWidth: '135px' }} />
+              <col style={{ width: '18%', minWidth: '180px' }} />
+              <col style={{ width: '9%', minWidth: '92px' }} />
+              <col style={{ width: '7%', minWidth: '72px' }} />
+              <col style={{ width: '11%', minWidth: '110px' }} />
+              <col style={{ width: '9%', minWidth: '90px' }} />
+              <col style={{ width: '11%', minWidth: '110px' }} />
+              <col style={{ width: '9%', minWidth: '90px' }} />
+              <col style={{ width: '13%', minWidth: '150px' }} />
+            </colgroup>
             <thead>
-              <tr className="text-center align-middle">
-                <th className="text-center align-middle">Mã BN</th>
-                <th className="text-center align-middle">Họ tên</th>
-                <th className="text-center align-middle">Ngày sinh</th>
-                <th className="text-center align-middle">Giới tính</th>
-                <th className="text-center align-middle">Số điện thoại</th>
-                <th className="text-center align-middle">CCCD</th>
-                <th className="text-center align-middle">BHYT</th>
-                <th className="text-center align-middle">Địa chỉ</th>
-                <th className="text-center align-middle">Hồ sơ</th>
+              <tr>
+                <th style={{ width: '13%', minWidth: '135px' }}>Mã BN</th>
+                <th style={{ width: '18%', minWidth: '180px' }}>Họ tên</th>
+                <th style={{ width: '9%', minWidth: '92px' }}>Ngày sinh</th>
+                <th style={{ width: '7%', minWidth: '72px' }}>Giới tính</th>
+                <th style={{ width: '11%', minWidth: '110px' }}>Số điện thoại</th>
+                <th style={{ width: '9%', minWidth: '90px' }}>CCCD</th>
+                <th style={{ width: '11%', minWidth: '110px' }}>BHYT</th>
+                <th style={{ width: '9%', minWidth: '90px' }}>Địa chỉ</th>
+                <th
+                  className="text-end text-nowrap"
+                  style={{ width: '13%', minWidth: '150px' }}
+                >
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody>
               {visiblePatients.map((patient) => (
                 <tr key={patient.id}>
-                  <td>
-                    <span className="patient-table__code">{patient.code}</span>
+                  <td className="text-truncate" title={patient.code}>
+                    <span className="fw-semibold text-primary">{patient.code}</span>
                   </td>
                   <td>
-                    <div className="patient-table__identity">
-                      <span className="patient-table__avatar patient-table__avatar--primary">
+                    <div className="admin-management-entity">
+                      <span
+                        className="doctor-card__avatar"
+                        style={{ width: 38, height: 38, fontSize: '0.85rem' }}
+                      >
                         {initials(patient.fullName)}
                       </span>
-                      <strong>{patient.fullName}</strong>
+                      <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                        <strong className="text-truncate d-block" title={patient.fullName}>
+                          {patient.fullName}
+                        </strong>
+                        <small className="text-truncate d-block" title={patient.email || 'Chưa có email'}>
+                          {patient.email || 'Chưa có email'}
+                        </small>
+                      </div>
                     </div>
                   </td>
-                  <td>{dateText(patient.dateOfBirth)}</td>
-                  <td className="text-center align-middle text-nowrap">
+                  <td className="text-nowrap">{dateText(patient.dateOfBirth)}</td>
+                  <td className="text-nowrap">
                     {patient.gender === 'NU' ? 'Nữ' : patient.gender === 'NAM' ? 'Nam' : 'Khác'}
                   </td>
-                  <td>{patient.phoneNumber}</td>
-                  <td>{patient.identityNumber || '—'}</td>
-                  <td>{patient.healthInsuranceNumber || '—'}</td>
-                  <td>{patient.address || '—'}</td>
-                  <td className="text-center text-nowrap">
-                    <button
-                      className="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center text-nowrap"
-                      type="button"
-                      onClick={() => void openRecord(patient)}
-                    >
-                      <span className="material-symbols-outlined me-1" style={{ fontSize: 18, lineHeight: 1 }}>
-                        visibility
-                      </span>
-                      <span>Xem hồ sơ</span>
-                    </button>
+                  <td className="text-nowrap">{patient.phoneNumber}</td>
+                  <td className="text-truncate" title={patient.identityNumber || '—'}>
+                    {patient.identityNumber || '—'}
+                  </td>
+                  <td className="text-truncate" title={patient.healthInsuranceNumber || '—'}>
+                    {patient.healthInsuranceNumber || '—'}
+                  </td>
+                  <td className="text-truncate" title={patient.address || '—'}>
+                    {patient.address || '—'}
+                  </td>
+                  <td className="text-end">
+                    <div className="admin-crud-actions justify-content-end flex-nowrap">
+                      <button
+                        className="btn btn-sm btn-primary text-nowrap"
+                        type="button"
+                        onClick={() => void openRecord(patient)}
+                      >
+                        <span className="material-symbols-outlined">visibility</span>
+                        Xem hồ sơ
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -263,7 +310,7 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
           size="xl"
           onClose={() => setRecord(null)}
           footer={
-            <button className="btn btn-secondary" type="button" onClick={() => setRecord(null)}>
+            <button className="btn btn-primary" type="button" onClick={() => setRecord(null)}>
               Đóng
             </button>
           }
