@@ -192,7 +192,7 @@ export default function TrangDuyetLichLamViecDuocSi() {
           <p className="admin-management-eyebrow">Điều phối lịch làm việc</p>
           <h1>PHÂN LỊCH TRỰC ĐÊM</h1>
           <p className="admin-management-description">
-            Phân công và quản lý lịch trực đêm của bác sĩ trong khoa; tự động tính toán ngày nghỉ bù theo quy định.
+            Thiết lập và điều phối lịch trực đêm, quản lý định mức phân công và chế độ nghỉ bù của đội ngũ bác sĩ.
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">

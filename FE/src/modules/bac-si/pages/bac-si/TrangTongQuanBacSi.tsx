@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 
 import DoctorAppointmentTable from '@/modules/lich-hen/components/bac-si/DoctorAppointmentTable';
 import { useDoctorAppointments } from '@/modules/lich-hen/hooks/use-doctor-appointments';
-
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '../../doctor-workspace.css';
 
 function localDateValue() {
@@ -29,23 +30,25 @@ export default function TrangTongQuanBacSi() {
   ).length;
 
   return (
-    <div className="doctor-page">
-      <div className="d-flex flex-wrap justify-content-between gap-3 mb-4">
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading align-items-end">
         <div>
-          <div className="doctor-page__eyebrow">Bảng điều khiển bác sĩ</div>
-          <h1 className="doctor-page__title">Tổng quan hôm nay</h1>
-          <p className="doctor-page__description">
-            Theo dõi lịch khám và bệnh nhân đã được lễ tân tiếp nhận.
+          <p className="admin-management-eyebrow">Tổng quan hoạt động</p>
+          <h1>TỔNG QUAN KHÁM BỆNH</h1>
+          <p className="admin-management-description">
+            Theo dõi lịch khám, danh sách bệnh nhân được tiếp nhận và tình trạng chờ khám trong ngày.
           </p>
         </div>
-        <Link
-          to="/bac-si/hang-doi"
-          className="btn btn-primary align-self-start d-flex align-items-center gap-2"
-        >
-          <span className="material-symbols-outlined">groups</span>
-          Mở hàng đợi
-        </Link>
-      </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <Link
+            to="/bac-si/hang-doi"
+            className="btn btn-primary d-flex align-items-center gap-2 text-white"
+          >
+            <span className="material-symbols-outlined">groups</span>
+            Mở hàng đợi
+          </Link>
+        </div>
+      </header>
 
       <div className="row g-3 mb-4">
         <div className="col-sm-6 col-xl-3">
@@ -102,8 +105,14 @@ export default function TrangTongQuanBacSi() {
             </span>
             Lịch khám gần nhất
           </h2>
-          <Link to="/bac-si/lich-kham" className="btn btn-sm btn-link">
-            Xem toàn bộ
+          <Link
+            className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 text-white"
+            to="/bac-si/lich-kham"
+          >
+            <span>Xem tất cả</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+              arrow_forward
+            </span>
           </Link>
         </div>
         <DoctorAppointmentTable

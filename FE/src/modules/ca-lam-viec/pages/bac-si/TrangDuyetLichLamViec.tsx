@@ -5,6 +5,7 @@ import { useWorkSchedules } from '../../hooks/use-work-schedules';
 import { addScheduleDays, getCurrentMonday } from '../../utils/schedule-date';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
 
 interface DoctorDutyRow {
@@ -194,13 +195,13 @@ export default function TrangDuyetLichLamViec() {
   }
 
   return (
-    <div className="doctor-page admin-crud-page">
-      <header className="admin-crud-heading">
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading align-items-end">
         <div>
-          <p className="admin-management-eyebrow">Dành cho trưởng khoa</p>
+          <p className="admin-management-eyebrow">Điều phối lịch làm việc</p>
           <h1>PHÂN LỊCH TRỰC ĐÊM</h1>
           <p className="admin-management-description">
-            Phân hai ca trực mỗi tuần cho bác sĩ trong khoa; ngày nghỉ bù được tính tự động.
+            Thiết lập và điều phối lịch trực đêm, quản lý định mức phân công và chế độ nghỉ bù của đội ngũ bác sĩ.
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">

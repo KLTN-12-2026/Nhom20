@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useWorkSchedules } from '../../hooks/use-work-schedules';
 import { addScheduleDays, getCurrentMonday } from '../../utils/schedule-date';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
 
 const DAYS = [
@@ -35,19 +37,21 @@ export default function TrangLichLamViec() {
     .filter((index: number) => index !== -1) || [];
 
   return (
-    <div className="doctor-page">
-      <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
         <div>
-          <div className="doctor-page__eyebrow">Lịch cá nhân</div>
-          <h1 className="doctor-page__title">Lịch làm việc</h1>
-          <p className="doctor-page__description">
-            Xem lịch hành chính, ca trực đêm và ngày nghỉ bù do trưởng khoa phân công.
+          <p className="admin-management-eyebrow">Lịch cá nhân</p>
+          <h1>LỊCH LÀM VIỆC</h1>
+          <p className="admin-management-description">
+            Theo dõi lịch làm việc hành chính, lịch trực đêm và ngày nghỉ bù được phân công bởi Trưởng khoa.
           </p>
         </div>
-        <span className={`doctor-status ${isPublished ? 'doctor-status--ready' : 'doctor-status--waiting'}`}>
-          {isPublished ? 'Đã công bố' : 'Chưa công bố'}
-        </span>
-      </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <span className={`doctor-status ${isPublished ? 'doctor-status--ready' : 'doctor-status--waiting'}`}>
+            {isPublished ? 'Đã công bố' : 'Chưa công bố'}
+          </span>
+        </div>
+      </header>
 
       <div className="row g-3 mb-4">
         <div className="col-md-4"><div className="doctor-stat"><div className="doctor-stat__icon"><span className="material-symbols-outlined">schedule</span></div><div><div className="doctor-stat__value">07:00</div><div className="doctor-stat__label">Bắt đầu giờ hành chính</div></div></div></div>

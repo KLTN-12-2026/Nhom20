@@ -1,9 +1,19 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 
 import DoctorAppointmentTable from '../../components/bac-si/DoctorAppointmentTable';
 import { useDoctorAppointments } from '../../hooks/use-doctor-appointments';
 import type { AppointmentStatus } from '../../types/appointment.types';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
+
+const APPOINTMENTS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 export default function TrangLichKham() {
   const [date, setDate] = useState('');
@@ -16,7 +26,7 @@ export default function TrangLichKham() {
       status: status || undefined,
       search: search.trim() || undefined,
       page,
-      limit: 10,
+      limit: APPOINTMENTS_PER_PAGE,
     }),
     [date, page, search, status],
   );
@@ -29,20 +39,28 @@ export default function TrangLichKham() {
     error,
     reload,
   } = useDoctorAppointments(query);
-  const pageNumbers = useMemo(() => {
-    const start = Math.max(1, Math.min(page - 2, totalPages - 4));
-    const end = Math.min(totalPages, start + 4);
-    return Array.from({ length: Math.max(0, end - start + 1) }, (_, index) => start + index);
-  }, [page, totalPages]);
+  const currentPage = Math.min(page, Math.max(1, totalPages));
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, Math.max(1, totalPages)),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    total === 0 ? 0 : (currentPage - 1) * APPOINTMENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * APPOINTMENTS_PER_PAGE,
+    total,
+  );
 
   return (
-    <div className="doctor-page">
-      <div className="mb-4">
-        <div className="doctor-page__eyebrow">Lịch trình làm việc</div>
-        <h1 className="doctor-page__title">Lịch khám chi tiết</h1>
-        <p className="doctor-page__description">
-          Danh sách lịch được lễ tân phân công cho đúng tài khoản bác sĩ.
-        </p>
+    <div className="medicine-inventory admin-crud-page">
+      <div className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Quản lý lịch khám</p>
+          <h1>LỊCH KHÁM CHI TIẾT</h1>
+          <p className="admin-management-description">
+            Danh sách lịch được lễ tân phân công cho đúng tài khoản bác sĩ.
+          </p>
+        </div>
       </div>
 
       <div className="row g-3 mb-4">
@@ -142,40 +160,60 @@ export default function TrangLichKham() {
           onReload={() => void reload()}
         />
 
-        <div className="doctor-pagination">
-          <span className="text-secondary small">
-            Trang {page}/{totalPages} · {total} lịch khám
-          </span>
-          <div className="btn-group" aria-label="Phân trang lịch khám">
-            <button
-              className="btn btn-outline-primary"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => current - 1)}
-              aria-label="Trang trước"
-            >
-              <span className="material-symbols-outlined">chevron_left</span>
-            </button>
-            {pageNumbers.map((pageNumber) => (
-              <button
-                aria-current={pageNumber === page ? 'page' : undefined}
-                className={`btn ${pageNumber === page ? 'btn-primary' : 'btn-outline-primary'}`}
-                key={pageNumber}
-                onClick={() => setPage(pageNumber)}
-                type="button"
-              >
-                {pageNumber}
-              </button>
-            ))}
-            <button
-              className="btn btn-outline-primary"
-              disabled={page >= totalPages}
-              onClick={() => setPage((current) => current + 1)}
-              aria-label="Trang sau"
-            >
-              <span className="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
-        </div>
+        {total > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {total} lịch khám
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang lịch khám">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === currentPage ? 'page' : undefined}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={currentPage >= totalPages}
+                    onClick={() =>
+                      setPage((current) => Math.min(totalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        )}
       </section>
     </div>
   );
