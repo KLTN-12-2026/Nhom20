@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Quản trị – Smart Clinic AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0..200" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --sc-primary: #1d4ed8;
+      --sc-primary-hover: #1e40af;
+      --sc-primary-light: #e0ecff;
+      --sc-sidebar-w: 260px;
+      --sc-topbar-h: 60px;
+      --sc-border: #e2e8f0;
+      --sc-bg: #f8fafc;
+      --sc-text-main: #0f172a;
+      --sc-text-muted: #64748b;
+    }
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+    body { background: var(--sc-bg); margin: 0; color: #1e293b; font-size: 14px; }
+
+    /* ── SIDEBAR ── */
+    .sc-sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      width: var(--sc-sidebar-w);
+      background: #fff; border-right: 1px solid var(--sc-border);
+      display: flex; flex-direction: column;
+      z-index: 100; overflow-y: auto;
+    }
+    .sc-sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 18px 20px 14px; border-bottom: 1px solid #f1f5f9;
+    }
+    .sc-brand-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--sc-primary);
+      display: flex; align-items: center; justify-content: center; color: #fff;
+    }
+    .sc-brand-icon .material-symbols-outlined { font-size: 20px; font-variation-settings: 'FILL' 1; }
+    .sc-brand-name { font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .sc-brand-sub  { font-size: 11px; color: #64748b; }
+
+    .sc-nav { flex: 1; padding: 10px 12px 0; }
+    .sc-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px;
+      font-size: 13.5px; font-weight: 500; color: #475569;
+      text-decoration: none; cursor: pointer;
+      transition: background .15s, color .15s;
+      margin-bottom: 2px; white-space: nowrap;
+    }
+    .sc-nav-item:hover { background: #f1f5f9; color: var(--sc-primary); }
+    .sc-nav-item.active {
+      background: var(--sc-primary-light); color: var(--sc-primary); font-weight: 700;
+    }
+    .sc-nav-item .material-symbols-outlined { font-size: 20px; flex-shrink: 0; }
+    .sc-nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+    .sc-nav-bottom { padding: 12px; margin-top: auto; border-top: 1px solid #f1f5f9; }
+
+    /* ── TOPBAR ── */
+    .sc-topbar {
+      position: fixed; top: 0; left: var(--sc-sidebar-w); right: 0;
+      height: var(--sc-topbar-h);
+      background: #fff; border-bottom: 1px solid var(--sc-border);
+      display: flex; align-items: center; padding: 0 24px;
+      z-index: 90; gap: 12px;
+    }
+    .sc-topbar-title { font-size: 15px; font-weight: 600; color: #1e293b; }
+    .sc-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .sc-avatar-mq {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #ea580c; color: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 12.5px; flex-shrink: 0;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .sc-main {
+      margin-left: var(--sc-sidebar-w);
+      padding-top: var(--sc-topbar-h);
+      min-height: 100vh;
+    }
+    .admin-dashboard-page {
+      width: 100%; max-width: 1440px; margin: 0 auto;
+      padding: 24px 32px 64px;
+      display: grid; gap: 20px;
+    }
+
+    /* ── 1. HEADING ── */
+    .admin-crud-heading {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 20px; flex-wrap: wrap; margin-bottom: 4px;
+    }
+    .admin-management-eyebrow {
+      margin: 0 0 4px; color: #2563eb; font-size: 11px;
+      font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .admin-crud-heading h1 {
+      margin: 0; color: var(--sc-text-main); font-size: 22px;
+      line-height: 1.2; font-weight: 800; letter-spacing: -0.01em;
+    }
+    .admin-management-description {
+      margin: 4px 0 0; color: var(--sc-text-muted); font-size: 13.5px;
+    }
+    .admin-dashboard-heading__actions {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .btn-detail-report {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid #2563eb; color: #2563eb; background: #fff;
+      font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 8px;
+      text-decoration: none; transition: all .15s ease;
+    }
+    .btn-detail-report:hover { background: #eff6ff; color: #1d4ed8; }
+    .btn-refresh-dashboard {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #1d4ed8; color: #fff; border: 1px solid #1d4ed8;
+      font-size: 13px; font-weight: 600; padding: 7px 18px; border-radius: 8px;
+      cursor: pointer; transition: background .15s ease;
+    }
+    .btn-refresh-dashboard:hover { background: #1e40af; }
+
+    /* ── 2. FILTER CARD ── */
+    .admin-dashboard-filter {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px; border: 1px solid var(--sc-border);
+      border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      flex-wrap: wrap;
+    }
+    .filter-item { display: flex; flex-direction: column; gap: 4px; width: 175px; }
+    .filter-item label {
+      font-size: 12px; font-weight: 700; color: #334155; margin: 0;
+    }
+    .filter-input-wrap {
+      position: relative; display: flex; align-items: center;
+    }
+    .filter-input-wrap input {
+      width: 100%; border: 1px solid #cbd5e1; border-radius: 8px;
+      padding: 6px 36px 6px 12px; font-size: 13px; color: #0f172a; height: 38px;
+    }
+    .filter-input-wrap .material-symbols-outlined {
+      position: absolute; right: 10px; font-size: 18px; color: #64748b; pointer-events: none;
+    }
+    .filter-note {
+      display: flex; align-items: center; gap: 6px;
+      margin-left: auto; color: var(--sc-text-muted); font-size: 12.5px;
+    }
+    .filter-note .material-symbols-outlined { font-size: 18px; color: #2563eb; }
+
+    /* ── 3. 4 METRICS CARDS ── */
+    .admin-dashboard-metrics {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .metric-card {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 18px 20px; border: 1px solid var(--sc-border);
+      border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      min-height: 110px;
+    }
+    .admin-dashboard-metrics__icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .admin-dashboard-metrics__icon .material-symbols-outlined { font-size: 22px; }
+    .admin-dashboard-metrics__icon--blue   { color: #155eef; background: #eff6ff; }
+    .admin-dashboard-metrics__icon--green  { color: #067647; background: #ecfdf5; }
+    .admin-dashboard-metrics__icon--amber  { color: #b54708; background: #fffbeb; }
+    .admin-dashboard-metrics__icon--violet { color: #6941c6; background: #f5f3ff; }
+
+    .metric-card-content { display: flex; flex-direction: column; gap: 2px; }
+    .metric-card-content small { font-size: 12.5px; font-weight: 600; color: #64748b; }
+    .metric-card-content strong {
+      font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.15; margin: 2px 0;
+    }
+    .metric-card-content span { font-size: 12px; color: #64748b; }
+
+    /* ── 4. PANELS GRID ── */
+    .admin-dashboard-grid {
+      display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .admin-dashboard-panel {
+      background: #fff; border: 1px solid var(--sc-border);
+      border-radius: 12px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      display: flex; flex-direction: column; min-width: 0; min-height: 340px;
+    }
+    .admin-dashboard-panel--span-8  { grid-column: span 8; }
+    .admin-dashboard-panel--span-4  { grid-column: span 4; }
+    .admin-dashboard-panel--span-12 { grid-column: span 12; min-height: 380px; }
+
+    .admin-dashboard-panel__header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; padding-bottom: 14px; margin-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .admin-dashboard-panel__eyebrow {
+      margin: 0 0 2px; color: #2563eb; font-size: 11px;
+      font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .admin-dashboard-panel__header h2 {
+      margin: 0; color: #0f172a; font-size: 15px; font-weight: 700;
+    }
+    .admin-dashboard-panel__header span:not(.material-symbols-outlined) {
+      display: block; margin-top: 3px; color: #64748b; font-size: 12.5px;
+    }
+    .admin-dashboard-panel__header a {
+      color: #2563eb; font-size: 13px; font-weight: 600;
+      text-decoration: none; white-space: nowrap; padding-top: 2px;
+    }
+    .admin-dashboard-panel__header a:hover { text-decoration: underline; }
+
+    .admin-dashboard-chart { position: relative; flex: 1; width: 100%; min-height: 240px; }
+    .admin-dashboard-chart--donut { min-height: 250px; }
+    .admin-dashboard-chart--bar   { min-height: 280px; }
+
+    @media (max-width: 992px) {
+      .admin-dashboard-metrics { grid-template-columns: repeat(2, 1fr); }
+      .admin-dashboard-panel--span-8,
+      .admin-dashboard-panel--span-4 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sc-sidebar">
+  <div class="sc-sidebar-brand">
+    <div class="sc-brand-icon"><span class="material-symbols-outlined">local_hospital</span></div>
+    <div>
+      <div class="sc-brand-name">Smart Clinic</div>
+      <div class="sc-brand-sub">Quản trị hệ thống</div>
+    </div>
+  </div>
+  <nav class="sc-nav">
+    <a class="sc-nav-item active" href="tong-quan-admin.html"><span class="material-symbols-outlined">dashboard</span>Tổng quan</a>
+    <a class="sc-nav-item" href="quan-ly-nhan-su.html"><span class="material-symbols-outlined">group</span>Quản lý nhân sự</a>
+    <a class="sc-nav-item" href="#"><span class="material-symbols-outlined">medical_services</span>Quản lý bác sĩ</a>
+    <a class="sc-nav-item" href="quan-ly-benh-nhan.html"><span class="material-symbols-outlined">person</span>Quản lý bệnh nhân</a>
+    <a class="sc-nav-item" href="TrangQuanLyChuyenKhoa.html"><span class="material-symbols-outlined">category</span>Quản lý chuyên khoa</a>
+    <a class="sc-nav-item" href="#"><span class="material-symbols-outlined">event</span>Quản lý lịch hẹn</a>
+    <a class="sc-nav-item" href="quan-ly-dich-vu.html"><span class="material-symbols-outlined">medical_information</span>Quản lý dịch vụ</a>
+    <a class="sc-nav-item" href="TrangQuanLyKhoThuoc.html"><span class="material-symbols-outlined">medication</span>Quản lý kho thuốc</a>
+    <a class="sc-nav-item" href="TrangQuanlyBaoCaoThongKe.html"><span class="material-symbols-outlined">analytics</span>Báo cáo và thống kê</a>
+    <a class="sc-nav-item" href="#"><span class="material-symbols-outlined">star_rate</span>Đánh giá bác sĩ</a>
+    <a class="sc-nav-item" href="TrangQuanLyChatboxAI.html"><span class="material-symbols-outlined">smart_toy</span>Quản lý Chatbox AI</a>
+    <a class="sc-nav-item" href="tong-quan-thu-ngan.html"><span class="material-symbols-outlined">point_of_sale</span>Thu ngân & Tiếp đón</a>
+    <a class="sc-nav-item" href="nhat-ky-he-thong.html"><span class="material-symbols-outlined">history</span>Nhật ký hệ thống</a>
+  </nav>
+  <div class="sc-nav-bottom">
+    <a class="sc-nav-item" href="#" style="margin-bottom:0">
+      <span class="material-symbols-outlined">settings</span>Cài đặt hệ thống
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════ TOPBAR ══════════════ -->
+<header class="sc-topbar">
+  <span class="material-symbols-outlined text-secondary" style="font-size:18px">dashboard</span>
+  <span class="sc-topbar-title">Tổng quan vận hành</span>
+  <div class="sc-topbar-right">
+    <button class="btn btn-light btn-sm d-flex align-items-center" style="border:none;background:transparent;">
+      <span class="material-symbols-outlined" style="font-size:20px;color:#64748b">notifications</span>
+    </button>
+    <div class="sc-avatar-mq">MQ</div>
+    <div class="d-none d-md-block text-start">
+      <div style="font-size:13px;font-weight:600;line-height:1.2;color:#0f172a">Nguyễn Minh Quân</div>
+      <small style="font-size:11px;color:#64748b">Quản trị hệ thống</small>
+    </div>
+    <span class="material-symbols-outlined" style="font-size:16px;color:#64748b;cursor:pointer">expand_more</span>
+  </div>
+</header>
+
+<!-- ══════════════ MAIN CONTENT ══════════════ -->
+<main class="sc-main">
+  <div class="admin-dashboard-page">
+
+    <!-- 1. Heading -->
+    <div class="admin-crud-heading">
+      <div>
+        <p class="admin-management-eyebrow">TỔNG QUAN VẬN HÀNH</p>
+        <h1>DASHBOARD QUẢN TRỊ</h1>
+        <p class="admin-management-description">Theo dõi nhanh lịch hẹn, lượt khám, doanh thu và chất lượng phục vụ.</p>
+      </div>
+      <div class="admin-dashboard-heading__actions">
+        <a class="btn-detail-report" href="TrangQuanlyBaoCaoThongKe.html">
+          <span class="material-symbols-outlined" style="font-size:17px">description</span>
+          Xem báo cáo chi tiết
+        </a>
+        <button type="button" class="btn-refresh-dashboard" onclick="location.reload()">
+          <span class="material-symbols-outlined" style="font-size:17px">refresh</span>
+          Làm mới
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Filter Bar -->
+    <section class="admin-dashboard-filter">
+      <div class="filter-item">
+        <label>Từ ngày</label>
+        <div class="filter-input-wrap">
+          <input type="text" value="01/11/2026" />
+          <span class="material-symbols-outlined">calendar_today</span>
+        </div>
+      </div>
+      <div class="filter-item">
+        <label>Đến ngày</label>
+        <div class="filter-input-wrap">
+          <input type="text" value="07/11/2026" />
+          <span class="material-symbols-outlined">calendar_today</span>
+        </div>
+      </div>
+      <p class="filter-note">
+        <span class="material-symbols-outlined">date_range</span>
+        Dữ liệu thay đổi theo khoảng ngày bạn chọn.
+      </p>
+    </section>
+
+    <!-- 3. 4 KPI Metrics Cards -->
+    <section class="admin-dashboard-metrics">
+      <!-- Card 1 -->
+      <article class="metric-card">
+        <span class="admin-dashboard-metrics__icon admin-dashboard-metrics__icon--blue">
+          <span class="material-symbols-outlined">event_note</span>
+        </span>
+        <div class="metric-card-content">
+          <small>Tổng lịch hẹn</small>
+          <strong>1,280</strong>
+          <span>12 lịch chờ xác nhận • 92% tỷ lệ tới</span>
+        </div>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="metric-card">
+        <span class="admin-dashboard-metrics__icon admin-dashboard-metrics__icon--green">
+          <span class="material-symbols-outlined">clinical_notes</span>
+        </span>
+        <div class="metric-card-content">
+          <small>Lượt khám hoàn tất</small>
+          <strong>1,142</strong>
+          <span>Ca sáng: 680 | Ca chiều: 462</span>
+        </div>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="metric-card">
+        <span class="admin-dashboard-metrics__icon admin-dashboard-metrics__icon--amber">
+          <span class="material-symbols-outlined">payments</span>
+        </span>
+        <div class="metric-card-content">
+          <small>Doanh thu đã thu</small>
+          <strong>384.5M ₫</strong>
+          <span>Tiền khám: 172M | Thuốc: 212.5M</span>
+        </div>
+      </article>
+
+      <!-- Card 4 -->
+      <article class="metric-card">
+        <span class="admin-dashboard-metrics__icon admin-dashboard-metrics__icon--violet">
+          <span class="material-symbols-outlined">star</span>
+        </span>
+        <div class="metric-card-content">
+          <small>Đánh giá bác sĩ</small>
+          <strong>4.9 ★</strong>
+          <span>428 lượt đánh giá hài lòng (98.4%)</span>
+        </div>
+      </article>
+    </section>
+
+    <!-- 4. Panels Grid -->
+    <section class="admin-dashboard-grid">
+
+      <!-- Panel 1: Lịch hẹn theo ngày (span 8) -->
+      <article class="admin-dashboard-panel admin-dashboard-panel--span-8">
+        <header class="admin-dashboard-panel__header">
+          <div>
+            <p class="admin-dashboard-panel__eyebrow">Xu hướng</p>
+            <h2>Lịch hẹn theo ngày</h2>
+            <span>Lịch phát sinh trong khoảng thời gian đã chọn.</span>
+          </div>
+          <a href="#">Quản lý lịch hẹn</a>
+        </header>
+        <div class="admin-dashboard-chart">
+          <canvas id="appointmentsChart"></canvas>
+        </div>
+      </article>
+
+      <!-- Panel 2: Trạng thái lịch hẹn (span 4) -->
+      <article class="admin-dashboard-panel admin-dashboard-panel--span-4">
+        <header class="admin-dashboard-panel__header">
+          <div>
+            <p class="admin-dashboard-panel__eyebrow">Điều phối</p>
+            <h2>Trạng thái lịch hẹn</h2>
+            <span>Phân bổ theo trạng thái hiện tại.</span>
+          </div>
+        </header>
+        <div class="admin-dashboard-chart admin-dashboard-chart--donut">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </article>
+
+      <!-- Panel 3: Doanh thu theo ngày (span 8) -->
+      <article class="admin-dashboard-panel admin-dashboard-panel--span-8">
+        <header class="admin-dashboard-panel__header">
+          <div>
+            <p class="admin-dashboard-panel__eyebrow">Tài chính</p>
+            <h2>Doanh thu theo ngày</h2>
+            <span>Chỉ tính các giao dịch thanh toán thành công.</span>
+          </div>
+          <a href="#">Phân tích chi tiết</a>
+        </header>
+        <div class="admin-dashboard-chart">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </article>
+
+      <!-- Panel 4: Phương thức thanh toán (span 4) -->
+      <article class="admin-dashboard-panel admin-dashboard-panel--span-4">
+        <header class="admin-dashboard-panel__header">
+          <div>
+            <p class="admin-dashboard-panel__eyebrow">Thanh toán</p>
+            <h2>Phương thức thanh toán</h2>
+            <span>Tổng tiền theo phương thức thanh toán.</span>
+          </div>
+        </header>
+        <div class="admin-dashboard-chart admin-dashboard-chart--donut">
+          <canvas id="paymentMethodChart"></canvas>
+        </div>
+      </article>
+
+      <!-- Panel 5: Lượt khám theo chuyên khoa (span 12) -->
+      <article class="admin-dashboard-panel admin-dashboard-panel--span-12">
+        <header class="admin-dashboard-panel__header">
+          <div>
+            <p class="admin-dashboard-panel__eyebrow">Chuyên môn</p>
+            <h2>Lượt khám theo chuyên khoa</h2>
+            <span>Số lượt khám đã hoàn tất trong khoảng thời gian đã chọn.</span>
+          </div>
+        </header>
+        <div class="admin-dashboard-chart admin-dashboard-chart--bar">
+          <canvas id="specialtyChart"></canvas>
+        </div>
+      </article>
+
+    </section>
+
+  </div>
+</main>
+
+<script>
+  // ── 1. Biểu đồ đường: Lịch hẹn theo ngày ──
+  const ctxApp = document.getElementById('appointmentsChart').getContext('2d');
+  new Chart(ctxApp, {
+    type: 'line',
+    data: {
+      labels: ['31/10/2026', '01/11/2026', '02/11/2026', '03/11/2026', '04/11/2026', '05/11/2026', '06/11/2026'],
+      datasets: [{
+        data: [1, 4, 3, 1, 6, 3, 7],
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.12)',
+        pointBackgroundColor: '#2563eb',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.38,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 7,
+          ticks: { stepSize: 1, color: '#64748b', font: { family: 'Inter', size: 11.5 } },
+          grid: { color: '#f1f5f9' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#64748b', font: { family: 'Inter', size: 11.5 } }
+        }
+      }
+    }
+  });
+
+  // ── 2. Biểu đồ Donut: Trạng thái lịch hẹn ──
+  const ctxStatus = document.getElementById('statusChart').getContext('2d');
+  new Chart(ctxStatus, {
+    type: 'doughnut',
+    data: {
+      labels: ['Chờ xác nhận', 'Đã check-in', 'Đã xác nhận', 'Đã từ chối'],
+      datasets: [{
+        data: [12, 6, 5, 2],
+        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ef4444'],
+        borderColor: '#ffffff',
+        borderWidth: 3,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 9,
+            padding: 14,
+            usePointStyle: false,
+            font: { family: 'Inter', size: 11.5 }
+          }
+        }
+      }
+    }
+  });
+
+  // ── 3. Biểu đồ đường: Doanh thu theo ngày ──
+  const ctxRev = document.getElementById('revenueChart').getContext('2d');
+  new Chart(ctxRev, {
+    type: 'line',
+    data: {
+      labels: ['31/10', '01/11', '02/11', '03/11', '04/11', '05/11', '06/11'],
+      datasets: [{
+        data: [42, 51, 48, 65, 62, 73, 89],
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.08)',
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.38,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: value => value + 'M',
+            color: '#64748b',
+            font: { family: 'Inter', size: 11.5 }
+          },
+          grid: { color: '#f1f5f9' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#64748b', font: { family: 'Inter', size: 11.5 } }
+        }
+      }
+    }
+  });
+
+  // ── 4. Biểu đồ Donut: Phương thức thanh toán ──
+  const ctxPayment = document.getElementById('paymentMethodChart').getContext('2d');
+  new Chart(ctxPayment, {
+    type: 'doughnut',
+    data: {
+      labels: ['VietQR / Chuyển khoản', 'Tiền mặt', 'Thẻ POS'],
+      datasets: [{
+        data: [62, 26, 12],
+        backgroundColor: ['#2563eb', '#10b981', '#f59e0b'],
+        borderWidth: 3,
+        borderColor: '#ffffff',
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 9,
+            padding: 14,
+            usePointStyle: false,
+            font: { family: 'Inter', size: 11.5 }
+          }
+        }
+      }
+    }
+  });
+
+  // ── 5. Biểu đồ Cột: Lượt khám theo chuyên khoa ──
+  const ctxSpecialty = document.getElementById('specialtyChart').getContext('2d');
+  new Chart(ctxSpecialty, {
+    type: 'bar',
+    data: {
+      labels: ['Mắt', 'Cơ Xương Khớp', 'Tai Mũi Họng'],
+      datasets: [{
+        label: 'Số lượt khám',
+        data: [11, 2, 1],
+        backgroundColor: '#2563eb',
+        borderRadius: 8,
+        borderSkipped: false,
+        maxBarThickness: 54
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 12,
+          ticks: { stepSize: 2, color: '#64748b', font: { family: 'Inter', size: 11.5 } },
+          grid: { color: '#f1f5f9' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#334155', font: { family: 'Inter', size: 12, weight: '500' } }
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>
