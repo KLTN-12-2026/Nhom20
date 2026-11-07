@@ -14,6 +14,7 @@ import type {
 
 export function useAppointments(query: AppointmentQuery) {
   const latestRequestId = useRef(0);
+  const isInitialLoad = useRef(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [stats, setStats] = useState<AppointmentStats>({
     total: 0,
@@ -26,13 +27,17 @@ export function useAppointments(query: AppointmentQuery) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const queryStr = JSON.stringify(query);
+
   const loadAppointments = useCallback(async () => {
     const requestId = latestRequestId.current + 1;
     latestRequestId.current = requestId;
-    setIsLoading(true);
+    if (isInitialLoad.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
-      const response = await appointmentApi.getAll(query);
+      const response = await appointmentApi.getAll(JSON.parse(queryStr));
       if (requestId !== latestRequestId.current) return;
       setAppointments(response.data.items);
       setStats(response.data.stats);
@@ -44,9 +49,12 @@ export function useAppointments(query: AppointmentQuery) {
         getApiErrorMessage(requestError, 'Không thể tải danh sách lịch hẹn'),
       );
     } finally {
-      if (requestId === latestRequestId.current) setIsLoading(false);
+      if (requestId === latestRequestId.current) {
+        setIsLoading(false);
+        isInitialLoad.current = false;
+      }
     }
-  }, [query]);
+  }, [queryStr]);
 
   useEffect(() => {
     void loadAppointments();

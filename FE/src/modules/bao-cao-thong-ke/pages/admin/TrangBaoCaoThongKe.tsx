@@ -296,13 +296,9 @@ export default function TrangBaoCaoThongKe() {
             <span className="material-symbols-outlined">print</span>
             In báo cáo
           </button>
-          <button type="button" className="btn btn-outline-primary admin-report-refresh" onClick={handleExportExcel} disabled={!data || isLoading}>
+          <button type="button" className="btn btn-primary admin-report-refresh" onClick={handleExportExcel} disabled={!data || isLoading}>
             <span className="material-symbols-outlined">download</span>
             Xuất Excel
-          </button>
-          <button type="button" className="btn btn-primary admin-report-refresh" onClick={() => void reload()} disabled={isLoading}>
-            <span className="material-symbols-outlined">refresh</span>
-            Làm mới
           </button>
         </div>
       </header>

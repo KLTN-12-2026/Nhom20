@@ -67,7 +67,7 @@ export default function TrangLichLamViec() {
       <div className="d-flex justify-content-end gap-2 mb-3">
         <button className="btn btn-outline-secondary px-3" type="button" onClick={() => setWeekStart(addScheduleDays(weekStart, -7))}>Tuần trước</button>
         <button className="btn btn-outline-primary px-3" type="button" disabled={weekStart === getCurrentMonday()} onClick={() => setWeekStart(getCurrentMonday())}>Tuần này</button>
-        <button className="btn btn-outline-primary px-3" type="button" onClick={() => setWeekStart(addScheduleDays(weekStart, 7))}>Tuần sau</button>
+        <button className="btn btn-primary px-3" type="button" onClick={() => setWeekStart(addScheduleDays(weekStart, 7))}>Tuần sau</button>
       </div>
 
       <section className="doctor-panel overflow-hidden">

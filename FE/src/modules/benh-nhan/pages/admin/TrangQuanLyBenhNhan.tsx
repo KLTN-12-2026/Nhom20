@@ -145,17 +145,6 @@ export default function TrangQuanLyBenhNhan() {
             placeholder="Tìm theo tên, mã hoặc số điện thoại..."
           />
         </div>
-        <button
-          className="btn btn-primary d-flex align-items-center gap-2 ms-auto text-white"
-          onClick={() => {
-            void loadPatients(search);
-            setPage(1);
-          }}
-          disabled={loading}
-        >
-          <span className="material-symbols-outlined">refresh</span>
-          Làm mới
-        </button>
       </div>
 
       {loading && (

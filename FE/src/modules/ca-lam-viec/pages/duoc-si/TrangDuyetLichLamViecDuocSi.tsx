@@ -280,7 +280,7 @@ export default function TrangDuyetLichLamViecDuocSi() {
             Tuần này
           </button>
           <button
-            className="btn btn-outline-primary px-3"
+            className="btn btn-primary px-3"
             type="button"
             onClick={() => setWeekStart(addScheduleDays(weekStart, 7))}
           >
@@ -314,14 +314,24 @@ export default function TrangDuyetLichLamViecDuocSi() {
           <div className="p-5 text-center">Đang tải lịch Dược...</div>
         ) : (
           <div className="table-responsive">
-            <table className="table doctor-table align-middle mb-0">
+            <table
+              className="table doctor-table align-middle mb-0"
+              style={{ tableLayout: 'fixed', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '36%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '12%' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Dược sĩ</th>
-                  <th>Lịch hành chính</th>
-                  <th>Chọn ngày trực đêm</th>
-                  <th>Nghỉ bù tự động</th>
-                  <th>Kiểm tra</th>
+                  <th style={{ width: '22%' }}>Dược sĩ</th>
+                  <th style={{ width: '16%' }}>Lịch hành chính</th>
+                  <th style={{ width: '36%' }}>Chọn ngày trực đêm</th>
+                  <th style={{ width: '14%' }}>Nghỉ bù tự động</th>
+                  <th style={{ width: '12%' }}>Kiểm tra</th>
                 </tr>
               </thead>
               <tbody>
@@ -330,14 +340,18 @@ export default function TrangDuyetLichLamViecDuocSi() {
                   return (
                     <tr key={row.id}>
                       <td>
-                        <strong>{row.name}</strong>
-                        <div className="small text-secondary">Mã dược sĩ: {row.code}</div>
+                        <strong className="d-block text-truncate" title={row.name}>
+                          {row.name}
+                        </strong>
+                        <div className="small text-secondary text-truncate">
+                          Mã dược sĩ: {row.code}
+                        </div>
                       </td>
                       <td>
                         <strong>07:00–16:30</strong>
                         <div className="small text-secondary">Trừ ngày nghỉ bù</div>
                       </td>
-                      <td style={{ minWidth: 400 }}>
+                      <td>
                         <div className="d-flex flex-wrap gap-2">
                           {DAYS.map((day, index) => {
                             const isSelected = row.dutyDays.includes(index);

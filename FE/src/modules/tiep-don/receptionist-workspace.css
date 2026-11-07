@@ -689,9 +689,9 @@
 }
 
 .reception-queue__filters button.active {
-  background: #fff;
-  border-color: #1758bf;
-  color: #1758bf;
+  background: var(--sc-primary, #1758bf);
+  border-color: var(--sc-primary, #1758bf);
+  color: #fff;
 }
 
 .reception-queue__list {

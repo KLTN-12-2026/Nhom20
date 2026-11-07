@@ -75,17 +75,6 @@ export default function TrangHangDoiKham() {
             Danh sách bệnh nhân được cập nhật tự động sau khi hoàn tất tiếp nhận và phân công bác sĩ tại quầy lễ tân.
           </p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <button
-            type="button"
-            className="btn btn-primary d-flex align-items-center gap-2 text-white"
-            onClick={() => void reload()}
-            disabled={isLoading}
-          >
-            <span className="material-symbols-outlined">refresh</span>
-            Làm mới
-          </button>
-        </div>
       </header>
 
       <div className="row g-3 mb-4">

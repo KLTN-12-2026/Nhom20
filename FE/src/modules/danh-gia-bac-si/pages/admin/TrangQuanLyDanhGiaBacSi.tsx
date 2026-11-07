@@ -175,17 +175,6 @@ export default function TrangQuanLyDanhGiaBacSi() {
           <option value="DA_HIEN_THI">Đang hiển thị</option>
           <option value="DA_AN">Đã ẩn</option>
         </select>
-        <button
-          className="btn btn-primary d-flex align-items-center gap-2 ms-auto text-white"
-          onClick={() => {
-            void load();
-            setPage(1);
-          }}
-          disabled={loading}
-        >
-          <span className="material-symbols-outlined">refresh</span>
-          Làm mới
-        </button>
       </div>
       {loading && (
         <div className="admin-crud-empty">

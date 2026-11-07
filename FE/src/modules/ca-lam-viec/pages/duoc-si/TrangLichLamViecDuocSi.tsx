@@ -126,7 +126,7 @@ export default function TrangLichLamViecDuocSi() {
           Tuần này
         </button>
         <button
-          className="btn btn-outline-primary px-3"
+          className="btn btn-primary px-3"
           type="button"
           onClick={() => setWeekStart(addScheduleDays(weekStart, 7))}
         >

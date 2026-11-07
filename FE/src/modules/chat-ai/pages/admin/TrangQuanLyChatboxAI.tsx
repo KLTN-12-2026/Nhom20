@@ -93,9 +93,6 @@ export default function TrangQuanLyChatboxAI() {
           <h1>QUẢN LÝ CHATBOX AI</h1>
           <p>Theo dõi hội thoại thật, yêu cầu đặt lịch và tình trạng phản hồi của trợ lý Smart Clinic.</p>
         </div>
-        <button className="btn btn-primary chat-admin-refresh" type="button" disabled={isLoading} onClick={() => void refresh()}>
-          <span className="material-symbols-outlined">refresh</span>{isLoading ? 'Đang tải...' : 'Làm mới'}
-        </button>
       </header>
 
       <section className="chat-admin-metrics" aria-label="Tổng quan Chatbox AI">

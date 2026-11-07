@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 
 import ReceptionistDashboardCharts from '../../components/ReceptionistDashboardCharts';
-import ReceptionistPageHeader from '../../components/ReceptionistPageHeader';
 import { useFollowUpReminders } from '../../hooks/use-follow-up-reminders';
 import { useReceptionDashboard } from '../../hooks/use-reception-dashboard';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '../../receptionist-workspace.css';
 
 const APPOINTMENT_STATUS: Record<string, { label: string; tone: string }> = {
@@ -42,24 +43,26 @@ export default function TrangTongQuanThuNgan() {
   } = useReceptionDashboard();
 
   return (
-    <div className="reception-page">
-      <ReceptionistPageHeader
-        eyebrow="Hệ thống điều phối"
-        title="Tổng quan"
-        description="Theo dõi nhanh hoạt động tiếp đón, lịch hẹn và hàng đợi trong ca trực."
-        actions={
-          <>
-            <Link className="btn btn-outline-primary" to="/thu-ngan/ca-truc">
-              <span className="material-symbols-outlined me-2">description</span>
-              Báo cáo ca
-            </Link>
-            <Link className="btn btn-primary" to="/thu-ngan/tiep-don">
-              <span className="material-symbols-outlined me-2">person_add</span>
-              Tiếp đón mới
-            </Link>
-          </>
-        }
-      />
+    <div className="reception-page medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading align-items-end">
+        <div>
+          <p className="admin-management-eyebrow">Hệ thống điều phối</p>
+          <h1>TỔNG QUAN THU NGÂN</h1>
+          <p className="admin-management-description">
+            Theo dõi và quản lý tổng quan hoạt động thu phí khám bệnh, thanh toán hóa đơn và tình trạng giao dịch trong ca trực.
+          </p>
+        </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <Link className="btn btn-outline-primary bg-white d-inline-flex align-items-center gap-1" to="/thu-ngan/ca-truc">
+            <span className="material-symbols-outlined fs-5">description</span>
+            <span>Báo cáo ca</span>
+          </Link>
+          <Link className="btn btn-primary d-inline-flex align-items-center gap-1 text-white" to="/thu-ngan/tiep-don">
+            <span className="material-symbols-outlined fs-5">person_add</span>
+            <span>Tiếp đón mới</span>
+          </Link>
+        </div>
+      </header>
 
       <ReceptionistDashboardCharts
         dashboard={dashboard}
@@ -73,7 +76,7 @@ export default function TrangTongQuanThuNgan() {
             <h2><span className="material-symbols-outlined text-primary">event_repeat</span>Nhắc tái khám</h2>
             <small className="text-secondary">Danh sách từ hồ sơ khám đã hoàn tất có ngày tái khám hôm nay hoặc ngày mai.</small>
           </div>
-          <Link to="/thu-ngan/benh-nhan" className="btn btn-sm btn-outline-primary">Xem hồ sơ bệnh nhân</Link>
+          <Link to="/thu-ngan/benh-nhan" className="btn btn-sm btn-primary">Xem hồ sơ bệnh nhân</Link>
         </div>
         {followUpError ? <p className="reception-follow-up__error mb-0">{followUpError}</p> : null}
         <div className="reception-follow-up__grid">
@@ -106,7 +109,15 @@ export default function TrangTongQuanThuNgan() {
         <section className="reception-card overflow-hidden">
           <div className="reception-card__header">
             <h2><span className="material-symbols-outlined text-primary">schedule</span>Lịch hẹn sắp tới</h2>
-            <Link to="/thu-ngan/lich-hen" className="btn btn-sm btn-link">Xem tất cả</Link>
+            <Link
+              className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 text-white"
+              to="/thu-ngan/lich-hen"
+            >
+              <span>Xem tất cả</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                arrow_forward
+              </span>
+            </Link>
           </div>
           <div className="table-responsive">
             <table className="table reception-table">
