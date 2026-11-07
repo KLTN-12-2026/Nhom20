@@ -228,14 +228,10 @@ export default function TrangTongQuanAdmin() {
           <p className="admin-management-description">Theo dõi nhanh lịch hẹn, lượt khám, doanh thu và chất lượng phục vụ.</p>
         </div>
         <div className="admin-dashboard-heading__actions">
-          <Link className="btn btn-outline-primary" to="/admin/bao-cao">
+          <Link className="btn btn-primary" to="/admin/bao-cao">
             <span className="material-symbols-outlined">analytics</span>
             Xem báo cáo chi tiết
           </Link>
-          <button type="button" className="btn btn-primary" onClick={() => void reload()} disabled={isLoading}>
-            <span className="material-symbols-outlined">refresh</span>
-            Làm mới
-          </button>
         </div>
       </div>
 

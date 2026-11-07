@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
+import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
-import ReceptionistPageHeader from '@/modules/tiep-don/components/ReceptionistPageHeader';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
 import { useAuthStore } from '@/stores/auth.store';
@@ -71,13 +71,16 @@ export default function TrangNhanBanGiaoCa() {
     }
   };
 
-  return <div className="reception-page">
-    <ReceptionistPageHeader
-      eyebrow="NHẬN CA VÀ ĐỐI CHIẾU"
-      title="Nhận bàn giao ca"
-      description="Kiểm tra quỹ tiền mặt, giao dịch và công việc tồn trước khi xác nhận nhận ca."
-      actions={<button type="button" className="btn btn-outline-primary" onClick={() => void loadHandovers()} disabled={isLoading}>Làm mới</button>}
-    />
+  return <div className="reception-page admin-crud-page">
+    <div className="admin-crud-heading">
+      <div>
+        <p className="admin-management-eyebrow">NHẬN CA VÀ ĐỐI CHIẾU</p>
+        <h1>NHẬN BÀN GIAO CA</h1>
+        <p className="admin-management-description">
+          Kiểm tra quỹ tiền mặt, giao dịch và công việc tồn trước khi xác nhận nhận ca.
+        </p>
+      </div>
+    </div>
 
     <section className="reception-card">
       <div className="reception-card__header">

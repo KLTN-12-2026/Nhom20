@@ -336,18 +336,6 @@ export default function TrangQuanLyKhoThuoc() {
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
-          <button
-            type="button"
-            className="btn btn-primary d-flex align-items-center gap-2 text-white"
-            onClick={() => {
-              void refresh();
-              setPage(1);
-            }}
-            disabled={isLoading}
-          >
-            <span className="material-symbols-outlined">refresh</span>
-            Làm mới
-          </button>
           {!isAdmin && (
             <>
               {hasPermission(user, 'THUOC.UPDATE') && <button

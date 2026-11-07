@@ -465,7 +465,7 @@ export default function TrangQuanLyThanhToan() {
               </small>
               <button
                 type="button"
-                className="btn btn-sm btn-outline-primary"
+                className="btn btn-sm btn-primary"
                 onClick={() => {
                   setSelectedDate('');
                   setDateInput('');

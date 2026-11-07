@@ -10,7 +10,6 @@ import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
 import { useAuthStore } from '@/stores/auth.store';
 import { hasPermission } from '@/utils/permissions';
-import ReceptionistPageHeader from '../../components/ReceptionistPageHeader';
 import { useReception } from '../../hooks/use-reception';
 import type { ReceptionTicketData } from '../../types/reception-ticket.types';
 import type {
@@ -18,6 +17,8 @@ import type {
   ReceptionPatient,
   ReceptionRecord,
 } from '../../types/reception.types';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '../../receptionist-workspace.css';
 
 type PatientMode = 'existing' | 'new';
@@ -466,12 +467,16 @@ export default function TrangTiepDonBenhNhan() {
   };
 
   return (
-    <div className="reception-page">
-      <ReceptionistPageHeader
-        eyebrow="Quy trình tiếp nhận"
-        title="Tiếp đón bệnh nhân"
-        description="Tra cứu bệnh nhân cũ hoặc tạo đầy đủ hồ sơ cho bệnh nhân đến khám lần đầu."
-      />
+    <div className="reception-page medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Quy trình tiếp nhận</p>
+          <h1>TIẾP ĐÓN BỆNH NHÂN</h1>
+          <p className="admin-management-description">
+            Tra cứu bệnh nhân cũ hoặc tạo đầy đủ hồ sơ cho bệnh nhân đến khám lần đầu.
+          </p>
+        </div>
+      </header>
       <div className="reception-grid">
         <section className="reception-card overflow-hidden">
           <div className="p-3 border-bottom">

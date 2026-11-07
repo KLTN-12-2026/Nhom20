@@ -247,7 +247,7 @@ export default function TrangDuyetLichLamViec() {
         <div className="d-flex gap-2">
           <button className="btn btn-outline-secondary px-3" type="button" onClick={() => setWeekStart(addScheduleDays(weekStart, -7))}>Tuần trước</button>
           <button className="btn btn-outline-primary px-3" type="button" disabled={weekStart === getCurrentMonday()} onClick={() => setWeekStart(getCurrentMonday())}>Tuần này</button>
-          <button className="btn btn-outline-primary px-3" type="button" onClick={() => setWeekStart(addScheduleDays(weekStart, 7))}>Tuần sau</button>
+          <button className="btn btn-primary px-3" type="button" onClick={() => setWeekStart(addScheduleDays(weekStart, 7))}>Tuần sau</button>
         </div>
       </div>
 
@@ -273,16 +273,45 @@ export default function TrangDuyetLichLamViec() {
         )}
 
         <div className="table-responsive">
-          <table className="table doctor-table align-middle mb-0">
-            <thead><tr><th>Bác sĩ</th><th>Lịch hành chính</th><th>Chọn ngày trực đêm</th><th>Nghỉ bù tự động</th><th>Kiểm tra</th></tr></thead>
+          <table
+            className="table doctor-table align-middle mb-0"
+            style={{ tableLayout: 'fixed', width: '100%' }}
+          >
+            <colgroup>
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '36%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '12%' }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th style={{ width: '22%' }}>Bác sĩ</th>
+                <th style={{ width: '16%' }}>Lịch hành chính</th>
+                <th style={{ width: '36%' }}>Chọn ngày trực đêm</th>
+                <th style={{ width: '14%' }}>Nghỉ bù tự động</th>
+                <th style={{ width: '12%' }}>Kiểm tra</th>
+              </tr>
+            </thead>
             <tbody>
               {rows.map((row) => {
                 const isValid = row.assignedDutyDays.length === 2 && !hasAdjacentDuty(row.assignedDutyDays);
-                return <tr key={row.id}>
-                  <td><strong>{row.name}</strong><div className="small text-secondary">Mã bác sĩ: {row.code}</div></td>
-                  <td><strong>07:00–16:30</strong><div className="small text-secondary">Trừ ngày nghỉ bù</div></td>
-                  <td style={{ minWidth: 400 }}>
-                    <div className="d-flex flex-wrap gap-2">
+                return (
+                  <tr key={row.id}>
+                    <td>
+                      <strong className="d-block text-truncate" title={row.name}>
+                        {row.name}
+                      </strong>
+                      <div className="small text-secondary text-truncate">
+                        Mã bác sĩ: {row.code}
+                      </div>
+                    </td>
+                    <td>
+                      <strong>07:00–16:30</strong>
+                      <div className="small text-secondary">Trừ ngày nghỉ bù</div>
+                    </td>
+                    <td>
+                      <div className="d-flex flex-wrap gap-2">
                       {DAYS.map((day, index) => {
                         const isSelected = row.assignedDutyDays.includes(index);
                         const isBoundaryBlocked = !isSelected && row.blockedDutyDays.includes(index);
@@ -325,8 +354,9 @@ export default function TrangDuyetLichLamViec() {
                   </td>
                   <td>{restDayLabels(row.assignedDutyDays).join(', ') || 'Chưa có'}</td>
                   <td><span className={`doctor-status ${isValid ? 'doctor-status--ready' : 'doctor-status--waiting'}`}>{isValid ? 'Hợp lệ' : 'Chưa đủ ca'}</span></td>
-                </tr>;
-              })}
+                </tr>
+              );
+            })}
               {rows.length === 0 && (
                 <tr><td colSpan={5} className="text-center p-4">Không có bác sĩ nào trong khoa</td></tr>
               )}

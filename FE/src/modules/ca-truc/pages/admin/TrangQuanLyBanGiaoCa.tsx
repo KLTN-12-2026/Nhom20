@@ -124,17 +124,6 @@ export default function TrangQuanLyBanGiaoCa() {
             placeholder="Tìm người bàn giao, người nhận..."
           />
         </div>
-        <button
-          className="btn btn-primary d-flex align-items-center gap-2 ms-auto text-white"
-          onClick={() => {
-            loadData();
-            setPage(1);
-          }}
-          disabled={loading}
-        >
-          <span className="material-symbols-outlined">refresh</span>
-          Làm mới
-        </button>
       </div>
 
       {loading && (

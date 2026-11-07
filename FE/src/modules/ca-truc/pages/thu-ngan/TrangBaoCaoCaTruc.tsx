@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import ReceptionistPageHeader from '@/modules/tiep-don/components/ReceptionistPageHeader';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import '@/components/ui/admin-crud.css';
 import ReceptionistStatCard from '@/modules/tiep-don/components/ReceptionistStatCard';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { useAppToast } from '@/components/ui/use-app-toast';
@@ -14,6 +14,14 @@ const formatMoneyInput = (value: string) => {
   const digits = value.replace(/\D/g, '');
   return digits ? new Intl.NumberFormat('vi-VN').format(Number(digits)) : '';
 };
+
+const ITEMS_PER_PAGE = 5;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 export default function TrangBaoCaoCaTruc() {
   const user = useAuthStore((state) => state.user);
@@ -32,6 +40,7 @@ export default function TrangBaoCaoCaTruc() {
   const [transferAmount, setTransferAmount] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [pendingItems, setPendingItems] = useState<any[]>([]);
+  const [pendingPage, setPendingPage] = useState(1);
 
   useEffect(() => {
     void Promise.all([
@@ -46,6 +55,33 @@ export default function TrangBaoCaoCaTruc() {
       setPendingItems(data.pendingItems || []);
     }).catch((error) => showToast(getApiErrorMessage(error, 'Không thể tải báo cáo ca'), 'danger'));
   }, [showToast]);
+
+  const totalPendingPages = Math.max(1, Math.ceil(pendingItems.length / ITEMS_PER_PAGE));
+  const currentPendingPage = Math.min(pendingPage, totalPendingPages);
+  const pendingPageNumbers = useMemo(
+    () => getPageNumbers(currentPendingPage, totalPendingPages),
+    [currentPendingPage, totalPendingPages],
+  );
+  const displayedPendingFrom =
+    pendingItems.length === 0 ? 0 : (currentPendingPage - 1) * ITEMS_PER_PAGE + 1;
+  const displayedPendingTo = Math.min(
+    currentPendingPage * ITEMS_PER_PAGE,
+    pendingItems.length,
+  );
+  const paginatedPendingItems = useMemo(
+    () =>
+      pendingItems.slice(
+        (currentPendingPage - 1) * ITEMS_PER_PAGE,
+        currentPendingPage * ITEMS_PER_PAGE,
+      ),
+    [currentPendingPage, pendingItems],
+  );
+
+  useEffect(() => {
+    if (pendingPage > totalPendingPages) {
+      setPendingPage(totalPendingPages);
+    }
+  }, [pendingPage, totalPendingPages]);
 
   const groupedReceivers = useMemo(() => {
     const groups: Record<string, typeof availableReceivers> = {};
@@ -78,8 +114,19 @@ export default function TrangBaoCaoCaTruc() {
     finally { setIsSaving(false); }
   };
 
-  return <div className="reception-page">
-    <ReceptionistPageHeader eyebrow="Kết ca và bàn giao" title="Báo cáo ca trực" description="Đối chiếu doanh thu, kiểm quỹ và bàn giao cho ca tiếp theo." actions={<span className="reception-badge reception-badge--amber">{status}</span>} />
+  return <div className="reception-page admin-crud-page">
+    <div className="admin-crud-heading">
+      <div>
+        <p className="admin-management-eyebrow">Kết ca và bàn giao</p>
+        <h1>BÁO CÁO CA TRỰC</h1>
+        <p className="admin-management-description">
+          Đối chiếu doanh thu, kiểm quỹ và bàn giao cho ca tiếp theo.
+        </p>
+      </div>
+      <div className="admin-crud-actions">
+        <span className="reception-badge reception-badge--amber">{status}</span>
+      </div>
+    </div>
     <div className="reception-stats"><ReceptionistStatCard icon="payments" label="Tổng doanh thu" value={money(totalRevenue)} tone="green" /><ReceptionistStatCard icon="payments" label="Tiền mặt hệ thống" value={money(systemCash)} /><ReceptionistStatCard icon="account_balance" label="Chuyển khoản" value={money(transferAmount)} /><ReceptionistStatCard icon="pending_actions" label="Phiếu chờ xử lý" value={pendingItems.length} tone="amber" /></div>
     <div className="reception-grid reception-grid--handover">
       <div className="d-grid gap-3">
@@ -88,7 +135,110 @@ export default function TrangBaoCaoCaTruc() {
       </div>
       {canCreateHandover && <aside className="reception-card align-self-start"><div className="reception-card__header"><h2>Thông tin bàn giao</h2></div><div className="reception-card__body"><label className="form-label fw-semibold">Người nhận bàn giao *</label><select className="form-select mb-2" value={receiver} onChange={(event) => setReceiver(event.target.value)}><option value="">Chọn nhân viên ca tiếp theo</option>{Object.keys(groupedReceivers).length > 1 ? Object.entries(groupedReceivers).map(([groupLabel, items]) => <optgroup key={groupLabel} label={groupLabel}>{items.map((item) => <option key={item.id} value={item.id}>{item.fullName}</option>)}</optgroup>) : availableReceivers.map((item) => <option key={item.id} value={item.id}>{item.fullName}</option>)}</select>{receiver && <div className="alert alert-light border py-2 px-3 mb-3 d-flex align-items-center justify-content-between"><div className="small text-muted">Ca nhận: <strong className="text-primary">{availableReceivers.find((item) => String(item.id) === receiver)?.shift}</strong></div><span className="badge bg-primary-subtle text-primary border border-primary-subtle">{availableReceivers.find((item) => String(item.id) === receiver)?.fullName}</span></div>}<div className="reception-checklist">{CHECKLIST.map((item) => <label key={item}><input className="form-check-input" type="checkbox" checked={checkedItems.includes(item)} onChange={() => setCheckedItems((current) => current.includes(item) ? current.filter((value) => value !== item) : [...current, item])} /><strong>{item}</strong></label>)}</div><label className="form-label fw-semibold mt-3">Ghi chú cho ca sau</label><textarea className="form-control" rows={3} value={note} onChange={(event) => setNote(event.target.value)} /><div className="small text-secondary mt-2">Đã hoàn tất {checkedItems.length}/{CHECKLIST.length} mục.</div><div className="d-grid gap-2 mt-3"><button className="btn btn-outline-primary" type="button" disabled={isSaving} onClick={() => void saveDraft()}>Lưu bản nháp</button><button className="btn btn-primary" type="button" disabled={!canSubmit || isSaving} onClick={() => setIsConfirmOpen(true)}>Gửi bàn giao</button></div></div></aside>}
     </div>
-    <section className="reception-card mt-3"><div className="reception-card__header"><h2>Phiếu chờ xử lý</h2><span className="text-muted">{pendingItems.length} phiếu</span></div><div className="table-responsive"><table className="table reception-table mb-0"><thead><tr><th>Mã phiếu</th><th>Nội dung cần xử lý</th><th>Trạng thái</th></tr></thead><tbody>{pendingItems.length === 0 ? <tr><td colSpan={3} className="text-center text-muted py-4">Không có phiếu tồn.</td></tr> : pendingItems.map((item) => <tr key={item.code}><td className="fw-semibold text-primary">{item.code}</td><td>{item.content}</td><td><span className="reception-badge reception-badge--amber">{item.status}</span></td></tr>)}</tbody></table></div></section>
+    <section className="reception-card mt-3 overflow-hidden">
+      <div className="reception-card__header">
+        <h2>Phiếu chờ xử lý</h2>
+        <span className="text-muted">{pendingItems.length} phiếu</span>
+      </div>
+      <div className="table-responsive">
+        <table
+          className="table reception-table align-middle mb-0"
+          style={{ tableLayout: 'fixed', width: '100%' }}
+        >
+          <colgroup>
+            <col style={{ width: '25%' }} />
+            <col style={{ width: '50%' }} />
+            <col style={{ width: '25%' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={{ width: '25%' }}>Mã phiếu</th>
+              <th style={{ width: '50%' }}>Nội dung cần xử lý</th>
+              <th style={{ width: '25%' }}>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedPendingItems.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="text-center text-muted py-4">
+                  Không có phiếu tồn.
+                </td>
+              </tr>
+            ) : (
+              paginatedPendingItems.map((item) => (
+                <tr key={item.code}>
+                  <td className="fw-semibold text-primary text-truncate" title={item.code}>
+                    {item.code}
+                  </td>
+                  <td className="text-truncate" title={item.content}>
+                    {item.content}
+                  </td>
+                  <td>
+                    <span className="reception-badge reception-badge--amber text-nowrap">
+                      {item.status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      {pendingItems.length > 0 && (
+        <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+          <span className="text-secondary small">
+            Hiển thị {displayedPendingFrom}–{displayedPendingTo} trong tổng số {pendingItems.length} phiếu
+          </span>
+          <nav className="align-self-md-auto align-self-start" aria-label="Phân trang phiếu chờ xử lý">
+            <ul className="pagination mb-0 flex-wrap">
+              <li className={`page-item ${currentPendingPage <= 1 ? 'disabled' : ''}`}>
+                <button
+                  type="button"
+                  className="page-link"
+                  aria-label="Trang trước"
+                  disabled={currentPendingPage <= 1}
+                  onClick={() => setPendingPage((current) => Math.max(1, current - 1))}
+                >
+                  <span aria-hidden="true">«</span>
+                </button>
+              </li>
+              {pendingPageNumbers.map((pageNumber, index) => (
+                <Fragment key={pageNumber}>
+                  {index > 0 && pageNumber - pendingPageNumbers[index - 1] > 1 && (
+                    <li className="page-item disabled" aria-hidden="true">
+                      <span className="page-link">…</span>
+                    </li>
+                  )}
+                  <li className={`page-item ${pageNumber === currentPendingPage ? 'active' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-current={pageNumber === currentPendingPage ? 'page' : undefined}
+                      onClick={() => setPendingPage(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  </li>
+                </Fragment>
+              ))}
+              <li className={`page-item ${currentPendingPage >= totalPendingPages ? 'disabled' : ''}`}>
+                <button
+                  type="button"
+                  className="page-link"
+                  aria-label="Trang sau"
+                  disabled={currentPendingPage >= totalPendingPages}
+                  onClick={() =>
+                    setPendingPage((current) => Math.min(totalPendingPages, current + 1))
+                  }
+                >
+                  <span aria-hidden="true">»</span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </footer>
+      )}
+    </section>
     {isConfirmOpen && <div className="modal d-block reception-modal" role="dialog" aria-modal="true"><div className="modal-backdrop show reception-modal__backdrop" onClick={() => setIsConfirmOpen(false)} /><div className="modal-dialog modal-dialog-centered"><div className="modal-content"><div className="modal-header"><h2 className="modal-title fs-5">Xác nhận gửi bàn giao</h2><button className="btn-close" onClick={() => setIsConfirmOpen(false)} /></div><div className="modal-body"><p>Người nhận sẽ kiểm tra tiền mặt, giao dịch và checklist trước khi xác nhận bàn giao.</p><strong>Người nhận: {availableReceivers.find((item) => String(item.id) === receiver)?.fullName}</strong></div><div className="modal-footer"><button className="btn btn-outline-secondary" onClick={() => setIsConfirmOpen(false)}>Quay lại</button><button className="btn btn-primary" disabled={isSaving} onClick={() => void submitHandover()}>Xác nhận gửi</button></div></div></div></div>}
   </div>;
 }
