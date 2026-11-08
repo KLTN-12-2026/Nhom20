@@ -1,3 +1,4 @@
+import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import ReceptionistDashboardCharts from '../../components/ReceptionistDashboardCharts';
@@ -6,6 +7,14 @@ import { useReceptionDashboard } from '../../hooks/use-reception-dashboard';
 import '@/components/ui/admin-crud.css';
 import '@/modules/thuoc/medicine-inventory.css';
 import '../../receptionist-workspace.css';
+
+const APPOINTMENTS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 const APPOINTMENT_STATUS: Record<string, { label: string; tone: string }> = {
   CHO_XAC_NHAN: { label: 'Chờ xác nhận', tone: 'amber' },
@@ -41,6 +50,39 @@ export default function TrangTongQuanThuNgan() {
     isLoading: isLoadingDashboard,
     error: dashboardError,
   } = useReceptionDashboard();
+
+  const [appointmentPage, setAppointmentPage] = useState(1);
+
+  const upcomingAppointments = useMemo(
+    () => dashboard?.upcomingAppointments ?? [],
+    [dashboard?.upcomingAppointments],
+  );
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(upcomingAppointments.length / APPOINTMENTS_PER_PAGE),
+  );
+  const currentPage = Math.min(appointmentPage, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    upcomingAppointments.length === 0
+      ? 0
+      : (currentPage - 1) * APPOINTMENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * APPOINTMENTS_PER_PAGE,
+    upcomingAppointments.length,
+  );
+  const paginatedAppointments = useMemo(
+    () =>
+      upcomingAppointments.slice(
+        (currentPage - 1) * APPOINTMENTS_PER_PAGE,
+        currentPage * APPOINTMENTS_PER_PAGE,
+      ),
+    [currentPage, upcomingAppointments],
+  );
 
   return (
     <div className="reception-page medicine-inventory admin-crud-page">
@@ -127,8 +169,8 @@ export default function TrangTongQuanThuNgan() {
                   <tr><td className="reception-empty" colSpan={5}>Đang tải lịch hẹn...</td></tr>
                 ) : dashboardError ? (
                   <tr><td className="reception-empty text-danger" colSpan={5}>{dashboardError}</td></tr>
-                ) : dashboard?.upcomingAppointments.length ? (
-                  dashboard.upcomingAppointments.map((appointment) => {
+                ) : paginatedAppointments.length ? (
+                  paginatedAppointments.map((appointment) => {
                     const status = APPOINTMENT_STATUS[appointment.status] ?? { label: appointment.status.replaceAll('_', ' '), tone: 'blue' };
                     return <tr key={appointment.id}>
                       <td><div className="reception-person"><span className="reception-person__avatar">{initials(appointment.patient.fullName)}</span><div><strong>{appointment.patient.fullName}</strong><small className="text-nowrap">Mã: {appointment.code} · SĐT: {appointment.patient.phoneNumber}</small></div></div></td>
@@ -144,6 +186,60 @@ export default function TrangTongQuanThuNgan() {
               </tbody>
             </table>
           </div>
+          {!isLoadingDashboard && !dashboardError && upcomingAppointments.length > 0 && (
+            <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 py-2 border-top">
+              <span className="text-secondary small">
+                Hiển thị {displayedFrom}–{displayedTo} trong tổng số {upcomingAppointments.length} lịch hẹn
+              </span>
+              <nav aria-label="Phân trang lịch hẹn">
+                <ul className="pagination mb-0 flex-wrap">
+                  <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang trước"
+                      disabled={currentPage <= 1}
+                      onClick={() => setAppointmentPage((current) => Math.max(1, current - 1))}
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </button>
+                  </li>
+                  {pageNumbers.map((pageNumber, index) => (
+                    <Fragment key={pageNumber}>
+                      {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                        <li className="page-item disabled" aria-hidden="true">
+                          <span className="page-link">…</span>
+                        </li>
+                      )}
+                      <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                        <button
+                          type="button"
+                          className="page-link"
+                          aria-current={pageNumber === currentPage ? 'page' : undefined}
+                          onClick={() => setAppointmentPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
+                  <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang sau"
+                      disabled={currentPage >= totalPages}
+                      onClick={() =>
+                        setAppointmentPage((current) => Math.min(totalPages, current + 1))
+                      }
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </footer>
+          )}
         </section>
 
         <section className="reception-card">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
 import '@/components/ui/admin-crud.css';
@@ -26,6 +26,14 @@ type PendingHandover = {
   note: string | null;
 };
 
+const ITEMS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
+
 const money = (value: number | null) =>
   value === null ? 'Chưa kiểm đếm' : `${new Intl.NumberFormat('vi-VN').format(value)} ₫`;
 
@@ -41,6 +49,31 @@ export default function TrangNhanBanGiaoCa() {
   const [isLoading, setIsLoading] = useState(true);
   const [selected, setSelected] = useState<PendingHandover | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(handovers.length / ITEMS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    handovers.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const displayedTo = Math.min(currentPage * ITEMS_PER_PAGE, handovers.length);
+  const paginatedHandovers = useMemo(
+    () =>
+      handovers.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+      ),
+    [currentPage, handovers],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const loadHandovers = useCallback(async () => {
     setIsLoading(true);
@@ -71,7 +104,7 @@ export default function TrangNhanBanGiaoCa() {
     }
   };
 
-  return <div className="reception-page admin-crud-page">
+  return <div className="reception-page medicine-inventory admin-crud-page">
     <div className="admin-crud-heading">
       <div>
         <p className="admin-management-eyebrow">NHẬN CA VÀ ĐỐI CHIẾU</p>
@@ -88,22 +121,96 @@ export default function TrangNhanBanGiaoCa() {
         <span className="reception-badge reception-badge--amber">{handovers.length} chờ xác nhận</span>
       </div>
       <div className="table-responsive">
-        <table className="table reception-table mb-0">
-          <thead><tr><th>Người bàn giao</th><th>Ca làm việc</th><th>Thời gian gửi</th><th>Tiền mặt thực tế</th><th>Chênh lệch</th><th className="text-end">Thao tác</th></tr></thead>
+        <table
+          className="table reception-table align-middle mb-0"
+          style={{ tableLayout: 'fixed', minWidth: '950px', width: '100%' }}
+        >
+          <colgroup>
+            <col style={{ width: '22%', minWidth: '200px' }} />
+            <col style={{ width: '18%', minWidth: '160px' }} />
+            <col style={{ width: '16%', minWidth: '150px' }} />
+            <col style={{ width: '15%', minWidth: '130px' }} />
+            <col style={{ width: '14%', minWidth: '120px' }} />
+            <col style={{ width: '15%', minWidth: '140px' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={{ width: '22%', minWidth: '200px' }}>Người bàn giao</th>
+              <th style={{ width: '18%', minWidth: '160px' }}>Ca làm việc</th>
+              <th style={{ width: '16%', minWidth: '150px' }}>Thời gian gửi</th>
+              <th style={{ width: '15%', minWidth: '130px' }}>Tiền mặt thực tế</th>
+              <th style={{ width: '14%', minWidth: '120px' }}>Chênh lệch</th>
+              <th className="text-end" style={{ width: '15%', minWidth: '140px' }}>Thao tác</th>
+            </tr>
+          </thead>
           <tbody>
             {isLoading && <tr><td colSpan={6} className="text-center text-secondary py-5">Đang tải bàn giao ca...</td></tr>}
             {!isLoading && handovers.length === 0 && <tr><td colSpan={6} className="text-center text-secondary py-5">Bạn chưa có bàn giao ca nào cần xác nhận.</td></tr>}
-            {!isLoading && handovers.map((item) => <tr key={item.id}>
+            {!isLoading && paginatedHandovers.map((item) => <tr key={item.id}>
               <td><strong>{item.sender}</strong><span className="d-block text-secondary small">{item.senderPhone ?? 'Không có số điện thoại'}</span></td>
               <td>{item.shift}<span className="d-block text-secondary small">{formatDate(item.workingDate)}</span></td>
               <td>{formatDate(item.submittedAt)}</td>
               <td>{money(item.actualCash)}</td>
               <td className={item.difference ? 'text-danger fw-semibold' : 'text-success fw-semibold'}>{money(item.difference)}</td>
-              <td className="text-end"><button type="button" className="btn btn-primary btn-sm" onClick={() => setSelected(item)}>{canConfirm ? 'Xem & xác nhận' : 'Xem chi tiết'}</button></td>
+              <td className="text-end"><button type="button" className="btn btn-primary btn-sm text-nowrap" style={{ minHeight: '32px', height: '32px', padding: '0 12px', fontSize: '0.8125rem' }} onClick={() => setSelected(item)}>{canConfirm ? 'Xem & xác nhận' : 'Xem chi tiết'}</button></td>
             </tr>)}
           </tbody>
         </table>
       </div>
+      {!isLoading && handovers.length > 0 && (
+        <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 py-2 border-top">
+          <span className="text-secondary small">
+            Hiển thị {displayedFrom}–{displayedTo} trong tổng số {handovers.length} bàn giao
+          </span>
+          <nav aria-label="Phân trang nhận ca">
+            <ul className="pagination mb-0 flex-wrap">
+              <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                <button
+                  type="button"
+                  className="page-link"
+                  aria-label="Trang trước"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  <span aria-hidden="true">&laquo;</span>
+                </button>
+              </li>
+              {pageNumbers.map((pageNumber, index) => (
+                <Fragment key={pageNumber}>
+                  {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                    <li className="page-item disabled" aria-hidden="true">
+                      <span className="page-link">…</span>
+                    </li>
+                  )}
+                  <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-current={pageNumber === currentPage ? 'page' : undefined}
+                      onClick={() => setPage(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  </li>
+                </Fragment>
+              ))}
+              <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                <button
+                  type="button"
+                  className="page-link"
+                  aria-label="Trang sau"
+                  disabled={currentPage >= totalPages}
+                  onClick={() =>
+                    setPage((current) => Math.min(totalPages, current + 1))
+                  }
+                >
+                  <span aria-hidden="true">&raquo;</span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </footer>
+      )}
     </section>
 
     {selected && <AppModal

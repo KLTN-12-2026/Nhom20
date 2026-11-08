@@ -1,5 +1,4 @@
 import { Fragment, useCallback, useMemo, useState, useEffect, useRef } from 'react';
-import ReceptionistPageHeader from '@/modules/tiep-don/components/ReceptionistPageHeader';
 import ReceptionistStatCard from '@/modules/tiep-don/components/ReceptionistStatCard';
 import { useRealtimeEvent } from '@/hooks/use-realtime-event';
 import { useAppToast } from '@/components/ui/use-app-toast';
@@ -7,6 +6,7 @@ import confetti from 'canvas-confetti';
 import { paymentApi } from '../../api/payment.api';
 import { dinhDangNgay, dinhDangNgayGio, giaTriInputNgay } from '@/utils/dinh-dang-ngay';
 import { inBillRawBT58mm, inBillSunmi58mm, khoiDongMayInSunmi, maHoaNoiDung, moCuaSoInBill58mm } from '@/utils/in-an';
+import '@/components/ui/admin-crud.css';
 import '@/modules/tiep-don/receptionist-workspace.css';
 import { useAuthStore } from '@/stores/auth.store';
 import { hasPermission } from '@/utils/permissions';
@@ -361,9 +361,18 @@ export default function TrangQuanLyThanhToan() {
     }
   };
 
-  return <div className="reception-page">
-    <ReceptionistPageHeader eyebrow="Tài chính trong ca" title="Quản lý thanh toán" description="Thu tiền, theo dõi công nợ và lịch sử thanh toán của từng hóa đơn." />
-    <div className="reception-stats">
+  return (
+    <div className="reception-page medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Tài chính trong ca</p>
+          <h1>QUẢN LÝ THANH TOÁN</h1>
+          <p className="admin-management-description">
+            Thu tiền, theo dõi công nợ và lịch sử thanh toán của từng hóa đơn.
+          </p>
+        </div>
+      </header>
+      <div className="reception-stats">
       <ReceptionistStatCard icon="account_balance_wallet" label={selectedDate ? `Doanh thu ${displayDate(selectedDate)}` : 'Tổng doanh thu'} value={money(revenue)} tone="green" />
       <ReceptionistStatCard icon="pending_actions" label="Còn phải thu" value={money(receivable)} tone="amber" />
       <ReceptionistStatCard icon="receipt_long" label="Tổng hóa đơn" value={targetInvoices.length} />
@@ -481,17 +490,30 @@ export default function TrangQuanLyThanhToan() {
         <>
           {/* Giao diện Desktop / Màn hình rộng (Bảng 8 cột) */}
           <div className="d-none d-md-block table-responsive">
-            <table className="table reception-table">
+            <table
+              className="table reception-table align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1150px', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '13%', minWidth: '130px' }} />
+                <col style={{ width: '17%', minWidth: '170px' }} />
+                <col style={{ width: '12%', minWidth: '125px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '12%', minWidth: '130px' }} />
+                <col style={{ width: '16%', minWidth: '190px' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Mã hóa đơn</th>
-                  <th>Bệnh nhân</th>
-                  <th>Ngày lập</th>
-                  <th>Tổng tiền</th>
-                  <th>Đã thu</th>
-                  <th>Còn lại</th>
-                  <th>Trạng thái</th>
-                  <th className="text-end">Thao tác</th>
+                  <th style={{ width: '13%', minWidth: '130px' }}>Mã hóa đơn</th>
+                  <th style={{ width: '17%', minWidth: '170px' }}>Bệnh nhân</th>
+                  <th style={{ width: '12%', minWidth: '125px' }}>Ngày lập</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Tổng tiền</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Đã thu</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Còn lại</th>
+                  <th style={{ width: '12%', minWidth: '130px' }}>Trạng thái</th>
+                  <th className="text-end" style={{ width: '16%', minWidth: '190px' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -520,17 +542,26 @@ export default function TrangQuanLyThanhToan() {
                       </span>
                     </td>
                     <td className="text-end">
-                      <div className="d-inline-flex gap-1">
-                        <button className="btn btn-sm btn-primary text-white" onClick={() => openInvoice(invoice)}>
-                          {invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}
+                      <div className="d-inline-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                        <button
+                          className="btn btn-sm btn-primary text-white text-nowrap d-inline-flex align-items-center gap-1"
+                          style={{ minHeight: '32px', height: '32px', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
+                          onClick={() => openInvoice(invoice)}
+                        >
+                          <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>
+                            {invoice.status === 'Đã thanh toán' || !canUpdate ? 'visibility' : 'payments'}
+                          </span>
+                          <span className="text-nowrap">{invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}</span>
                         </button>
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-dark"
+                          className="btn btn-sm btn-dark text-white text-nowrap d-inline-flex align-items-center gap-1"
+                          style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                           title="In bill 58mm (máy Sunmi POS)"
                           onClick={() => inHoaDon58mm(invoice)}
                         >
-                          <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>receipt_long</span>
+                          <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>print</span>
+                          <span className="text-nowrap">In</span>
                         </button>
                       </div>
                     </td>
@@ -593,12 +624,12 @@ export default function TrangQuanLyThanhToan() {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-outline-dark"
+                      className="btn btn-dark text-white"
                       onClick={() => inHoaDon58mm(invoice)}
                       title="In bill 58mm máy Sunmi V2"
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>receipt_long</span>
-                      In 58mm
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>print</span>
+                      In
                     </button>
                   </div>
                 </div>
@@ -779,7 +810,7 @@ export default function TrangQuanLyThanhToan() {
           onClick={() => inHoaDon58mm()}
           title="In hoá đơn 58mm"
         >
-          <span className="material-symbols-outlined me-1" style={{ fontSize: 18 }}>receipt_long</span>
+          <span className="material-symbols-outlined me-1" style={{ fontSize: 18 }}>print</span>
           In bill 58mm
         </button>
         {remaining > 0 && canUpdate && (
@@ -795,7 +826,7 @@ export default function TrangQuanLyThanhToan() {
           ) : (
             <button
               type="button"
-              className="btn btn-outline-success"
+              className="btn btn-success"
               disabled={paymentAmount <= 0 || paymentAmount > remaining}
               onClick={recordPayment}
             >
@@ -807,5 +838,6 @@ export default function TrangQuanLyThanhToan() {
     </div>
   </div>
 </div>}
-  </div>;
+    </div>
+  );
 }

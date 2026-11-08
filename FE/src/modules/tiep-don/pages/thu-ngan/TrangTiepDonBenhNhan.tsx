@@ -566,7 +566,7 @@ export default function TrangTiepDonBenhNhan() {
                           )}
                         </div>
                         <button
-                          className="btn btn-outline-primary"
+                          className="btn btn-primary"
                           type="button"
                           onClick={() => selectPatient(patient)}
                         >
@@ -859,7 +859,7 @@ export default function TrangTiepDonBenhNhan() {
                             <p>Hỏi lại bệnh nhân trước khi bác sĩ kê đơn.</p>
                           )}
                         </div>
-                        <button className="btn btn-outline-primary btn-sm" type="button" onClick={() => setStep(1)}>
+                        <button className="btn btn-primary btn-sm" type="button" onClick={() => setStep(1)}>
                           Cập nhật dị ứng
                         </button>
                       </div>

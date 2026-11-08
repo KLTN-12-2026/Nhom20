@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập hệ thống - Smart Clinic</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;850&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+
+    <!-- Google Material Symbols Outlined -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200"
+    />
+
+    <style>
+      :root {
+        --primary: #1a73e8;
+        --primary-hover: #1557b0;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border-color: #dce5f2;
+        --surface-low: #f8fafc;
+        --surface-lowest: #ffffff;
+        --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        color: var(--text-main);
+        background-color: var(--surface-low);
+        font-size: 14px;
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+      }
+
+      .auth-wrapper {
+        width: 100%;
+        max-width: 440px;
+        padding: 0 12px;
+      }
+
+      .auth-brand {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .auth-brand .brand-icon {
+        font-size: 48px;
+        color: var(--primary);
+      }
+
+      .auth-brand h1 {
+        font-size: 24px;
+        font-weight: 750;
+        color: var(--primary);
+        letter-spacing: -0.02em;
+        margin-top: 6px;
+        margin-bottom: 2px;
+      }
+
+      .auth-brand p {
+        font-size: 13.5px;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      /* Card biểu mẫu */
+      .auth-card {
+        background-color: var(--surface-lowest);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        padding: 32px 28px;
+      }
+
+      .auth-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 4px;
+      }
+
+      .auth-card .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+      }
+
+      .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 6px;
+      }
+
+      .form-control {
+        height: 44px;
+        border-radius: 8px;
+        border: 1.5px solid #cbd5e1;
+        font-size: 14px;
+        padding: 10px 14px;
+        background-color: #ffffff;
+        transition: all 0.15s;
+      }
+
+      .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.14);
+        outline: none;
+      }
+
+      .password-wrapper {
+        position: relative;
+      }
+
+      .password-wrapper .form-control {
+        padding-right: 48px;
+      }
+
+      .password-toggle-btn {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        padding: 0 14px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        cursor: pointer;
+        transition: color 0.15s;
+      }
+
+      .password-toggle-btn:hover {
+        color: var(--primary);
+      }
+
+      .password-toggle-btn .material-symbols-outlined {
+        font-size: 20px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        font-weight: 600;
+        font-size: 14px;
+        height: 44px;
+        border-radius: 8px;
+        transition: background-color 0.15s;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+      }
+
+      .forgot-password-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .forgot-password-link:hover {
+        text-decoration: underline;
+      }
+
+      .auth-footer-links {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .auth-footer-links a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .auth-footer-links a:hover {
+        text-decoration: underline;
+      }
+
+      /* Toast Notification */
+      .toast-container {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        z-index: 1055;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="auth-wrapper">
+      <!-- Thương hiệu Smart Clinic (Tương ứng AuthLayout) -->
+      <div class="auth-brand">
+        <a href="giaodientrangchu.html" class="text-decoration-none">
+          <span class="material-symbols-outlined brand-icon">medical_services</span>
+          <h1>Smart Clinic</h1>
+          <p>Chăm sóc sức khỏe thông minh</p>
+        </a>
+      </div>
+
+      <!-- Biểu mẫu đăng nhập (Tương ứng TrangDangNhap.tsx) -->
+      <div class="auth-card">
+        <section aria-labelledby="login-title">
+          <h2 id="login-title">Đăng nhập hệ thống</h2>
+          <p class="subtitle">
+            Nhập thông tin tài khoản của bạn để tiếp tục.
+          </p>
+
+          <form id="loginForm" aria-label="Biểu mẫu đăng nhập">
+            <!-- Tài khoản: Email hoặc số điện thoại -->
+            <div class="mb-3">
+              <label class="form-label" for="login-identifier">Tài khoản</label>
+              <input
+                id="login-identifier"
+                name="identifier"
+                class="form-control"
+                type="text"
+                placeholder="Nhập email hoặc số điện thoại"
+                autocomplete="username"
+                required
+              />
+            </div>
+
+            <!-- Mật khẩu + Nút ẩn hiện -->
+            <div class="mb-3">
+              <label class="form-label" for="login-password">Mật khẩu</label>
+              <div class="password-wrapper">
+                <input
+                  id="login-password"
+                  name="password"
+                  class="form-control"
+                  type="password"
+                  placeholder="Nhập mật khẩu"
+                  autocomplete="current-password"
+                  minlength="8"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  id="togglePasswordBtn"
+                  aria-label="Hiện mật khẩu"
+                  title="Hiện mật khẩu"
+                >
+                  <span class="material-symbols-outlined" id="togglePasswordIcon">
+                    visibility
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Quên mật khẩu -->
+            <div class="text-end mb-3">
+              <a href="#" class="forgot-password-link">
+                Quên mật khẩu?
+              </a>
+            </div>
+
+            <!-- Nút đăng nhập -->
+            <button type="submit" class="btn btn-primary w-100 mb-3" id="submitBtn">
+              Đăng nhập
+            </button>
+          </form>
+
+          <!-- Liên kết chân form -->
+          <div class="auth-footer-links">
+            <p class="text-secondary small mb-2">
+              Chưa có tài khoản?
+              <a href="TrangDangKy.html">Đăng ký</a>
+            </p>
+            <p class="text-secondary small mb-0">
+              <a href="giaodientrangchu.html">← Về trang chủ</a>
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Bootstrap 5 Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript tương tác mô phỏng TrangDangNhap.tsx -->
+    <script>
+      function showToast(message, type = 'success') {
+        const toastContainer = document.getElementById('toastContainer');
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-bg-${type === 'danger' ? 'danger' : 'light'} border shadow-sm show mb-2`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+
+        toastEl.innerHTML = `
+          <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+              <i class="bi ${type === 'danger' ? 'bi-exclamation-triangle-fill text-white' : 'bi-check-circle-fill text-primary'}"></i>
+              <span>${message}</span>
+            </div>
+            <button type="button" class="btn-close ${type === 'danger' ? 'btn-close-white' : ''} me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        `;
+
+        toastContainer.appendChild(toastEl);
+
+        setTimeout(() => {
+          toastEl.classList.remove('show');
+          setTimeout(() => toastEl.remove(), 300);
+        }, 3500);
+      }
+
+      // Xử lý Ẩn/Hiện mật khẩu
+      const passwordInput = document.getElementById('login-password');
+      const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+      const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+      let isPasswordVisible = false;
+
+      togglePasswordBtn.addEventListener('click', function () {
+        isPasswordVisible = !isPasswordVisible;
+        passwordInput.type = isPasswordVisible ? 'text' : 'password';
+        togglePasswordIcon.textContent = isPasswordVisible ? 'visibility_off' : 'visibility';
+        togglePasswordBtn.setAttribute('aria-label', isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+        togglePasswordBtn.setAttribute('title', isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+      });
+
+      // Xử lý nộp form đăng nhập
+      const loginForm = document.getElementById('loginForm');
+      const submitBtn = document.getElementById('submitBtn');
+
+      loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang đăng nhập...';
+
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Đăng nhập';
+          showToast('Đăng nhập thành công! Đang chuyển hướng...');
+        }, 600);
+      });
+    </script>
+  </body>
+</html>
+

@@ -7,6 +7,8 @@ import { examinationApi } from '../../api/examination.api';
 import type { PrescriptionWarning, WarningAiSuggestionResult } from '../../types/examination.types';
 import { usePrescriptionMedicines } from '@/modules/thuoc/hooks/use-prescription-medicines';
 import { KhamChuyenKhoa } from '../../components/kham-chuyen-khoa/KhamChuyenKhoa';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
 import './TrangKhamBenh.css';
 
@@ -539,13 +541,15 @@ export default function TrangKhamBenh() {
   }
 
   return (
-    <div className="doctor-page doctor-examination-page">
-      <div className="mb-4">
-        <div className="doctor-page__eyebrow">Phiếu khám điện tử</div>
-        <h1 className="doctor-page__title">Khám bệnh</h1>
-        <p className="doctor-page__description">
-          Ghi nhận sinh hiệu, chẩn đoán và chỉ định cho bệnh nhân.
-        </p>
+    <div className="medicine-inventory admin-crud-page doctor-page doctor-examination-page">
+      <div className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Phiếu khám điện tử</p>
+          <h1>KHÁM BỆNH</h1>
+          <p className="admin-management-description">
+            Ghi nhận sinh hiệu, chẩn đoán và chỉ định cho bệnh nhân.
+          </p>
+        </div>
       </div>
 
       <div className="doctor-exam-shell">
@@ -731,7 +735,7 @@ export default function TrangKhamBenh() {
               </div>
               <button
                 type="button"
-                className="btn btn-outline-primary"
+                className="btn btn-primary"
                 onClick={() =>
                   setPrescriptions((current) => [
                     ...current,
@@ -895,7 +899,7 @@ export default function TrangKhamBenh() {
                     <div className="col-lg-1 text-end">
                       <button
                         type="button"
-                        className="btn btn-outline-danger"
+                        className="btn btn-danger text-white d-inline-flex align-items-center gap-1"
                         disabled={prescriptions.length === 1}
                         onClick={() =>
                           setPrescriptions((current) =>
@@ -904,7 +908,8 @@ export default function TrangKhamBenh() {
                         }
                         title="Bỏ thuốc"
                       >
-                        <span className="material-symbols-outlined">delete</span>
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>
+                        Xóa
                       </button>
                     </div>
                   </div>

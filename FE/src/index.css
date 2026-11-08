@@ -329,6 +329,65 @@ a:hover {
   box-shadow: var(--sc-shadow-md);
 }
 
+.btn-success {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+  background-color: #15803d;
+  border-color: #15803d;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: var(--sc-shadow-md);
+}
+
+.btn-success:active {
+  transform: scale(0.97);
+}
+
+.btn-success:disabled,
+.btn-success.disabled {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0.6;
+}
+
+.btn-outline-success {
+  background-color: transparent;
+  border-color: #16a34a;
+  color: #16a34a;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-success:hover {
+  background-color: #f0fdf4;
+  border-color: #15803d;
+  color: #15803d;
+}
+
+.btn-outline-success:active {
+  transform: scale(0.97);
+}
+
+.btn-outline-success:disabled,
+.btn-outline-success.disabled {
+  border-color: #16a34a;
+  color: #16a34a;
+  opacity: 0.6;
+}
+
 .btn-danger {
   background-color: #dc2626;
   border-color: #dc2626;

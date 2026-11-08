@@ -252,7 +252,7 @@
         color: #0f172a;
       }
 
-      /* Hero Image & Floating Card */
+      /* Hero Placeholder & Floating Card */
       .hero-image-wrap {
         position: relative;
         border-radius: 24px;
@@ -262,21 +262,37 @@
         border: 1px solid #e9ecef;
       }
 
-      .hero-image-wrap img {
+      .hero-placeholder-icon {
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        object-position: center;
+        background: linear-gradient(135deg, #eef4ff, #e0ebf9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        color: #93c5fd;
+      }
+
+      .hero-placeholder-icon i {
+        font-size: 64px;
+        color: #60a5fa;
+      }
+
+      .hero-placeholder-icon span {
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
       }
 
       .floating-status-card {
         position: absolute;
         bottom: 24px;
         left: 24px;
-        background: rgba(255, 255, 255, 0.88);
+        background: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.8);
         border-radius: 12px;
         padding: 10px 16px;
         display: flex;
@@ -635,17 +651,24 @@
 
       .doctor-card-img-wrap {
         height: 190px;
-        background: linear-gradient(135deg, #eef4ff, #f8fafc);
+        background: linear-gradient(135deg, #eef4ff, #f1f5f9);
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
+        gap: 8px;
+        color: #93c5fd;
       }
 
-      .doctor-card-img-wrap img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+      .doctor-card-img-wrap .doctor-placeholder-icon {
+        font-size: 52px;
+        color: #60a5fa;
+      }
+
+      .doctor-card-img-wrap .doctor-placeholder-sub {
+        font-size: 12px;
+        font-weight: 500;
+        color: #64748b;
       }
 
       .doctor-card-body {
@@ -1095,14 +1118,13 @@
             </div>
           </div>
 
-          <!-- Right Column Image with Floating Card -->
+          <!-- Right Column Image with Floating Card (Thay ảnh bằng Icon hình ảnh) -->
           <div class="col-lg-6">
             <div class="hero-image-wrap">
-              <img
-                src="../../FE/src/assets/clinic-hero-v1.png"
-                alt="Không gian phòng khám Smart Clinic"
-                onerror="this.src='https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80'"
-              />
+              <div class="hero-placeholder-icon">
+                <i class="bi bi-image"></i>
+                <span>Hình ảnh phòng khám Smart Clinic</span>
+              </div>
               <!-- Floating Card -->
               <div class="floating-status-card">
                 <div class="floating-icon-circle">
@@ -1293,7 +1315,7 @@
       </div>
     </section>
 
-    <!-- ================= SECTION ĐỘI NGŨ BÁC SĨ ================= -->
+    <!-- ================= SECTION ĐỘI NGŨ BÁC SĨ (Thay ảnh bằng Icon hình ảnh) ================= -->
     <section class="section-block pt-0">
       <div class="container" style="max-width: 1240px">
         <div class="section-header-flex">
@@ -1319,10 +1341,8 @@
             <!-- Doctor 1: Trần Thảo Nguyên -->
             <div class="doctor-card-item">
               <div class="doctor-card-img-wrap">
-                <img
-                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=300&fit=crop&crop=faces"
-                  alt="BS. Trần Thảo Nguyên"
-                />
+                <i class="bi bi-image doctor-placeholder-icon"></i>
+                <span class="doctor-placeholder-sub">Ảnh BS. Trần Thảo Nguyên</span>
               </div>
               <div class="doctor-card-body">
                 <div class="doctor-specialty-tag">CƠ XƯƠNG KHỚP</div>
@@ -1335,10 +1355,8 @@
             <!-- Doctor 2: Nguyễn Trung Hiếu -->
             <div class="doctor-card-item">
               <div class="doctor-card-img-wrap">
-                <img
-                  src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=300&fit=crop&crop=faces"
-                  alt="BS. Nguyễn Trung Hiếu"
-                />
+                <i class="bi bi-image doctor-placeholder-icon"></i>
+                <span class="doctor-placeholder-sub">Ảnh BS. Nguyễn Trung Hiếu</span>
               </div>
               <div class="doctor-card-body">
                 <div class="doctor-specialty-tag">CƠ XƯƠNG KHỚP</div>
@@ -1351,10 +1369,8 @@
             <!-- Doctor 3: Lê Khánh Vy -->
             <div class="doctor-card-item">
               <div class="doctor-card-img-wrap">
-                <img
-                  src="https://images.unsplash.com/photo-1594824813576-905ffcdf9b81?w=400&h=300&fit=crop&crop=faces"
-                  alt="BS. Lê Khánh Vy"
-                />
+                <i class="bi bi-image doctor-placeholder-icon"></i>
+                <span class="doctor-placeholder-sub">Ảnh BS. Lê Khánh Vy</span>
               </div>
               <div class="doctor-card-body">
                 <div class="doctor-specialty-tag">MẮT</div>
@@ -1367,10 +1383,8 @@
             <!-- Doctor 4: Phạm Quốc Khánh -->
             <div class="doctor-card-item">
               <div class="doctor-card-img-wrap">
-                <img
-                  src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=400&h=300&fit=crop&crop=faces"
-                  alt="BS. Phạm Quốc Khánh"
-                />
+                <i class="bi bi-image doctor-placeholder-icon"></i>
+                <span class="doctor-placeholder-sub">Ảnh BS. Phạm Quốc Khánh</span>
               </div>
               <div class="doctor-card-body">
                 <div class="doctor-specialty-tag">MẮT</div>
