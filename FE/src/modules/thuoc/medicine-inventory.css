@@ -57,7 +57,7 @@
   gap: 10px;
 }
 
-.medicine-inventory .btn {
+.medicine-inventory .btn:not(.btn-sm) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -67,7 +67,7 @@
   font-weight: 700;
 }
 
-.medicine-inventory .btn .material-symbols-outlined {
+.medicine-inventory .btn:not(.btn-sm) .material-symbols-outlined {
   font-size: 20px;
 }
 

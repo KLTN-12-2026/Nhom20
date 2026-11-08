@@ -353,24 +353,26 @@ export default function TrangLichHenThuNgan() {
               <div className="reception-row-actions justify-content-end flex-nowrap">
                 <button
                   className="btn btn-sm btn-primary text-white border text-nowrap d-inline-flex align-items-center gap-1"
-                  style={{ width: 'auto', minWidth: 'auto', padding: '0 10px' }}
+                  style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                   title="Xem chi tiết"
                   onClick={() => openAppointment(appointment)}
                 >
-                  <span className="material-symbols-outlined">visibility</span>
-                  <span>Chi tiết</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>visibility</span>
+                  <span className="text-nowrap">Chi tiết</span>
                 </button>
                 {canUpdate && appointment.status === 'CHO_XAC_NHAN' && (
                   <>
                     <button
-                      className="btn btn-sm btn-danger reception-action-btn"
+                      className="btn btn-sm btn-danger text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Từ chối lịch hẹn"
                       onClick={() => openRejectModal(appointment)}
                     >
                       Từ chối
                     </button>
                     <button
-                      className="btn btn-sm btn-primary reception-action-btn"
+                      className="btn btn-sm btn-primary text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Xác nhận lịch hẹn"
                       onClick={() => openAppointment(appointment)}
                     >
@@ -381,14 +383,16 @@ export default function TrangLichHenThuNgan() {
                 {canUpdate && appointment.status === 'DA_XAC_NHAN' && (
                   <>
                     <button
-                      className="btn btn-sm btn-danger reception-action-btn"
+                      className="btn btn-sm btn-danger text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Từ chối lịch hẹn"
                       onClick={() => openRejectModal(appointment)}
                     >
                       Từ chối
                     </button>
                     <button
-                      className="btn btn-sm btn-primary reception-action-btn"
+                      className="btn btn-sm btn-primary text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Cấp phiếu tiếp đón"
                       onClick={() => openAppointment(appointment)}
                     >
@@ -399,12 +403,12 @@ export default function TrangLichHenThuNgan() {
                 {appointment.ticket && (
                   <button
                     className="btn btn-sm btn-dark text-nowrap d-inline-flex align-items-center gap-1"
-                    style={{ width: 'auto', minWidth: 'auto', padding: '0 10px' }}
+                    style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                     title="In phiếu tiếp đón"
                     onClick={() => printTicket(appointment)}
                   >
-                    <span className="material-symbols-outlined">print</span>
-                    <span>In</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>print</span>
+                    <span className="text-nowrap">In</span>
                   </button>
                 )}
               </div>

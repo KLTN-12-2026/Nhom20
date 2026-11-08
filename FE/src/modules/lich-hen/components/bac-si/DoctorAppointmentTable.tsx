@@ -89,15 +89,26 @@ export default function DoctorAppointmentTable({
 
   return (
     <div className="table-responsive">
-      <table className="table doctor-table">
+      <table
+        className="table doctor-table align-middle mb-0"
+        style={{ tableLayout: 'fixed', minWidth: '950px', width: '100%' }}
+      >
+        <colgroup>
+          {showQueueNumber && <col style={{ width: '8%', minWidth: '70px' }} />}
+          <col style={{ width: showQueueNumber ? '12%' : '14%', minWidth: '110px' }} />
+          <col style={{ width: showQueueNumber ? '28%' : '30%', minWidth: '220px' }} />
+          <col style={{ width: showQueueNumber ? '26%' : '28%', minWidth: '200px' }} />
+          <col style={{ width: showQueueNumber ? '13%' : '14%', minWidth: '130px' }} />
+          <col style={{ width: showQueueNumber ? '13%' : '14%', minWidth: '140px' }} />
+        </colgroup>
         <thead>
           <tr>
-            {showQueueNumber && <th>STT</th>}
-            <th>Thời gian</th>
-            <th>Bệnh nhân</th>
-            <th>Lý do khám</th>
-            <th>Trạng thái</th>
-            <th className="text-end">Thao tác</th>
+            {showQueueNumber && <th style={{ width: '8%', minWidth: '70px' }}>STT</th>}
+            <th style={{ width: showQueueNumber ? '12%' : '14%', minWidth: '110px' }}>Thời gian</th>
+            <th style={{ width: showQueueNumber ? '28%' : '30%', minWidth: '220px' }}>Bệnh nhân</th>
+            <th style={{ width: showQueueNumber ? '26%' : '28%', minWidth: '200px' }}>Lý do khám</th>
+            <th style={{ width: showQueueNumber ? '13%' : '14%', minWidth: '130px' }}>Trạng thái</th>
+            <th className="text-end" style={{ width: showQueueNumber ? '13%' : '14%', minWidth: '140px' }}>Thao tác</th>
           </tr>
         </thead>
         <tbody>

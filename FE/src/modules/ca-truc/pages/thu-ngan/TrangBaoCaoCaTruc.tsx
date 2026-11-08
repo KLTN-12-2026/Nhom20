@@ -1,11 +1,12 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
+import '@/modules/tiep-don/receptionist-workspace.css';
 import ReceptionistStatCard from '@/modules/tiep-don/components/ReceptionistStatCard';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { useAuthStore } from '@/stores/auth.store';
 import { hasPermission } from '@/utils/permissions';
-import '@/modules/tiep-don/receptionist-workspace.css';
 
 const CHECKLIST = ['Đã kiểm đếm quỹ tiền mặt', 'Đã đối chiếu giao dịch chuyển khoản', 'Đã ghi nhận phiếu còn chờ xử lý', 'Đã bàn giao chìa khóa và công cụ'];
 const money = (value: number) => `${new Intl.NumberFormat('vi-VN').format(value)} ₫`;
@@ -15,7 +16,7 @@ const formatMoneyInput = (value: string) => {
   return digits ? new Intl.NumberFormat('vi-VN').format(Number(digits)) : '';
 };
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 function getPageNumbers(currentPage: number, totalPages: number) {
   return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
@@ -114,21 +115,27 @@ export default function TrangBaoCaoCaTruc() {
     finally { setIsSaving(false); }
   };
 
-  return <div className="reception-page admin-crud-page">
-    <div className="admin-crud-heading">
-      <div>
-        <p className="admin-management-eyebrow">Kết ca và bàn giao</p>
-        <h1>BÁO CÁO CA TRỰC</h1>
-        <p className="admin-management-description">
-          Đối chiếu doanh thu, kiểm quỹ và bàn giao cho ca tiếp theo.
-        </p>
+  return (
+    <div className="reception-page medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Kết ca và bàn giao</p>
+          <h1>BÁO CÁO CA TRỰC</h1>
+          <p className="admin-management-description">
+            Đối chiếu doanh thu, kiểm quỹ và bàn giao cho ca tiếp theo.
+          </p>
+        </div>
+        <div className="admin-crud-actions">
+          <span className="reception-badge reception-badge--amber">{status}</span>
+        </div>
+      </header>
+      <div className="reception-stats">
+        <ReceptionistStatCard icon="payments" label="Tổng doanh thu" value={money(totalRevenue)} tone="green" />
+        <ReceptionistStatCard icon="payments" label="Tiền mặt hệ thống" value={money(systemCash)} />
+        <ReceptionistStatCard icon="account_balance" label="Chuyển khoản" value={money(transferAmount)} />
+        <ReceptionistStatCard icon="pending_actions" label="Phiếu chờ xử lý" value={pendingItems.length} tone="amber" />
       </div>
-      <div className="admin-crud-actions">
-        <span className="reception-badge reception-badge--amber">{status}</span>
-      </div>
-    </div>
-    <div className="reception-stats"><ReceptionistStatCard icon="payments" label="Tổng doanh thu" value={money(totalRevenue)} tone="green" /><ReceptionistStatCard icon="payments" label="Tiền mặt hệ thống" value={money(systemCash)} /><ReceptionistStatCard icon="account_balance" label="Chuyển khoản" value={money(transferAmount)} /><ReceptionistStatCard icon="pending_actions" label="Phiếu chờ xử lý" value={pendingItems.length} tone="amber" /></div>
-    <div className="reception-grid reception-grid--handover">
+      <div className="reception-grid">
       <div className="d-grid gap-3">
         <section className="reception-card"><div className="reception-card__header"><h2>Đối chiếu doanh thu và quỹ</h2></div><div className="reception-card__body"><div className="row g-3"><div className="col-md-6"><span>Tiền mặt hệ thống</span><strong className="d-block">{money(systemCash)}</strong></div><div className="col-md-6"><span>Chuyển khoản</span><strong className="d-block">{money(transferAmount)}</strong></div><div className="col-md-6"><label className="form-label fw-semibold">Tiền mặt kiểm đếm thực tế *</label><input className="form-control" type="text" inputMode="numeric" value={actualCash} onChange={(event) => setActualCash(formatMoneyInput(event.target.value))} placeholder="Ví dụ: 10.000.000" /></div><div className="col-md-6"><label className="form-label fw-semibold">Chênh lệch tiền mặt</label><div className={`form-control fw-bold ${difference === 0 ? 'text-success' : 'text-danger'}`}>{actualCash ? money(difference) : 'Chưa kiểm đếm'}</div></div>{actualCash && difference !== 0 && <div className="col-12"><label className="form-label fw-semibold">Lý do chênh lệch *</label><textarea className="form-control" rows={2} value={differenceReason} onChange={(event) => setDifferenceReason(event.target.value)} /></div>}</div></div></section>
         <section className="reception-card overflow-hidden"><div className="reception-card__header"><h2>Giao dịch trong ca</h2></div><div className="table-responsive"><table className="table reception-table"><thead><tr><th>Thời gian</th><th>Bệnh nhân</th><th>Mã hóa đơn</th><th>Số tiền</th><th>Phương thức</th></tr></thead><tbody>{transactions.map((item) => <tr key={item.invoiceCode}><td>{item.time}</td><td>{item.patientName}</td><td>{item.invoiceCode}</td><td>{money(item.amount)}</td><td>{item.method}</td></tr>)}</tbody></table></div></section>
@@ -239,6 +246,27 @@ export default function TrangBaoCaoCaTruc() {
         </footer>
       )}
     </section>
-    {isConfirmOpen && <div className="modal d-block reception-modal" role="dialog" aria-modal="true"><div className="modal-backdrop show reception-modal__backdrop" onClick={() => setIsConfirmOpen(false)} /><div className="modal-dialog modal-dialog-centered"><div className="modal-content"><div className="modal-header"><h2 className="modal-title fs-5">Xác nhận gửi bàn giao</h2><button className="btn-close" onClick={() => setIsConfirmOpen(false)} /></div><div className="modal-body"><p>Người nhận sẽ kiểm tra tiền mặt, giao dịch và checklist trước khi xác nhận bàn giao.</p><strong>Người nhận: {availableReceivers.find((item) => String(item.id) === receiver)?.fullName}</strong></div><div className="modal-footer"><button className="btn btn-outline-secondary" onClick={() => setIsConfirmOpen(false)}>Quay lại</button><button className="btn btn-primary" disabled={isSaving} onClick={() => void submitHandover()}>Xác nhận gửi</button></div></div></div></div>}
-  </div>;
+    {isConfirmOpen && (
+      <div className="modal d-block reception-modal" role="dialog" aria-modal="true">
+        <div className="modal-backdrop show reception-modal__backdrop" onClick={() => setIsConfirmOpen(false)} />
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="modal-title fs-5">Xác nhận gửi bàn giao</h2>
+              <button className="btn-close" onClick={() => setIsConfirmOpen(false)} />
+            </div>
+            <div className="modal-body">
+              <p>Người nhận sẽ kiểm tra tiền mặt, giao dịch và checklist trước khi xác nhận bàn giao.</p>
+              <strong>Người nhận: {availableReceivers.find((item) => String(item.id) === receiver)?.fullName}</strong>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline-secondary" onClick={() => setIsConfirmOpen(false)}>Quay lại</button>
+              <button className="btn btn-primary" disabled={isSaving} onClick={() => void submitHandover()}>Xác nhận gửi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
 }

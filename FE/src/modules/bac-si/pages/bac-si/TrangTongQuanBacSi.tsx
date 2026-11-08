@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import DoctorAppointmentTable from '@/modules/lich-hen/components/bac-si/DoctorAppointmentTable';
@@ -7,6 +7,14 @@ import '@/components/ui/admin-crud.css';
 import '@/modules/thuoc/medicine-inventory.css';
 import '../../doctor-workspace.css';
 
+const APPOINTMENTS_PER_PAGE = 5;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
+
 function localDateValue() {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60_000;
@@ -14,13 +22,16 @@ function localDateValue() {
 }
 
 export default function TrangTongQuanBacSi() {
+  const [page, setPage] = useState(1);
   const query = useMemo(
-    () => ({ date: localDateValue(), page: 1, limit: 5 }),
-    [],
+    () => ({ date: localDateValue(), page, limit: APPOINTMENTS_PER_PAGE }),
+    [page],
   );
   const {
     appointments,
     stats,
+    total,
+    totalPages,
     isLoading,
     error,
     reload,
@@ -28,6 +39,16 @@ export default function TrangTongQuanBacSi() {
   const checkedIn = appointments.filter(
     (appointment) => appointment.status === 'DA_CHECK_IN',
   ).length;
+
+  const effectiveTotalPages = Math.max(1, totalPages);
+  const currentPage = Math.min(page, effectiveTotalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, effectiveTotalPages),
+    [currentPage, effectiveTotalPages],
+  );
+  const displayedFrom =
+    total === 0 ? 0 : (currentPage - 1) * APPOINTMENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(currentPage * APPOINTMENTS_PER_PAGE, total);
 
   return (
     <div className="medicine-inventory admin-crud-page">
@@ -121,6 +142,60 @@ export default function TrangTongQuanBacSi() {
           error={error}
           onReload={() => void reload()}
         />
+        {total > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {total} lịch khám
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang lịch khám">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === currentPage ? 'page' : undefined}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${currentPage >= effectiveTotalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={currentPage >= effectiveTotalPages}
+                    onClick={() =>
+                      setPage((current) => Math.min(effectiveTotalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        )}
       </section>
     </div>
   );

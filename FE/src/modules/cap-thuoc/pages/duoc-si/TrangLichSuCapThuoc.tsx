@@ -141,16 +141,30 @@ export default function TrangLichSuCapThuoc() {
         </div>
 
         <div className="table-responsive">
-          <table className="table pharmacy-table">
+          <table
+            className="table pharmacy-table align-middle mb-0"
+            style={{ tableLayout: 'fixed', minWidth: '1000px', width: '100%' }}
+          >
+            <colgroup>
+              <col style={{ width: '14%', minWidth: '130px' }} />
+              <col style={{ width: '22%', minWidth: '180px' }} />
+              <col style={{ width: '18%', minWidth: '160px' }} />
+              <col style={{ width: '9%', minWidth: '85px' }} />
+              <col style={{ width: '15%', minWidth: '140px' }} />
+              <col style={{ width: '11%', minWidth: '120px' }} />
+              <col style={{ width: '11%', minWidth: '115px' }} />
+            </colgroup>
             <thead>
               <tr>
-                <th>Mã đơn</th>
-                <th>Bệnh nhân</th>
-                <th>Dược sĩ</th>
-                <th>Số loại</th>
-                <th>Thời gian</th>
-                <th>Trạng thái</th>
-                <th className="text-end">Thao tác</th>
+                <th style={{ width: '14%', minWidth: '130px' }}>Mã đơn</th>
+                <th style={{ width: '22%', minWidth: '180px' }}>Bệnh nhân</th>
+                <th style={{ width: '18%', minWidth: '160px' }}>Dược sĩ</th>
+                <th style={{ width: '9%', minWidth: '85px' }}>Số loại</th>
+                <th style={{ width: '15%', minWidth: '140px' }}>Thời gian</th>
+                <th style={{ width: '11%', minWidth: '120px' }}>Trạng thái</th>
+                <th className="text-end" style={{ width: '11%', minWidth: '115px' }}>
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -176,24 +190,31 @@ export default function TrangLichSuCapThuoc() {
                 return (
                   <tr key={item.id}>
                     <td>
-                      <strong>{item.code}</strong>
+                      <strong className="text-primary">{item.code}</strong>
                     </td>
-                    <td>{item.patient.fullName}</td>
-                    <td>{pharmacistName}</td>
+                    <td>
+                      <span className="fw-semibold text-dark">{item.patient.fullName}</span>
+                      <small className="text-secondary">{item.patient.code}</small>
+                    </td>
+                    <td>
+                      <span>{pharmacistName}</span>
+                    </td>
                     <td>{item.items.length}</td>
-                    <td>{actionTime}</td>
+                    <td>
+                      <span className="text-nowrap">{actionTime}</span>
+                    </td>
                     <td>
                       {isRefused ? (
-                        <span className="pharmacy-badge pharmacy-badge--red">
+                        <span className="pharmacy-badge pharmacy-badge--red text-nowrap">
                           Từ chối cấp
                         </span>
                       ) : item.status === 'DA_CAP_THUOC' ||
                         item.status === 'DA_CAP' ? (
-                        <span className="pharmacy-badge pharmacy-badge--green">
+                        <span className="pharmacy-badge pharmacy-badge--green text-nowrap">
                           Đã cấp thuốc
                         </span>
                       ) : (
-                        <span className="pharmacy-badge pharmacy-badge--gray">
+                        <span className="pharmacy-badge pharmacy-badge--gray text-nowrap">
                           {item.status}
                         </span>
                       )}
@@ -201,11 +222,12 @@ export default function TrangLichSuCapThuoc() {
                     <td className="text-end">
                       <button
                         type="button"
-                        className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+                        className="btn btn-sm btn-primary text-nowrap d-inline-flex align-items-center gap-1"
+                        style={{ minHeight: '32px', height: '32px', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                         onClick={() => setSelectedItem(item)}
                         title="Xem chi tiết đơn thuốc"
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
                           visibility
                         </span>
                         <span>Chi tiết</span>
