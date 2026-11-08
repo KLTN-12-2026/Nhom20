@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lịch khám chi tiết – Bác sĩ Smart Clinic</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0..200" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --sc-primary: #1457c8;
+      --sc-primary-hover: #0f46a4;
+      --sc-primary-light: #eaf1ff;
+      --sc-sidebar-w: 260px;
+      --sc-topbar-h: 60px;
+      --sc-border: #dbe3ef;
+      --sc-surface: #ffffff;
+      --sc-bg: #f8fafc;
+      --sc-text-main: #12213f;
+      --sc-text-muted: #667085;
+    }
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+    body { background: var(--sc-bg); margin: 0; color: var(--sc-text-main); font-size: 14px; }
+
+    /* ── SIDEBAR (BÁC SĨ) ── */
+    .sc-sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      width: var(--sc-sidebar-w);
+      background: #fff; border-right: 1px solid var(--sc-border);
+      display: flex; flex-direction: column;
+      z-index: 100; overflow-y: auto;
+    }
+    .sc-sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 18px 20px 14px; border-bottom: 1px solid #f1f5f9;
+    }
+    .sc-brand-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--sc-primary);
+      display: flex; align-items: center; justify-content: center; color: #fff;
+    }
+    .sc-brand-icon .material-symbols-outlined { font-size: 20px; font-variation-settings: 'FILL' 1; }
+    .sc-brand-name { font-size: 14px; font-weight: 700; color: #12213f; line-height: 1.2; }
+    .sc-brand-sub  { font-size: 11px; color: #667085; }
+
+    .sc-nav { flex: 1; padding: 10px 12px 0; }
+    .sc-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px;
+      font-size: 13.5px; font-weight: 500; color: #475467;
+      text-decoration: none; cursor: pointer;
+      transition: background .15s, color .15s;
+      margin-bottom: 2px; white-space: nowrap;
+    }
+    .sc-nav-item:hover { background: #f1f5f9; color: var(--sc-primary); }
+    .sc-nav-item.active {
+      background: var(--sc-primary-light); color: var(--sc-primary); font-weight: 700;
+    }
+    .sc-nav-item .material-symbols-outlined { font-size: 20px; flex-shrink: 0; }
+    .sc-nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+    .sc-nav-bottom { padding: 12px; margin-top: auto; border-top: 1px solid #f1f5f9; }
+
+    /* ── TOPBAR ── */
+    .sc-topbar {
+      position: fixed; top: 0; left: var(--sc-sidebar-w); right: 0;
+      height: var(--sc-topbar-h);
+      background: #fff; border-bottom: 1px solid var(--sc-border);
+      display: flex; align-items: center; padding: 0 24px;
+      z-index: 90; gap: 12px;
+    }
+    .sc-topbar-title { font-size: 15px; font-weight: 600; color: #12213f; }
+    .sc-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .sc-avatar-doc {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #0ea5e9; color: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .sc-main {
+      margin-left: var(--sc-sidebar-w);
+      padding-top: var(--sc-topbar-h);
+      min-height: 100vh;
+    }
+    .doctor-page-container {
+      width: 100%; max-width: 1440px; margin: 0 auto;
+      padding: 28px 32px 64px;
+    }
+
+    /* ── HEADING ── */
+    .admin-crud-heading {
+      margin-bottom: 24px;
+    }
+    .admin-management-eyebrow {
+      margin: 0 0 4px; color: var(--sc-primary); font-size: 11px;
+      font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .admin-crud-heading h1 {
+      margin: 0; color: #12213f; font-size: 24px;
+      line-height: 1.2; font-weight: 800; letter-spacing: -0.02em;
+    }
+    .admin-management-description {
+      margin: 6px 0 0; color: #667085; font-size: 13.5px;
+    }
+
+    /* ── STAT CARDS (3 CỘT) ── */
+    .doctor-stat {
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--sc-border);
+      border-radius: 14px;
+      display: flex;
+      gap: 14px;
+      min-height: 108px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .doctor-stat:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px -4px rgba(20, 87, 200, 0.08);
+    }
+    .doctor-stat__icon {
+      align-items: center;
+      background: var(--sc-primary-light);
+      border-radius: 12px;
+      color: var(--sc-primary);
+      display: flex;
+      height: 46px;
+      justify-content: center;
+      width: 46px;
+      flex-shrink: 0;
+    }
+    .doctor-stat__icon .material-symbols-outlined { font-size: 22px; }
+    .doctor-stat__value {
+      color: #102a56;
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .doctor-stat__label {
+      color: #667085;
+      font-size: 0.86rem;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* ── PANEL & TABLE ── */
+    .doctor-panel {
+      background: #fff;
+      border: 1px solid var(--sc-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(21, 45, 82, 0.04);
+      overflow: hidden;
+    }
+
+    /* Filter Bar */
+    .doctor-filter-bar {
+      align-items: flex-end;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 18px 20px;
+      background: #fff;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .doctor-filter-bar .form-label {
+      font-size: 12px; font-weight: 700; color: #475467; margin-bottom: 6px; display: block;
+    }
+    .doctor-filter-bar .form-control,
+    .doctor-filter-bar .form-select {
+      border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px;
+      height: 38px; color: #12213f;
+    }
+    .doctor-filter-bar .form-control:focus,
+    .doctor-filter-bar .form-select:focus {
+      border-color: var(--sc-primary); box-shadow: 0 0 0 3px rgba(20, 87, 200, 0.12);
+    }
+
+    /* Doctor Table */
+    .doctor-table { margin: 0; width: 100%; border-collapse: collapse; }
+    .doctor-table thead th {
+      background: #f8fafc; border-bottom: 1px solid var(--sc-border);
+      color: #475467; font-size: 0.73rem; font-weight: 800;
+      padding: 13px 18px; text-transform: uppercase; white-space: nowrap;
+      letter-spacing: .04em;
+    }
+    .doctor-table tbody td {
+      border-bottom: 1px solid #f1f5f9; padding: 14px 18px;
+      vertical-align: middle; font-size: 13.5px;
+    }
+    .doctor-table tbody tr:last-child td { border-bottom: none; }
+    .doctor-table tbody tr:hover { background: #f8fafc; }
+
+    /* Patient Cell */
+    .doctor-patient {
+      align-items: center; display: flex; gap: 12px; min-width: 200px;
+    }
+    .doctor-patient__avatar {
+      align-items: center; background: #eaf1ff; border-radius: 50%;
+      color: var(--sc-primary); display: flex; flex: 0 0 auto;
+      font-size: 0.78rem; font-weight: 800; height: 38px; width: 38px;
+      justify-content: center;
+    }
+    .doctor-patient__name {
+      color: #12213f; font-weight: 700; line-height: 1.25;
+    }
+    .doctor-patient__meta {
+      color: #7a8699; font-size: 0.78rem; margin-top: 2px;
+    }
+
+    /* Badges */
+    .doctor-status {
+      border-radius: 999px; display: inline-flex; font-size: 0.75rem;
+      font-weight: 700; padding: 5px 12px; white-space: nowrap;
+    }
+    .doctor-status--ready {
+      background: #dcfce7; color: #15803d;
+    }
+    .doctor-status--waiting {
+      background: #fef3c7; color: #b45309;
+    }
+    .doctor-status--done {
+      background: #e2e8f0; color: #475569;
+    }
+    .doctor-status--cancelled {
+      background: #fee2e2; color: #b91c1c;
+    }
+
+    /* Buttons */
+    .btn-examine {
+      background: var(--sc-primary); color: #fff; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      padding: 6px 14px; display: inline-flex; align-items: center;
+      gap: 6px; cursor: pointer; transition: background .15s ease;
+    }
+    .btn-examine:hover { background: var(--sc-primary-hover); color: #fff; }
+
+    .btn-pending {
+      background: #fff; border: 1px solid #cbd5e1; color: #94a3b8;
+      border-radius: 8px; font-size: 12.5px; font-weight: 600;
+      padding: 6px 14px; cursor: not-allowed;
+    }
+
+    /* Footer Pagination */
+    .doctor-table-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; gap: 12px;
+    }
+    .doctor-table-footer span { font-size: 13px; color: #64748b; }
+    .pagination-custom { display: flex; align-items: center; gap: 4px; margin: 0; }
+    .page-btn {
+      min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px;
+      border: 1px solid #e2e8f0; background: #fff; color: #334155;
+      font-size: 13px; font-weight: 600; display: inline-flex;
+      align-items: center; justify-content: center; cursor: pointer;
+    }
+    .page-btn:hover { background: #f1f5f9; color: var(--sc-primary); }
+    .page-btn.active {
+      background: var(--sc-primary); border-color: var(--sc-primary); color: #fff;
+    }
+    .page-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 992px) {
+      .sc-sidebar { left: -260px; }
+      .sc-main { margin-left: 0; }
+      .sc-topbar { left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR (BÁC SĨ) ══════════════ -->
+<aside class="sc-sidebar">
+  <div class="sc-sidebar-brand">
+    <div class="sc-brand-icon"><span class="material-symbols-outlined">stethoscope</span></div>
+    <div>
+      <div class="sc-brand-name">Smart Clinic</div>
+      <div class="sc-brand-sub">Không gian Bác sĩ</div>
+    </div>
+  </div>
+  <nav class="sc-nav">
+    <a class="sc-nav-item" href="TrangTongQuanBacSi.html"><span class="material-symbols-outlined">dashboard</span>Tổng quan</a>
+    <a class="sc-nav-item active" href="TrangLichKham.html"><span class="material-symbols-outlined">calendar_today</span>Lịch khám</a>
+    <a class="sc-nav-item" href="#"><span class="material-symbols-outlined">groups</span>Bệnh nhân chờ</a>
+    <a class="sc-nav-item" href="#"><span class="material-symbols-outlined">history</span>Lịch sử khám</a>
+    <a class="sc-nav-item" href="#"><span class="material-symbols-outlined">calendar_month</span>Lịch làm việc</a>
+  </nav>
+  <div class="sc-nav-bottom">
+    <a class="sc-nav-item" href="#" style="margin-bottom:0">
+      <span class="material-symbols-outlined">person</span>Thông tin cá nhân
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════ TOPBAR ══════════════ -->
+<header class="sc-topbar">
+  <span class="material-symbols-outlined text-secondary" style="font-size:18px">calendar_today</span>
+  <span class="sc-topbar-title">Sổ lịch khám bệnh</span>
+  <div class="sc-topbar-right">
+    <button class="btn btn-light btn-sm d-flex align-items-center" style="border:none;background:transparent;">
+      <span class="material-symbols-outlined" style="font-size:20px;color:#64748b">notifications</span>
+    </button>
+    <div class="sc-avatar-doc">VH</div>
+    <div class="d-none d-md-block text-start">
+      <div style="font-size:13px;font-weight:600;line-height:1.2;color:#12213f">BS. Nguyễn Văn Hòa</div>
+      <small style="font-size:11px;color:#667085">Chuyên khoa Nội tổng quát</small>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════ MAIN CONTENT ══════════════ -->
+<main class="sc-main">
+  <div class="doctor-page-container">
+
+    <!-- 1. Heading -->
+    <div class="admin-crud-heading">
+      <div>
+        <p class="admin-management-eyebrow">QUẢN LÝ LỊCH KHÁM</p>
+        <h1>LỊCH KHÁM CHI TIẾT</h1>
+        <p class="admin-management-description">
+          Danh sách lịch được lễ tân phân công cho đúng tài khoản bác sĩ.
+        </p>
+      </div>
+    </div>
+
+    <!-- 2. 3 Stat Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <div class="doctor-stat">
+          <div class="doctor-stat__icon" style="background:#eaf1ff;color:#1457c8">
+            <span class="material-symbols-outlined">event_available</span>
+          </div>
+          <div>
+            <div class="doctor-stat__value" id="statTotal">38</div>
+            <div class="doctor-stat__label">Tổng ca theo bộ lọc</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-4">
+        <div class="doctor-stat">
+          <div class="doctor-stat__icon" style="background:#dcfce7;color:#15803d">
+            <span class="material-symbols-outlined">verified</span>
+          </div>
+          <div>
+            <div class="doctor-stat__value">18</div>
+            <div class="doctor-stat__label">Đã xác nhận hôm nay</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-4">
+        <div class="doctor-stat">
+          <div class="doctor-stat__icon" style="background:#fef3c7;color:#b45309">
+            <span class="material-symbols-outlined">hourglass_top</span>
+          </div>
+          <div>
+            <div class="doctor-stat__value">5</div>
+            <div class="doctor-stat__label">Chờ xác nhận hôm nay</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Panel Lịch khám & Bộ lọc -->
+    <section class="doctor-panel">
+      <!-- Bộ lọc (doctor-filter-bar) -->
+      <div class="doctor-filter-bar">
+        <div style="min-width: 240px; flex: 1 1 280px;">
+          <label class="form-label" for="doctorSearch">Tìm bệnh nhân</label>
+          <input
+            id="doctorSearch"
+            type="text"
+            class="form-control"
+            placeholder="Tên, số điện thoại hoặc mã lịch..."
+          />
+        </div>
+        <div style="min-width: 190px;">
+          <label class="form-label" for="doctorDate">Ngày khám</label>
+          <input
+            id="doctorDate"
+            type="date"
+            class="form-control"
+            value="2026-11-08"
+          />
+        </div>
+        <div style="min-width: 200px;">
+          <label class="form-label" for="doctorStatus">Trạng thái</label>
+          <select id="doctorStatus" class="form-select">
+            <option value="">Tất cả trạng thái</option>
+            <option value="CHO_XAC_NHAN">Chờ xác nhận</option>
+            <option value="DA_XAC_NHAN">Đã xác nhận</option>
+            <option value="DA_CHECK_IN">Đã cấp phiếu (Đã check-in)</option>
+            <option value="DA_TU_CHOI">Đã từ chối</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bảng lịch khám (10 ca/trang) -->
+      <div class="table-responsive">
+        <table class="doctor-table" style="table-layout: fixed; min-width: 950px;">
+          <colgroup>
+            <col style="width: 14%; min-width: 110px;" />
+            <col style="width: 30%; min-width: 220px;" />
+            <col style="width: 28%; min-width: 200px;" />
+            <col style="width: 14%; min-width: 130px;" />
+            <col style="width: 14%; min-width: 140px;" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Bệnh nhân</th>
+              <th>Lý do khám</th>
+              <th>Trạng thái</th>
+              <th class="text-end">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="appointmentTableBody">
+            <!-- Ca 1 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">08:00</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">PT</div>
+                  <div>
+                    <div class="doctor-patient__name">Phan Thị Minh Trúc</div>
+                    <div class="doctor-patient__meta">BN-PHAN-TRUC · 0905608591</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Đau thắt vùng thượng vị sau ăn, buồn nôn">
+                  Đau thắt vùng thượng vị sau ăn, buồn nôn
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--ready">Đã check-in</span></td>
+              <td class="text-end">
+                <button class="btn-examine" onclick="startExamination('Phan Thị Minh Trúc')">
+                  <span class="material-symbols-outlined" style="font-size:17px">stethoscope</span>
+                  Khám bệnh
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 2 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">08:30</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">NL</div>
+                  <div>
+                    <div class="doctor-patient__name">Nguyễn Thị Lan</div>
+                    <div class="doctor-patient__meta">BN-NGUYEN-LAN · 0905111222</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Tái khám định kỳ tăng huyết áp và đái tháo đường">
+                  Tái khám định kỳ tăng huyết áp và đái tháo đường
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--ready">Đã check-in</span></td>
+              <td class="text-end">
+                <button class="btn-examine" onclick="startExamination('Nguyễn Thị Lan')">
+                  <span class="material-symbols-outlined" style="font-size:17px">stethoscope</span>
+                  Khám bệnh
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 3 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">09:00</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">TM</div>
+                  <div>
+                    <div class="doctor-patient__name">Trần Văn Minh</div>
+                    <div class="doctor-patient__meta">BN-TRAN-MINH · 0905333444</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Ho khan kéo dài 1 tuần, sốt nhẹ về chiều">
+                  Ho khan kéo dài 1 tuần, sốt nhẹ về chiều
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--waiting">Chờ check-in</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lễ tân cần check-in bệnh nhân trước">
+                  Chờ tiếp nhận
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 4 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">09:30</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">LH</div>
+                  <div>
+                    <div class="doctor-patient__name">Lê Thị Hương</div>
+                    <div class="doctor-patient__meta">BN-LE-HUONG · 0905555666</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Chóng mặt khi thay đổi tư thế, đau đầu">
+                  Chóng mặt khi thay đổi tư thế, đau đầu
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--waiting">Chờ check-in</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lễ tân cần check-in bệnh nhân trước">
+                  Chờ tiếp nhận
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 5 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">10:00</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">GB</div>
+                  <div>
+                    <div class="doctor-patient__name">Hồ Gia Bảo</div>
+                    <div class="doctor-patient__meta">BN-HO-GIA-BAO · 0905777111</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Khám sức khỏe tổng quát theo lịch công ty">
+                  Khám sức khỏe tổng quát theo lịch công ty
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--waiting">Chờ xác nhận</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lễ tân cần check-in bệnh nhân trước">
+                  Chờ tiếp nhận
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 6 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">10:30</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">TD</div>
+                  <div>
+                    <div class="doctor-patient__name">Võ Thị Thùy Dương</div>
+                    <div class="doctor-patient__meta">BN-VO-THUY-DUONG · 0905777222</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Đau mỏi vai gáy lan xuống cánh tay phải">
+                  Đau mỏi vai gáy lan xuống cánh tay phải
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--waiting">Chờ check-in</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lễ tân cần check-in bệnh nhân trước">
+                  Chờ tiếp nhận
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 7 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">11:00</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">QK</div>
+                  <div>
+                    <div class="doctor-patient__name">Phạm Quốc Khôi</div>
+                    <div class="doctor-patient__meta">BN-PHAM-QUOC-KHOI · 0905777333</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Rối loạn tiêu hóa, chướng bụng đầy hơi kéo dài">
+                  Rối loạn tiêu hóa, chướng bụng đầy hơi kéo dài
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--waiting">Chờ xác nhận</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lễ tân cần check-in bệnh nhân trước">
+                  Chờ tiếp nhận
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 8 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">14:00</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">TT</div>
+                  <div>
+                    <div class="doctor-patient__name">Đặng Thu Trang</div>
+                    <div class="doctor-patient__meta">BN-DANG-THU-TRANG · 0905777444</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Tái khám sau đợt điều trị viêm phế quản cấp">
+                  Tái khám sau đợt điều trị viêm phế quản cấp
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--waiting">Chờ check-in</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lễ tân cần check-in bệnh nhân trước">
+                  Chờ tiếp nhận
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 9 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">14:30</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">TH</div>
+                  <div>
+                    <div class="doctor-patient__name">Lý Thanh Hà</div>
+                    <div class="doctor-patient__meta">BN-LY-THANH-HA · 0905777555</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Mất ngủ kéo dài, hồi hộp tim đập nhanh">
+                  Mất ngủ kéo dài, hồi hộp tim đập nhanh
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--waiting">Chờ xác nhận</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lễ tân cần check-in bệnh nhân trước">
+                  Chờ tiếp nhận
+                </button>
+              </td>
+            </tr>
+
+            <!-- Ca 10 -->
+            <tr>
+              <td class="fw-bold" style="color:var(--sc-primary)">15:00</td>
+              <td>
+                <div class="doctor-patient">
+                  <div class="doctor-patient__avatar">DM</div>
+                  <div>
+                    <div class="doctor-patient__name">Nguyễn Đức Minh</div>
+                    <div class="doctor-patient__meta">BN-NGUYEN-DUC-MINH · 0905777666</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="text-truncate" style="max-width: 320px;" title="Đau tức ngực trái từng cơn khi vận động gắng sức">
+                  Đau tức ngực trái từng cơn khi vận động gắng sức
+                </div>
+              </td>
+              <td><span class="doctor-status doctor-status--cancelled">Đã từ chối</span></td>
+              <td class="text-end">
+                <button class="btn-pending" disabled title="Lịch hẹn đã bị từ chối">
+                  Đã từ chối
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Pagination -->
+      <footer class="doctor-table-footer">
+        <span>Hiển thị 1–10 trong tổng số <strong id="recordCount">38</strong> lịch khám</span>
+        <div class="pagination-custom">
+          <button class="page-btn disabled">&laquo;</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn" onclick="alert('Chuyển trang 2')">2</button>
+          <button class="page-btn" onclick="alert('Chuyển trang 3')">3</button>
+          <button class="page-btn" onclick="alert('Chuyển trang 4')">4</button>
+          <button class="page-btn" onclick="alert('Trang tiếp theo')">&raquo;</button>
+        </div>
+      </footer>
+    </section>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function startExamination(patientName) {
+    alert(`Bắt đầu ca khám cho bệnh nhân: ${patientName}\n(Màn hình sẽ chuyển sang giao diện Khám bệnh, nhập sinh hiệu và kê đơn thuốc)`);
+  }
+
+  // Live filter simulation
+  const searchInput = document.getElementById('doctorSearch');
+  const statusSelect = document.getElementById('doctorStatus');
+
+  function filterTable() {
+    const searchVal = searchInput.value.toLowerCase().trim();
+    const statusVal = statusSelect.value;
+    const rows = document.querySelectorAll('#appointmentTableBody tr');
+    let count = 0;
+
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      let matchSearch = !searchVal || text.includes(searchVal);
+      let matchStatus = true;
+
+      if (statusVal === 'DA_CHECK_IN') matchStatus = text.includes('đã check-in');
+      else if (statusVal === 'CHO_XAC_NHAN') matchStatus = text.includes('chờ xác nhận');
+      else if (statusVal === 'DA_XAC_NHAN') matchStatus = text.includes('chờ check-in');
+      else if (statusVal === 'DA_TU_CHOI') matchStatus = text.includes('đã từ chối');
+
+      if (matchSearch && matchStatus) {
+        row.style.display = '';
+        count++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    document.getElementById('recordCount').textContent = count;
+    document.getElementById('statTotal').textContent = count;
+  }
+
+  searchInput.addEventListener('input', filterTable);
+  statusSelect.addEventListener('change', filterTable);
+</script>
+</body>
+</html>
+
