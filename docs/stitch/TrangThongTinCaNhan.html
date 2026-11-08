@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thông tin cá nhân - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --primary: #0c56d0;
+        --ink: #041b3c;
+        --muted: #434654;
+        --line: #c3c6d6;
+        --bg: #f9f9ff;
+        --low: #f1f3ff;
+        --high: #e0e8ff;
+        --sidebar: 280px;
+        --header: 72px;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, sans-serif; font-size: 14px; }
+      .material-symbols-outlined { font-size: 22px; vertical-align: middle; }
+      .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 50; width: var(--sidebar); display: flex; flex-direction: column; padding: 24px 16px; overflow-y: auto; border-right: 1px solid var(--line); background: #fff; }
+      .brand { display: flex; align-items: center; gap: 12px; padding: 0 12px; margin-bottom: 28px; }
+      .brand-icon { color: var(--primary); font-size: 34px !important; }
+      .brand h1 { margin: 0; color: var(--primary); font-size: 20px; font-weight: 700; }
+      .brand p { margin: 0; color: var(--muted); font-size: 12px; }
+      .sidebar-nav { display: flex; flex: 1; flex-direction: column; gap: 3px; }
+      .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; }
+      .sidebar-link:hover { color: var(--ink); background: var(--low); }
+      .sidebar-link.active { color: var(--ink); background: var(--high); font-weight: 700; }
+      .sidebar-link.settings { margin-top: auto; }
+      .app-shell { min-height: 100vh; margin-left: var(--sidebar); }
+      .topbar { position: sticky; top: 0; z-index: 40; height: var(--header); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.92); backdrop-filter: blur(12px); }
+      .header-search { position: relative; width: min(380px, 45vw); }
+      .header-search .material-symbols-outlined { position: absolute; top: 50%; left: 14px; color: #737685; transform: translateY(-50%); }
+      .header-search input { height: 44px; padding-left: 44px; border-color: var(--line); border-radius: 999px; background: var(--low); }
+      .user-area { display: flex; align-items: center; gap: 12px; }
+      .role-badge { padding: 5px 10px; border-radius: 6px; color: white; background: var(--primary); font-size: 11px; font-weight: 700; }
+      .avatar { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--primary); background: var(--high); font-weight: 700; }
+      main { padding: 32px; }
+      .page { width: 100%; max-width: 1320px; margin: 0 auto; }
+      .page-heading { margin-bottom: 24px; }
+      .page-heading h1 { margin: 0; font-size: 28px; line-height: 36px; font-weight: 700; }
+      .page-heading p { margin: 6px 0 0; color: var(--muted); }
+      .profile-layout { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
+      .profile-card, .profile-section { border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 2px 8px rgba(29,48,82,.05); }
+      .profile-card { position: sticky; top: calc(var(--header) + 24px); display: flex; align-items: center; flex-direction: column; padding: 32px; text-align: center; }
+      .profile-avatar-wrap { position: relative; }
+      .profile-avatar { width: 148px; height: 148px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--high); border-radius: 50%; color: var(--primary); background: var(--low); font-size: 36px; font-weight: 700; object-fit: cover; }
+      .avatar-button { position: absolute; right: 4px; bottom: 4px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 3px solid white; border-radius: 50%; color: white; background: var(--primary); cursor: pointer; }
+      .avatar-button input { display: none; }
+      .profile-card h2 { margin: 20px 0 4px; font-size: 21px; }
+      .profile-card > p { color: var(--muted); }
+      .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; color: #006d4a; background: #d8f7e9; font-size: 12px; font-weight: 700; }
+      .status-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #12a36f; }
+      .profile-divider { width: 100%; margin: 24px 0 12px; border-top: 1px solid var(--line); }
+      .profile-link { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px; border: 0; border-radius: 8px; color: var(--ink); background: transparent; text-decoration: none; text-align: left; }
+      .profile-link:hover { background: var(--low); }
+      .profile-link.logout { margin-top: 8px; color: #b42318; }
+      .profile-content { min-width: 0; display: grid; gap: 24px; }
+      .profile-section { overflow: hidden; scroll-margin-top: calc(var(--header) + 20px); }
+      .section-header { display: flex; align-items: center; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+      .section-accent { width: 5px; height: 28px; border-radius: 999px; background: var(--primary); }
+      .section-accent.green { background: #16835b; }
+      .section-accent.orange { background: #b76800; }
+      .section-header h2 { margin: 0; font-size: 19px; }
+      .section-body { padding: 24px; }
+      .form-label { font-size: 13px; font-weight: 650; }
+      .form-control, .form-select { min-height: 42px; border-color: var(--line); }
+      .password-wrap { position: relative; }
+      .password-wrap .form-control { padding-right: 42px; }
+      .password-toggle { position: absolute; right: 8px; top: 50%; border: 0; color: var(--muted); background: transparent; transform: translateY(-50%); }
+      .section-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+      .toast-message { position: fixed; right: 24px; bottom: 24px; z-index: 1000; min-width: 280px; display: none; align-items: center; gap: 10px; padding: 14px 16px; border: 1px solid #a8ddb9; border-radius: 12px; color: #067647; background: #ecfdf3; box-shadow: 0 8px 24px rgba(16,24,40,.12); }
+      .toast-message.show { display: flex; }
+      @media (max-width: 992px) {
+        :root { --sidebar: 88px; }
+        .brand div, .sidebar-link span:last-child { display: none; }
+        .brand { justify-content: center; padding-inline: 0; }
+        .sidebar-link { justify-content: center; }
+        .profile-layout { grid-template-columns: 280px minmax(0, 1fr); }
+      }
+      @media (max-width: 768px) {
+        :root { --sidebar: 0px; }
+        .sidebar { display: none; }
+        .topbar { padding: 0 16px; }
+        .header-search { width: min(240px, 55vw); }
+        main { padding: 20px 16px; }
+        .profile-layout { grid-template-columns: 1fr; }
+        .profile-card { position: static; }
+      }
+      @media (max-width: 480px) {
+        .section-body { padding: 18px; }
+        .role-badge { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="material-symbols-outlined brand-icon">local_hospital</span>
+        <div><h1>Smart Clinic</h1><p>Hệ thống quản lý y tế</p></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">dashboard</span><span>Tổng quan</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">calendar_month</span><span>Lịch hẹn</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">groups</span><span>Quản lý người dùng</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">medical_services</span><span>Chuyên khoa</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">medication</span><span>Kho thuốc</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">smart_toy</span><span>Chatbot AI</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">bar_chart</span><span>Báo cáo thống kê</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">admin_panel_settings</span><span>Vai trò & phân quyền</span></a>
+        <a class="sidebar-link settings active" href="#"><span class="material-symbols-outlined">manage_accounts</span><span>Thông tin cá nhân</span></a>
+      </nav>
+    </aside>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="header-search">
+          <span class="material-symbols-outlined">search</span>
+          <input class="form-control" placeholder="Tìm kiếm..." />
+        </div>
+        <div class="user-area">
+          <span class="role-badge">QUẢN TRỊ VIÊN</span>
+          <span class="avatar">NT</span>
+        </div>
+      </header>
+
+      <main>
+        <div class="page">
+          <div class="page-heading">
+            <h1>Thông tin cá nhân</h1>
+            <p>Quản lý thông tin, ảnh đại diện và bảo mật tài khoản.</p>
+          </div>
+
+          <div class="profile-layout">
+            <aside class="profile-card">
+              <div class="profile-avatar-wrap">
+                <div class="profile-avatar" id="profileAvatar">NT</div>
+                <label class="avatar-button" for="avatarInput" title="Cập nhật ảnh đại diện">
+                  <span class="material-symbols-outlined">photo_camera</span>
+                  <input id="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" />
+                </label>
+              </div>
+              <h2>Nguyễn Thảo Linh</h2>
+              <p>Quản trị viên</p>
+              <span class="status-badge">Đang hoạt động</span>
+              <button class="btn btn-outline-danger btn-sm mt-3" id="removeAvatar">Xóa ảnh đại diện</button>
+              <div class="profile-divider"></div>
+              <a class="profile-link" href="#thong-tin-co-ban"><span class="material-symbols-outlined">person</span><span class="text-start flex-fill">Thông tin cơ bản</span><span class="material-symbols-outlined ms-auto">chevron_right</span></a>
+              <a class="profile-link" href="#bao-mat"><span class="material-symbols-outlined">security</span><span class="text-start flex-fill">Bảo mật tài khoản</span><span class="material-symbols-outlined ms-auto">chevron_right</span></a>
+              <button class="profile-link logout" id="logoutButton"><span class="material-symbols-outlined">logout</span><span>Đăng xuất</span></button>
+            </aside>
+
+            <div class="profile-content">
+              <section class="profile-section" id="thong-tin-co-ban">
+                <div class="section-header"><span class="section-accent"></span><h2>Thông tin cơ bản</h2></div>
+                <form class="section-body" id="profileForm">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label" for="fullName">Họ và tên *</label>
+                      <input class="form-control" id="fullName" value="Nguyễn Thảo Linh" required />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="gender">Giới tính</label>
+                      <select class="form-select" id="gender"><option>Nữ</option><option>Nam</option><option>Khác</option></select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="dateOfBirth">Ngày sinh</label>
+                      <input class="form-control" type="date" id="dateOfBirth" value="1995-08-18" />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="identityNumber">Số CCCD / CMND</label>
+                      <input class="form-control" id="identityNumber" value="079195001234" />
+                    </div>
+                  </div>
+                  <div class="section-actions mt-4">
+                    <button type="reset" class="btn btn-light border">Hủy thay đổi</button>
+                    <button type="submit" class="btn btn-primary px-4"><span class="material-symbols-outlined me-1">save</span>Lưu thay đổi</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="profile-section">
+                <div class="section-header"><span class="section-accent green"></span><h2>Thông tin liên hệ</h2></div>
+                <form class="section-body" id="contactForm">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label" for="email">Email</label>
+                      <input class="form-control" type="email" id="email" value="linh.nguyen@smartclinic.vn" />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="phone">Số điện thoại</label>
+                      <input class="form-control" id="phone" value="0903 456 789" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="address">Địa chỉ</label>
+                      <input class="form-control" id="address" value="123 Đường Nguyễn Văn Cừ, Quận 5, TP. Hồ Chí Minh" />
+                    </div>
+                  </div>
+                  <div class="section-actions mt-4">
+                    <button type="reset" class="btn btn-light border">Hủy thay đổi</button>
+                    <button type="submit" class="btn btn-primary px-4"><span class="material-symbols-outlined me-1">save</span>Lưu thay đổi</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="profile-section" id="bao-mat">
+                <div class="section-header"><span class="section-accent orange"></span><h2>Bảo mật tài khoản</h2></div>
+                <form class="section-body" id="passwordForm">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                      <label class="form-label" for="currentPassword">Mật khẩu hiện tại *</label>
+                      <div class="password-wrap">
+                        <input class="form-control" type="password" id="currentPassword" required />
+                        <button class="password-toggle" type="button" data-target="currentPassword" aria-label="Hiện mật khẩu"><span class="material-symbols-outlined">visibility</span></button>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label" for="newPassword">Mật khẩu mới *</label>
+                      <div class="password-wrap">
+                        <input class="form-control" type="password" id="newPassword" minlength="6" required />
+                        <button class="password-toggle" type="button" data-target="newPassword" aria-label="Hiện mật khẩu"><span class="material-symbols-outlined">visibility</span></button>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label" for="confirmPassword">Xác nhận mật khẩu *</label>
+                      <div class="password-wrap">
+                        <input class="form-control" type="password" id="confirmPassword" minlength="6" required />
+                        <button class="password-toggle" type="button" data-target="confirmPassword" aria-label="Hiện mật khẩu"><span class="material-symbols-outlined">visibility</span></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="section-actions mt-4">
+                    <button type="reset" class="btn btn-light border">Hủy</button>
+                    <button type="submit" class="btn btn-primary px-4"><span class="material-symbols-outlined me-1">lock_reset</span>Đổi mật khẩu</button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast-message" id="toastMessage"><span class="material-symbols-outlined">check_circle</span><span id="toastText">Lưu thay đổi thành công</span></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const toast = document.getElementById("toastMessage");
+      const toastText = document.getElementById("toastText");
+      function showToast(message) {
+        toastText.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(window.toastTimer);
+        window.toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+      document.querySelectorAll("#profileForm, #contactForm").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          showToast("Lưu thay đổi thành công");
+        });
+      });
+      document.getElementById("avatarInput").addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          document.getElementById("profileAvatar").innerHTML = `<img src="${reader.result}" alt="Ảnh đại diện" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+          showToast("Cập nhật ảnh đại diện thành công");
+        };
+        reader.readAsDataURL(file);
+      });
+      document.getElementById("removeAvatar").addEventListener("click", () => {
+        document.getElementById("profileAvatar").innerHTML = "NT";
+        document.getElementById("avatarInput").value = "";
+        showToast("Đã xóa ảnh đại diện");
+      });
+      document.querySelectorAll(".password-toggle").forEach((button) => {
+        button.addEventListener("click", () => {
+          const input = document.getElementById(button.dataset.target);
+          const visible = input.type === "text";
+          input.type = visible ? "password" : "text";
+          button.innerHTML = `<span class="material-symbols-outlined">${visible ? "visibility" : "visibility_off"}</span>`;
+        });
+      });
+      document.getElementById("passwordForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const newPassword = document.getElementById("newPassword").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+        if (newPassword !== confirmPassword) {
+          toast.style.borderColor = "#fecaca";
+          toast.style.color = "#b42318";
+          toast.style.background = "#fff1f2";
+          toastText.textContent = "Mật khẩu xác nhận không khớp";
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 2600);
+          return;
+        }
+        event.target.reset();
+        toast.style.borderColor = "#a8ddb9";
+        toast.style.color = "#067647";
+        toast.style.background = "#ecfdf3";
+        showToast("Đổi mật khẩu thành công");
+      });
+      document.getElementById("logoutButton").addEventListener("click", () => showToast("Đăng xuất thành công"));
+    </script>
+  </body>
