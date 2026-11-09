@@ -201,9 +201,9 @@ export default function TrangDuyetLichLamViecThuNgan() {
       <header className="admin-crud-heading align-items-end">
         <div>
           <p className="admin-management-eyebrow">Điều phối lịch làm việc</p>
-          <h1>PHÂN LỊCH TRỰC ĐÊM THU NGÂN</h1>
+          <h1>PHÂN LỊCH TRỰC ĐÊM</h1>
           <p className="admin-management-description">
-            Thiết lập và điều phối lịch trực đêm, quản lý định mức phân công và chế độ nghỉ bù của đội ngũ thu ngân / lễ tân.
+            Thiết lập và điều phối lịch trực đêm, quản lý định mức phân công và chế độ nghỉ bù của đội ngũ Lễ tân / Thu ngân.
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
@@ -268,7 +268,7 @@ export default function TrangDuyetLichLamViecThuNgan() {
       >
         <span className="material-symbols-outlined text-primary fs-4 mt-1">info</span>
         <div className="flex-grow-1">
-          <h6 className="fw-bold mb-2 text-primary">Hướng dẫn phân lịch trực đêm Thu ngân</h6>
+          <h6 className="fw-bold mb-2 text-primary">Hướng dẫn phân lịch trực đêm</h6>
           <ul className="mb-0 ps-3 small text-secondary" style={{ lineHeight: '1.6' }}>
             <li>Mỗi thu ngân được phân <strong>2 ca trực đêm/tuần</strong> (16:30–07:00 hôm sau).</li>
             <li><strong>Không được xếp hai đêm liên tiếp.</strong> Hệ thống tự động gạch chéo khóa lại các đêm liền kề để tránh vi phạm.</li>

@@ -244,7 +244,7 @@ export const CASHIER_MENU_ITEMS: MenuItem[] = [
     permission: 'LICH_LAM_VIEC.VIEW',
   },
   {
-    label: 'Phân lịch trực',
+    label: 'Phân lịch trực đêm',
     icon: 'event_available',
     href: '/thu-ngan/duyet-lich-lam-viec',
     permission: 'LICH_LAM_VIEC.UPDATE',

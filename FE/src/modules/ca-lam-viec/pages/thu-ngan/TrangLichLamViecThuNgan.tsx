@@ -81,7 +81,7 @@ export default function TrangLichLamViecThuNgan() {
           <p className="admin-management-eyebrow">Lịch cá nhân</p>
           <h1>LỊCH LÀM VIỆC</h1>
           <p className="admin-management-description">
-            Theo dõi lịch làm việc hành chính, lịch trực đêm và ngày nghỉ bù được phân công bởi Quản lý / Trưởng bộ phận.
+            Theo dõi lịch làm việc hành chính, lịch trực đêm và ngày nghỉ bù được phân công bởi Trưởng khoa.
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
