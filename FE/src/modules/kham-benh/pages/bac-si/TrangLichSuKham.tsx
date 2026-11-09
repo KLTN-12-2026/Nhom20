@@ -248,7 +248,12 @@ export default function TrangLichSuKham() {
                       aria-label={`Xem chi tiết hồ sơ ${record.code}`}
                       onClick={() => setSelected(record)}
                     >
-                      <span className="material-symbols-outlined">visibility</span>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{ fontSize: 18 }}
+                      >
+                        visibility
+                      </span>
                       Chi tiết
                     </button>
                   </td>

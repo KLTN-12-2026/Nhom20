@@ -201,24 +201,24 @@ export default function TrangQuanLyDanhGiaBacSi() {
           <div className="table-responsive">
             <table
               className="table admin-management-table align-middle mb-0"
-              style={{ tableLayout: 'fixed', minWidth: '1140px', width: '100%' }}
+              style={{ tableLayout: 'fixed', minWidth: '1180px', width: '100%' }}
             >
               <colgroup>
-                <col style={{ width: '18%', minWidth: '180px' }} />
-                <col style={{ width: '18%', minWidth: '180px' }} />
-                <col style={{ width: '26%', minWidth: '240px' }} />
-                <col style={{ width: '13%', minWidth: '130px' }} />
-                <col style={{ width: '11%', minWidth: '110px' }} />
-                <col style={{ width: '14%', minWidth: '200px' }} />
+                <col style={{ width: '18%', minWidth: '170px' }} />
+                <col style={{ width: '17%', minWidth: '160px' }} />
+                <col style={{ width: '25%', minWidth: '220px' }} />
+                <col style={{ width: '12%', minWidth: '125px' }} />
+                <col style={{ width: '12%', minWidth: '125px' }} />
+                <col style={{ width: '16%', minWidth: '220px' }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: '18%', minWidth: '180px' }}>Bệnh nhân</th>
-                  <th style={{ width: '18%', minWidth: '180px' }}>Bác sĩ / Chuyên khoa</th>
-                  <th style={{ width: '26%', minWidth: '240px' }}>Đánh giá</th>
-                  <th style={{ width: '13%', minWidth: '130px' }}>Ngày gửi</th>
-                  <th style={{ width: '11%', minWidth: '110px' }}>Trạng thái</th>
-                  <th className="text-end text-nowrap" style={{ width: '14%', minWidth: '200px' }}>
+                  <th style={{ width: '18%', minWidth: '170px' }}>Bệnh nhân</th>
+                  <th style={{ width: '17%', minWidth: '160px' }}>Bác sĩ / Chuyên khoa</th>
+                  <th style={{ width: '25%', minWidth: '220px' }}>Đánh giá</th>
+                  <th style={{ width: '12%', minWidth: '125px' }}>Ngày gửi</th>
+                  <th style={{ width: '12%', minWidth: '125px' }}>Trạng thái</th>
+                  <th className="text-end text-nowrap" style={{ width: '16%', minWidth: '220px' }}>
                     Thao tác
                   </th>
                 </tr>
