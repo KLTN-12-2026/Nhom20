@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phân lịch trực đêm - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --primary: #0c56d0;
+        --ink: #041b3c;
+        --muted: #434654;
+        --line: #c3c6d6;
+        --bg: #f9f9ff;
+        --low: #f1f3ff;
+        --high: #e0e8ff;
+        --sidebar: 280px;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, sans-serif; font-size: 14px; }
+      .material-symbols-outlined { font-size: 22px; vertical-align: middle; }
+      .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 50; width: var(--sidebar); display: flex; flex-direction: column; padding: 24px 16px; overflow-y: auto; border-right: 1px solid var(--line); background: #fff; }
+      .brand { display: flex; align-items: center; gap: 12px; padding: 0 12px; margin-bottom: 28px; }
+      .brand-icon { color: var(--primary); font-size: 34px !important; }
+      .brand h1 { margin: 0; color: var(--primary); font-size: 20px; font-weight: 700; }
+      .brand p { margin: 0; color: var(--muted); font-size: 12px; }
+      .sidebar-nav { display: flex; flex: 1; flex-direction: column; gap: 3px; }
+      .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; }
+      .sidebar-link:hover { color: var(--ink); background: var(--low); }
+      .sidebar-link.active { color: var(--ink); background: var(--high); font-weight: 700; }
+      .app-shell { min-height: 100vh; margin-left: var(--sidebar); }
+      .topbar { position: sticky; top: 0; z-index: 40; height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.92); backdrop-filter: blur(12px); }
+      .header-search { position: relative; width: min(380px, 45vw); }
+      .header-search .material-symbols-outlined { position: absolute; top: 50%; left: 14px; color: #737685; transform: translateY(-50%); }
+      .header-search input { height: 44px; padding-left: 44px; border-color: var(--line); border-radius: 999px; background: var(--low); }
+      .user-area { display: flex; align-items: center; gap: 12px; }
+      .role-badge { padding: 5px 10px; border-radius: 6px; color: white; background: var(--primary); font-size: 11px; font-weight: 700; }
+      .avatar { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--primary); background: var(--high); font-weight: 700; }
+      main { padding: 32px; }
+      .page { width: 100%; max-width: 1480px; margin: 0 auto; }
+      .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+      .eyebrow { margin-bottom: 6px; color: var(--primary); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+      .page-heading h2 { margin: 0; font-size: 28px; line-height: 36px; font-weight: 700; }
+      .page-heading p { margin: 6px 0 0; color: var(--muted); }
+      .heading-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+      .heading-actions .btn { min-height: 42px; }
+      .stat-card, .panel { border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 2px 8px rgba(29,48,82,.05); }
+      .stat-card { min-height: 104px; display: flex; align-items: center; gap: 14px; padding: 20px; }
+      .stat-icon { width: 46px; height: 46px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--primary); background: var(--low); }
+      .stat-icon .material-symbols-outlined { font-size: 24px; }
+      .stat-value { color: var(--ink); font-size: 25px; line-height: 1; font-weight: 750; }
+      .stat-label { margin-top: 7px; color: var(--muted); font-size: 12px; }
+      .schedule-note { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid #d9e5ff; border-radius: 12px; color: #405474; background: #f5f8ff; }
+      .schedule-note > .material-symbols-outlined { color: var(--primary); }
+      .schedule-note h3 { margin: 0 0 8px; color: var(--primary); font-size: 14px; font-weight: 700; }
+      .schedule-note ul { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.7; }
+      .week-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 12px; }
+      .week-controls strong { font-size: 15px; }
+      .week-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+      .panel { overflow: hidden; }
+      .panel-heading { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+      .panel-heading h3 { margin: 0; font-size: 16px; font-weight: 700; }
+      .panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+      .publish-badge { padding: 6px 10px; border-radius: 999px; color: #9a6700; background: #fff4d6; font-size: 11px; font-weight: 700; white-space: nowrap; }
+      .publish-badge.published { color: #087443; background: #dff8eb; }
+      .published-warning { margin: 16px 16px 0; padding: 10px 12px; border: 1px solid #fedf89; border-radius: 8px; color: #93370d; background: #fffaeb; font-size: 12px; }
+      .schedule-table { min-width: 1100px; margin: 0; }
+      .schedule-table thead th { padding: 13px 16px; color: #475467; background: #f6f8fc; font-size: 11px; font-weight: 750; text-transform: uppercase; white-space: nowrap; }
+      .schedule-table tbody td { padding: 15px 16px; border-color: #e7ecf3; vertical-align: middle; }
+      .schedule-table td:first-child { min-width: 210px; }
+      .schedule-table td:nth-child(2) { min-width: 155px; }
+      .doctor-name { font-weight: 700; }
+      .doctor-code { margin-top: 3px; color: #7a8699; font-size: 11px; }
+      .duty-days { display: flex; flex-wrap: wrap; gap: 7px; min-width: 365px; }
+      .day-button { width: 44px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 7px; color: var(--muted); background: #fff; font-size: 11px; font-weight: 600; }
+      .day-button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+      .day-button.selected { border-color: var(--primary); color: #fff; background: var(--primary); }
+      .day-button:disabled { border-color: #e4e6eb; color: #b6bac6; background: #f4f5f7; text-decoration: line-through; cursor: not-allowed; }
+      .duty-count { display: block; margin-top: 7px; font-size: 11px; }
+      .status { display: inline-flex; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+      .status.valid { color: #087443; background: #dff8eb; }
+      .status.incomplete { color: #9a6700; background: #fff4d6; }
+      .coverage-grid { display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); }
+      .coverage-day { padding: 16px 10px; border-right: 1px solid #e7ecf3; text-align: center; }
+      .coverage-day:last-child { border-right: 0; }
+      .coverage-day strong { display: block; font-size: 12px; }
+      .coverage-count { display: block; margin-top: 9px; padding: 6px 8px; border-radius: 999px; color: #087443; background: #dff8eb; font-size: 10px; font-weight: 700; white-space: nowrap; }
+      .coverage-count.low { color: #b42318; background: #fee4e2; }
+      .toast-message { position: fixed; right: 24px; bottom: 24px; z-index: 1080; display: none; align-items: center; gap: 10px; max-width: min(420px, calc(100vw - 32px)); padding: 13px 16px; border: 1px solid #a8ddb9; border-radius: 12px; color: #067647; background: #ecfdf3; box-shadow: 0 8px 24px rgba(16,24,40,.12); }
+      .toast-message.show { display: flex; }
+      .modal-content { border: 1px solid var(--line); border-radius: 14px; }
+      @media (max-width: 1100px) { .coverage-grid { grid-template-columns: repeat(4, minmax(100px, 1fr)); } }
+      @media (max-width: 992px) {
+        :root { --sidebar: 88px; }
+        .brand div, .sidebar-link span:last-child { display: none; }
+        .brand { justify-content: center; padding-inline: 0; }
+        .sidebar-link { justify-content: center; }
+        .page-heading { flex-direction: column; }
+        .heading-actions { justify-content: flex-start; }
+      }
+      @media (max-width: 768px) {
+        :root { --sidebar: 0px; }
+        .sidebar { display: none; }
+        .topbar { padding: 0 16px; }
+        .header-search { width: min(240px, 55vw); }
+        main { padding: 20px 16px; }
+        .page-heading h2 { font-size: 23px; line-height: 30px; }
+        .week-controls { align-items: flex-start; flex-direction: column; }
+        .coverage-grid { grid-template-columns: repeat(2, minmax(110px, 1fr)); }
+        .coverage-day:nth-child(2n) { border-right: 0; }
+      }
+      @media (max-width: 480px) {
+        .role-badge { display: none; }
+        .heading-actions { width: 100%; }
+        .heading-actions .btn { flex: 1; }
+        .panel-heading { align-items: flex-start; flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="material-symbols-outlined brand-icon">local_hospital</span>
+        <div><h1>Smart Clinic</h1><p>Hệ thống quản lý y tế</p></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">dashboard</span><span>Tổng quan</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">calendar_month</span><span>Lịch khám</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">clinical_notes</span><span>Hồ sơ bệnh nhân</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">medical_services</span><span>Chuyên khoa</span></a>
+        <a class="sidebar-link active" href="#"><span class="material-symbols-outlined">event_available</span><span>Duyệt lịch làm việc</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">groups</span><span>Bác sĩ trong khoa</span></a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">settings</span><span>Cài đặt</span></a>
+      </nav>
+    </aside>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="header-search"><span class="material-symbols-outlined">search</span><input class="form-control" placeholder="Tìm kiếm..." /></div>
+        <div class="user-area"><span class="role-badge">TRƯỞNG KHOA</span><span class="avatar">TL</span></div>
+      </header>
+
+      <main>
+        <div class="page">
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow">Dành cho trưởng khoa · Khoa Nội tổng quát</div>
+              <h2>Phân lịch trực đêm</h2>
+              <p>Phân hai ca trực mỗi tuần cho bác sĩ trong khoa; ngày nghỉ bù được tính tự động.</p>
+            </div>
+            <div class="heading-actions">
+              <button class="btn btn-outline-primary bg-white" id="autoSchedule"><span class="material-symbols-outlined align-bottom fs-5 me-1">magic_button</span>Tự động xếp lịch</button>
+              <button class="btn btn-primary" id="saveSchedule"><span class="material-symbols-outlined align-bottom fs-5 me-1">publish</span>Lưu và công bố lịch</button>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-4"><div class="stat-card"><div class="stat-icon"><span class="material-symbols-outlined">stethoscope</span></div><div><div class="stat-value" id="doctorTotal">7</div><div class="stat-label">Bác sĩ trong khoa</div></div></div></div>
+            <div class="col-md-4"><div class="stat-card"><div class="stat-icon"><span class="material-symbols-outlined">bedtime</span></div><div><div class="stat-value" id="dutyTotal">14</div><div class="stat-label">Lượt trực đã phân</div></div></div></div>
+            <div class="col-md-4"><div class="stat-card"><div class="stat-icon"><span class="material-symbols-outlined">task_alt</span></div><div><div class="stat-value" id="validTotal">7/7</div><div class="stat-label">Bác sĩ đủ hai ca hợp lệ</div></div></div></div>
+          </div>
+
+          <section class="schedule-note mb-4">
+            <span class="material-symbols-outlined">info</span>
+            <div>
+              <h3>Hướng dẫn phân lịch trực đêm</h3>
+              <ul>
+                <li>Mỗi bác sĩ được phân <strong>2 ca trực đêm/tuần</strong> (16:30–07:00 hôm sau); mỗi đêm cần tối thiểu 2 bác sĩ.</li>
+                <li><strong>Không xếp hai đêm liên tiếp.</strong> Các ngày liền kề với ca đã chọn sẽ bị khóa.</li>
+                <li>Sau khi trực đêm, ngày hôm sau tự động nghỉ bù và không xếp lịch hành chính (07:00–16:30).</li>
+                <li>Ca ngày cần tối thiểu <strong>2 bác sĩ từ Thứ 2–5</strong> và <strong>3 bác sĩ từ Thứ 6–Chủ nhật</strong>.</li>
+              </ul>
+            </div>
+          </section>
+
+          <div class="week-controls">
+            <strong>Tuần đang xem: <span id="weekLabel"></span></strong>
+            <div class="week-buttons">
+              <button class="btn btn-outline-secondary" id="previousWeek">Tuần trước</button>
+              <button class="btn btn-outline-primary" id="currentWeek">Tuần này</button>
+              <button class="btn btn-outline-primary" id="nextWeek">Tuần sau</button>
+            </div>
+          </div>
+
+          <section class="panel mb-4">
+            <div class="panel-heading">
+              <div><h3>Lịch làm việc trong tuần</h3><p id="panelWeekLabel">Tuần bắt đầu từ — · Khoa Nội tổng quát</p></div>
+              <span class="publish-badge" id="publishBadge">Chưa công bố</span>
+            </div>
+            <div class="published-warning d-none" id="publishedWarning">Lịch tuần này đã được công bố. Thay đổi và lưu lại sẽ ghi đè lịch cũ và gửi lại thông báo mới.</div>
+            <div class="table-responsive">
+              <table class="table schedule-table align-middle">
+                <thead><tr><th>Bác sĩ</th><th>Lịch hành chính</th><th>Chọn ngày trực đêm</th><th>Nghỉ bù tự động</th><th>Kiểm tra</th></tr></thead>
+                <tbody id="doctorRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <div><h3>Nhân sự theo ngày</h3><p>Kiểm tra đồng thời ca ngày và ca trực đêm trước khi công bố.</p></div>
+              <span class="small text-secondary">Trực đêm: 16:30–07:00 hôm sau</span>
+            </div>
+            <div class="coverage-grid" id="coverageGrid"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal fade" id="emergencyModal" tabindex="-1" aria-labelledby="emergencyTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header"><h3 class="modal-title fs-5 fw-bold" id="emergencyTitle">Thay đổi lịch đột xuất</h3><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+          <div class="modal-body">
+            <label for="emergencyReason" class="form-label">Vui lòng nhập lý do thay đổi lịch (Ví dụ: bác sĩ ốm, có việc bận...) <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="emergencyReason" rows="3" placeholder="Nhập lý do thay đổi..."></textarea>
+            <div class="form-text">Lý do này sẽ được ghi nhận vào hệ thống để phục vụ đối soát và tính lương.</div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-primary" id="confirmEmergency" disabled>Lưu thay đổi</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="toast-message" id="toastMessage"><span class="material-symbols-outlined">check_circle</span><span id="toastText"></span></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const dayNames = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+      const fullDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
+      const patterns = [[0, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 0], [6, 1]];
+      const doctors = [
+        { code: "BS-001", name: "Nguyễn Hoàng Nam", shifts: [0, 2] },
+        { code: "BS-004", name: "Trần Ngọc Hân", shifts: [1, 3] },
+        { code: "BS-007", name: "Lê Minh Quân", shifts: [2, 4] },
+        { code: "BS-012", name: "Phạm Thùy Dương", shifts: [3, 5] },
+        { code: "BS-015", name: "Võ Thanh Tùng", shifts: [4, 6] },
+        { code: "BS-019", name: "Đặng Mỹ Linh", shifts: [5, 0] },
+        { code: "BS-022", name: "Bùi Quốc Việt", shifts: [6, 1] }
+      ];
+      const modal = new bootstrap.Modal(document.getElementById("emergencyModal"));
+      let monday = getMonday(new Date());
+      let published = false;
+      let hasUnsavedChanges = false;
+      let toastTimer;
+
+      function getMonday(date) {
+        const result = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const offset = (result.getDay() + 6) % 7;
+        result.setDate(result.getDate() - offset);
+        result.setHours(0, 0, 0, 0);
+        return result;
+      }
+      function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+      }
+      function dateText(date) {
+        return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
+      }
+      function showToast(message, type) {
+        const toast = document.getElementById("toastMessage");
+        const text = document.getElementById("toastText");
+        text.textContent = message;
+        toast.classList.toggle("danger", type === "danger");
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+      }
+      function isAdjacent(a, b) {
+        return Math.abs(a - b) === 1 || Math.abs(a - b) === 6;
+      }
+      function getCoverage() {
+        return dayNames.map((_, day) => doctors.filter((doctor) => doctor.shifts.includes(day)).length);
+      }
+      function getDayCoverage(nightCoverage) {
+        return dayNames.map((_, day) => day === 0 ? doctors.length : Math.max(0, doctors.length - nightCoverage[day - 1]));
+      }
+      function isDoctorValid(doctor) {
+        return doctor.shifts.length === 2 && !isAdjacent(doctor.shifts[0], doctor.shifts[1]);
+      }
+      function render() {
+        const nightCoverage = getCoverage();
+        const dayCoverage = getDayCoverage(nightCoverage);
+        const validCount = doctors.filter(isDoctorValid).length;
+        const assignedCount = doctors.reduce((total, doctor) => total + doctor.shifts.length, 0);
+        document.getElementById("weekLabel").textContent = dateText(monday);
+        document.getElementById("panelWeekLabel").textContent = `Tuần bắt đầu từ ${dateText(monday)} · Khoa Nội tổng quát`;
+        document.getElementById("doctorTotal").textContent = doctors.length;
+        document.getElementById("dutyTotal").textContent = assignedCount;
+        document.getElementById("validTotal").textContent = `${validCount}/${doctors.length}`;
+        document.getElementById("publishBadge").textContent = published ? "Đã công bố" : "Chưa công bố";
+        document.getElementById("publishBadge").classList.toggle("published", published);
+        document.getElementById("publishedWarning").classList.toggle("d-none", !published);
+        document.getElementById("saveSchedule").innerHTML = `<span class="material-symbols-outlined align-bottom fs-5 me-1">${published ? "edit_calendar" : "publish"}</span>${published ? "Cập nhật lại lịch đã công bố" : "Lưu và công bố lịch"}${hasUnsavedChanges ? " *" : ""}`;
+
+        document.getElementById("doctorRows").innerHTML = doctors.map((doctor, doctorIndex) => {
+          const valid = isDoctorValid(doctor);
+          const restDays = doctor.shifts.map((day) => day === 6 ? "T2 tuần sau" : dayNames[day + 1]);
+          const buttons = dayNames.map((day, dayIndex) => {
+            const selected = doctor.shifts.includes(dayIndex);
+            const conflict = !selected && doctor.shifts.some((shift) => isAdjacent(shift, dayIndex));
+            const title = conflict ? "Không thể trực hai đêm liên tiếp" : "Chọn làm ca trực đêm";
+            return `<button type="button" class="day-button ${selected ? "selected" : ""}" data-doctor="${doctorIndex}" data-day="${dayIndex}" ${conflict ? "disabled" : ""} title="${title}" aria-pressed="${selected}">${day}</button>`;
+          }).join("");
+          return `<tr><td><div class="doctor-name">${doctor.name}</div><div class="doctor-code">Mã bác sĩ: ${doctor.code}</div></td><td><strong>07:00–16:30</strong><div class="small text-secondary">Trừ ngày nghỉ bù</div></td><td><div class="duty-days">${buttons}</div><small class="duty-count ${valid ? "text-success" : "text-danger"}">${doctor.shifts.length}/2 ca trực</small></td><td>${restDays.join(", ") || "Chưa có"}</td><td><span class="status ${valid ? "valid" : "incomplete"}">${valid ? "Hợp lệ" : "Chưa đủ ca"}</span></td></tr>`;
+        }).join("");
+        document.getElementById("coverageGrid").innerHTML = dayNames.map((_, day) => {
+          const minDay = day < 4 ? 2 : 3;
+          const valid = nightCoverage[day] >= 2 && dayCoverage[day] >= minDay;
+          return `<div class="coverage-day"><strong>${fullDays[day]}</strong><span class="coverage-count ${valid ? "" : "low"}">Ca ngày ${dayCoverage[day]} · Trực đêm ${nightCoverage[day]}</span></div>`;
+        }).join("");
+        document.getElementById("doctorRows").querySelectorAll(".day-button:not(:disabled)").forEach((button) => {
+          button.addEventListener("click", () => toggleDuty(Number(button.dataset.doctor), Number(button.dataset.day)));
+        });
+      }
+      function toggleDuty(doctorIndex, day) {
+        const doctor = doctors[doctorIndex];
+        if (doctor.shifts.includes(day)) {
+          doctor.shifts = doctor.shifts.filter((item) => item !== day);
+        } else {
+          if (doctor.shifts.length >= 2) {
+            showToast("Chỉ được xếp tối đa 2 ca trực mỗi tuần.", "danger");
+            return;
+          }
+          if (doctor.shifts.some((shift) => isAdjacent(shift, day))) {
+            showToast("Không được xếp trực hai đêm liên tiếp.", "danger");
+            return;
+          }
+          doctor.shifts = [...doctor.shifts, day].sort((a, b) => a - b);
+        }
+        hasUnsavedChanges = true;
+        render();
+      }
+      function validateSchedule() {
+        if (doctors.length < 7) {
+          showToast("Khoa cần tối thiểu 7 bác sĩ để xếp đủ ca ngày và trực đêm.", "danger");
+          return false;
+        }
+        if (doctors.some((doctor) => !isDoctorValid(doctor))) {
+          showToast("Vui lòng phân đủ 2 ca trực hợp lệ cho tất cả bác sĩ.", "danger");
+          return false;
+        }
+        const nightCoverage = getCoverage();
+        if (nightCoverage.some((count) => count < 2)) {
+          showToast("Mỗi đêm phải có tối thiểu 2 bác sĩ trực.", "danger");
+          return false;
+        }
+        const dayCoverage = getDayCoverage(nightCoverage);
+        if (dayCoverage.some((count, index) => count < (index < 4 ? 2 : 3))) {
+          showToast("Ca ngày chưa đủ nhân sự: Thứ 2–5 cần 2, Thứ 6–Chủ nhật cần 3 bác sĩ.", "danger");
+          return false;
+        }
+        return true;
+      }
+
+      document.getElementById("previousWeek").addEventListener("click", () => { monday = addDays(monday, -7); published = false; hasUnsavedChanges = false; render(); });
+      document.getElementById("nextWeek").addEventListener("click", () => { monday = addDays(monday, 7); published = false; hasUnsavedChanges = false; render(); });
+      document.getElementById("currentWeek").addEventListener("click", () => { monday = getMonday(new Date()); published = false; hasUnsavedChanges = false; render(); });
+      document.getElementById("autoSchedule").addEventListener("click", () => {
+        doctors.forEach((doctor, index) => {
+          const start = index % patterns.length;
+          doctor.shifts = [...patterns[start]];
+        });
+        hasUnsavedChanges = true;
+        render();
+        showToast("Đã tự động xếp đủ ca trực trong tuần.", "success");
+      });
+      document.getElementById("saveSchedule").addEventListener("click", () => {
+        if (!validateSchedule()) return;
+        if (published) {
+          modal.show();
+          return;
+        }
+        published = true;
+        hasUnsavedChanges = false;
+        render();
+        showToast("Đã lưu và công bố lịch làm việc thành công.", "success");
+      });
+      document.getElementById("emergencyReason").addEventListener("input", (event) => {
+        document.getElementById("confirmEmergency").disabled = !event.target.value.trim();
+      });
+      document.getElementById("confirmEmergency").addEventListener("click", () => {
+        const reason = document.getElementById("emergencyReason").value.trim();
+        if (!reason) return;
+        published = true;
+        hasUnsavedChanges = false;
+        document.getElementById("emergencyReason").value = "";
+        document.getElementById("confirmEmergency").disabled = true;
+        modal.hide();
+        render();
+        showToast("Đã cập nhật lịch đột xuất và ghi nhận lý do.", "success");
+      });
+      render();
+    </script>
+  </body>
+</html>
