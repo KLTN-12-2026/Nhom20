@@ -176,11 +176,14 @@ export default function TrangDonThuocDangXuLy() {
                       <td>{dinhDangNgayGio(item.createdAt)}</td>
                       <td className="text-end">
                         <button
-                          className="btn btn-sm btn-primary text-nowrap"
+                          className="btn btn-sm btn-primary text-nowrap d-inline-flex align-items-center gap-1"
                           style={{ minHeight: '32px', height: '32px', padding: '0 12px', fontSize: '0.8125rem' }}
                           type="button"
                           onClick={() => navigate(`/duoc-si/dang-xu-ly/${item.id}`)}
                         >
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                            medication
+                          </span>
                           Tiếp tục cấp thuốc
                         </button>
                       </td>

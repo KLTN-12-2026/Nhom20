@@ -107,7 +107,7 @@ export default function TrangTongQuanDuocSi() {
     <div className="medicine-inventory admin-crud-page">
       <header className="admin-crud-heading">
         <div>
-          <p className="admin-management-eyebrow">Vận hành nhà thuốc</p>
+          <p className="admin-management-eyebrow">HỆ THỐNG QUẢN LÝ DƯỢC</p>
           <h1>TỔNG QUAN NHÀ THUỐC</h1>
           <p className="admin-management-description">
             Theo dõi đơn thuốc chờ cấp, lô thuốc sắp hết hạn và tình trạng thuốc hết hàng.

@@ -328,7 +328,7 @@ export default function TrangQuanLyKhoThuoc() {
       <header className="admin-crud-heading align-items-end">
         <div>
           <p className="admin-management-eyebrow">
-            Quản lý kho thuốc
+            KIỂM SOÁT KHO DƯỢC
           </p>
           <h1>DANH MỤC THUỐC</h1>
           <p className="admin-management-description">

@@ -181,11 +181,14 @@ export default function TrangDonThuocChoCap() {
                     <td className="text-end">
                       {canUpdate && (
                         <button
-                          className="btn btn-sm btn-primary text-nowrap"
+                          className="btn btn-sm btn-primary text-nowrap d-inline-flex align-items-center gap-1"
                           style={{ minHeight: '32px', height: '32px', padding: '0 12px', fontSize: '0.8125rem' }}
                           disabled={isLoading}
                           onClick={() => void handleAccept(item.id)}
                         >
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                            check_circle
+                          </span>
                           Tiếp nhận
                         </button>
                       )}

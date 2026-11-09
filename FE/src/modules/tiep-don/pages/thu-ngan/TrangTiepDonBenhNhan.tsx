@@ -480,10 +480,10 @@ export default function TrangTiepDonBenhNhan() {
       <div className="reception-grid">
         <section className="reception-card overflow-hidden">
           <div className="p-3 border-bottom">
-            <div className="btn-group w-100" role="group" aria-label="Loại bệnh nhân">
+            <div className="d-flex gap-2 w-100" role="group" aria-label="Loại bệnh nhân">
               <button
                 type="button"
-                className={`btn ${mode === 'existing' ? 'btn-primary' : 'btn-outline-primary'
+                className={`btn flex-fill rounded ${mode === 'existing' ? 'btn-primary' : 'btn-outline-primary'
                   }`}
                 onClick={() => switchMode('existing')}
               >
@@ -492,7 +492,7 @@ export default function TrangTiepDonBenhNhan() {
               </button>
               {canCreatePatient && <button
                 type="button"
-                className={`btn ${mode === 'new' ? 'btn-primary' : 'btn-outline-primary'
+                className={`btn flex-fill rounded ${mode === 'new' ? 'btn-primary' : 'btn-outline-primary'
                   }`}
                 onClick={() => switchMode('new')}
               >
