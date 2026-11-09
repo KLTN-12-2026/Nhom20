@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hàng đợi khám – Smart Clinic</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0..200"
+    rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --sc-primary: #165dff;
+      --sc-primary-hover: #0e4edb;
+      --sc-on-surface: #0f172a;
+      --sc-on-surface-variant: #64748b;
+      --sc-outline-variant: #e2e8f0;
+      --sc-outline: #94a3b8;
+      --sc-surface-container-lowest: #ffffff;
+      --sc-surface-container-low: #f8fafc;
+      --sc-sidebar-width: 260px;
+      --sc-header-height: 64px;
+    }
+
+    * {
+      font-family: 'Inter', sans-serif;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      margin: 0;
+      color: #1e293b;
+      font-size: 14px;
+    }
+
+    /* ── SIDEBAR (DASHBOARDSIDEBAR CHUẨN FE) ── */
+    .app-sidebar-container {
+      width: var(--sc-sidebar-width);
+      background-color: var(--sc-surface-container-lowest);
+      border-right: 1px solid var(--sc-outline-variant);
+      padding: 20px 16px;
+      z-index: 1050;
+      overflow-y: auto;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: #334155;
+      border-left: 4px solid transparent;
+      transition: all 0.2s ease;
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .sidebar-nav-item:hover {
+      background-color: #f1f5f9;
+      color: #1d4ed8;
+    }
+
+    .sidebar-nav-item.active {
+      background-color: #e0ecff;
+      color: #1d4ed8;
+      border-left-color: #1d4ed8;
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar-nav-item .material-symbols-outlined {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-nav-item.active .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1;
+    }
+
+    /* ── HEADER CHUẨN FE (DASHBOARDHEADER) ── */
+    .app-header {
+      height: var(--sc-header-height);
+      background-color: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--sc-outline-variant);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    /* ── APP MAIN LAYOUT ── */
+    .app-main {
+      margin-left: var(--sc-sidebar-width);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-content {
+      padding: 28px 32px 64px;
+      flex: 1;
+    }
+
+    /* ── ADMIN CRUD & DOCTOR WORKSPACE STYLES (100% TỪ FE) ── */
+    .admin-crud-page {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .admin-crud-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .admin-management-eyebrow {
+      margin: 0 0 4px;
+      color: #1457c8;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .admin-crud-heading h1 {
+      margin: 0;
+      color: var(--sc-on-surface);
+      font-size: 24px;
+      line-height: 32px;
+      font-weight: 700;
+    }
+
+    .admin-management-description {
+      margin: 6px 0 0;
+      color: var(--sc-on-surface-variant);
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 400;
+    }
+
+    /* Thẻ thống kê Doctor Workspace */
+    .doctor-stat {
+      align-items: center;
+      background: #fff;
+      border: 1px solid #dbe3ef;
+      border-radius: 14px;
+      display: flex;
+      gap: 14px;
+      min-height: 100px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);
+    }
+
+    .doctor-stat__icon {
+      align-items: center;
+      background: #eaf1ff;
+      border-radius: 12px;
+      color: #1457c8;
+      display: flex;
+      height: 46px;
+      justify-content: center;
+      width: 46px;
+      flex-shrink: 0;
+    }
+
+    .doctor-stat__icon .material-symbols-outlined {
+      font-size: 24px;
+    }
+
+    .doctor-stat__value {
+      color: #102a56;
+      font-size: 1.65rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .doctor-stat__label {
+      color: #667085;
+      font-size: 0.86rem;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .doctor-note {
+      background: #f5f8ff;
+      border: 1px solid #d9e5ff;
+      border-radius: 12px;
+      color: #405474;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 16px 20px;
+      min-height: 100px;
+    }
+
+    /* Panel & Table Doctor Workspace */
+    .doctor-panel {
+      background: #fff;
+      border: 1px solid #dbe3ef;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(21, 45, 82, 0.05);
+      overflow: hidden;
+    }
+
+    .doctor-table thead th {
+      background: #f6f8fc;
+      border-bottom: 1px solid #dbe3ef;
+      color: #475467;
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 13px 16px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+    }
+
+    .doctor-table tbody td {
+      border-bottom: 1px solid #e7ecf3;
+      padding: 14px 16px;
+      vertical-align: middle;
+      font-size: 0.875rem;
+    }
+
+    .doctor-table tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    /* Số thứ tự hàng đợi */
+    .doctor-queue-number {
+      align-items: center;
+      background: #1457c8;
+      border-radius: 12px;
+      color: #fff;
+      display: inline-flex;
+      font-size: 1.05rem;
+      font-weight: 800;
+      height: 40px;
+      justify-content: center;
+      min-width: 40px;
+    }
+
+    /* Trạng thái */
+    .doctor-status {
+      border-radius: 999px;
+      display: inline-flex;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      white-space: nowrap;
+    }
+
+    .doctor-status--waiting {
+      background: #fff4d6;
+      color: #9a6700;
+    }
+
+    .doctor-status--ready {
+      background: #dff8eb;
+      color: #087443;
+    }
+
+    .doctor-status--done {
+      background: #e8eef8;
+      color: #526175;
+    }
+
+    @media (max-width: 992px) {
+      .app-sidebar-container {
+        display: none;
+      }
+
+      .app-main {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════ THANH ĐIỀU HƯỚNG BÊN (DASHBOARDSIDEBAR BÁC SĨ) ══════════════ -->
+  <aside class="app-sidebar-container">
+    <!-- Brand -->
+    <div class="d-flex align-items-center gap-3 px-2 mb-4">
+      <span class="material-symbols-outlined text-primary" style="font-size: 32px; font-variation-settings: 'FILL' 1;">
+        medical_services
+      </span>
+      <div>
+        <h1 class="mb-0 text-primary fw-bold" style="font-size: 20px; line-height: 28px;">
+          Smart Clinic
+        </h1>
+        <p class="mb-0 text-secondary" style="font-size: 12px; font-weight: 500;">
+          Bác sĩ
+        </p>
+      </div>
+    </div>
+
+    <!-- Navigation List (100% khớp menu.config.ts DOCTOR_MENU_ITEMS) -->
+    <nav class="d-flex flex-column gap-1 flex-grow-1">
+      <a href="TrangTongQuanBacSi.html" class="sidebar-nav-item">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span>Tổng quan</span>
+      </a>
+      <a href="TrangLichKham.html" class="sidebar-nav-item">
+        <span class="material-symbols-outlined">calendar_today</span>
+        <span>Lịch khám</span>
+      </a>
+      <a href="TrangHangDoiKham.html" class="sidebar-nav-item active">
+        <span class="material-symbols-outlined">groups</span>
+        <span>Bệnh nhân chờ</span>
+      </a>
+      <a href="TrangLichSuKham.html" class="sidebar-nav-item">
+        <span class="material-symbols-outlined">history</span>
+        <span>Lịch sử khám</span>
+      </a>
+      <a href="tranglichlamviec.html" class="sidebar-nav-item">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <span>Lịch làm việc</span>
+      </a>
+      <a href="TrangDuyetLichLamViec.html" class="sidebar-nav-item">
+        <span class="material-symbols-outlined">event_available</span>
+        <span>Phân lịch trực đêm</span>
+      </a>
+      <a href="TrangHoSoBenhNhanTruongKhoa.html" class="sidebar-nav-item">
+        <span class="material-symbols-outlined">folder_shared</span>
+        <span>Hồ sơ bệnh nhân</span>
+      </a>
+      <a href="TrangThongTinCaNhan.html" class="sidebar-nav-item" style="margin-top: auto;">
+        <span class="material-symbols-outlined">person</span>
+        <span>Thông tin cá nhân</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ══════════════ KHU VỰC NỘI DUNG CHÍNH (APP-MAIN) ══════════════ -->
+  <div class="app-main">
+
+    <!-- Đầu trang điều hành (DashboardHeader chuẩn FE) -->
+    <header class="app-header">
+      <div class="d-flex align-items-center gap-2">
+        <span class="fw-bold text-primary d-lg-none" style="font-size: 16px;">
+          Smart Clinic
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 gap-md-4">
+        <!-- Chuông thông báo -->
+        <button type="button" class="btn btn-light position-relative p-2 rounded-circle"
+          style="border: 1px solid var(--sc-outline-variant);">
+          <span class="material-symbols-outlined text-secondary" style="font-size: 22px;">notifications</span>
+          <span
+            class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+        </button>
+
+        <!-- Thông tin tài khoản -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="text-end d-none d-lg-block">
+            <div class="fw-semibold" style="font-size: 14px;">BS. Nguyễn Văn Hòa</div>
+            <small class="text-secondary">Bác sĩ</small>
+          </div>
+          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+            style="width: 40px; height: 40px; font-size: 14px;">
+            VH
+          </div>
+          <span class="material-symbols-outlined text-secondary">expand_more</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Nội dung trang TrangHangDoiKham (100% cấu trúc FE) -->
+    <main class="app-content">
+      <div class="medicine-inventory admin-crud-page">
+
+        <!-- Header tiêu đề trang -->
+        <header class="admin-crud-heading align-items-end">
+          <div>
+            <p class="admin-management-eyebrow">
+              Tiếp nhận khám bệnh
+            </p>
+            <h1>HÀNG ĐỢI KHÁM</h1>
+            <p class="admin-management-description">
+              Danh sách bệnh nhân được cập nhật tự động sau khi hoàn tất tiếp nhận và phân công bác sĩ tại quầy lễ tân.
+            </p>
+          </div>
+        </header>
+
+        <!-- Thống kê & lưu ý -->
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6 col-lg-4">
+            <div class="doctor-stat">
+              <div class="doctor-stat__icon">
+                <span class="material-symbols-outlined">groups</span>
+              </div>
+              <div>
+                <div class="doctor-stat__value">4</div>
+                <div class="doctor-stat__label">Đang trong hàng đợi</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-8">
+            <div class="doctor-note h-100 d-flex align-items-center">
+              <span class="material-symbols-outlined me-2 fs-4 text-primary">info</span>
+              Gọi số trước, chờ bệnh nhân tới phòng rồi mới xác nhận vào phòng khám.
+            </div>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách hàng đợi -->
+        <section class="doctor-panel overflow-hidden">
+          <div class="table-responsive">
+            <table class="table doctor-table align-middle mb-0" style="table-layout: fixed; width: 100%;">
+              <colgroup>
+                <col style="width: 10%; min-width: 80px;" />
+                <col style="width: 22%; min-width: 180px;" />
+                <col style="width: 22%; min-width: 180px;" />
+                <col style="width: 13%; min-width: 110px;" />
+                <col style="width: 12%; min-width: 110px;" />
+                <col style="width: 21%; min-width: 190px;" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style="width: 10%;">Số phiếu</th>
+                  <th style="width: 22%;">Bệnh nhân</th>
+                  <th style="width: 22%;">Lý do khám</th>
+                  <th style="width: 13%;">Phòng</th>
+                  <th style="width: 12%;">Trạng thái</th>
+                  <th class="text-end" style="width: 21%;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Hàng 1: Đã vào phòng khám -->
+                <tr class="table-light">
+                  <td>
+                    <span class="doctor-queue-number" style="background: #087443;">01</span>
+                  </td>
+                  <td>
+                    <strong class="d-block text-dark">Trần Minh Quân</strong>
+                    <small class="text-secondary">BN000012</small>
+                  </td>
+                  <td class="text-truncate" title="Đau rát họng, ho có đờm sốt nhẹ 2 ngày">
+                    Đau rát họng, ho có đờm sốt nhẹ 2 ngày
+                  </td>
+                  <td>Phòng khám 102</td>
+                  <td>
+                    <span
+                      class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 text-nowrap">
+                      Đang khám
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-inline-flex flex-nowrap align-items-center justify-content-end gap-1">
+                      <button class="btn btn-sm btn-success text-nowrap d-inline-flex align-items-center gap-1"
+                        style="min-height: 32px; height: 32px; padding: 0 10px; font-size: 0.8125rem; white-space: nowrap;"
+                        onclick="alert('Chuyển tới giao diện khám bệnh (/bac-si/kham-benh?luotKhamId=12)')">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">play_arrow</span>
+                        <span>Tiếp tục khám</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Hàng 2: Đang gọi -->
+                <tr>
+                  <td>
+                    <span class="doctor-queue-number">02</span>
+                  </td>
+                  <td>
+                    <strong class="d-block text-dark">Lê Thị Mai Hương</strong>
+                    <small class="text-secondary">BN000045</small>
+                  </td>
+                  <td class="text-truncate" title="Tái khám tăng huyết áp, nhức đầu vùng gáy">
+                    Tái khám tăng huyết áp, nhức đầu vùng gáy
+                  </td>
+                  <td>Phòng khám 102</td>
+                  <td>
+                    <span class="doctor-status text-nowrap doctor-status--ready">
+                      Đang gọi
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-inline-flex flex-nowrap align-items-center justify-content-end gap-1">
+                      <button class="btn btn-sm btn-primary text-nowrap"
+                        style="min-height: 32px; height: 32px; padding: 0 8px; font-size: 0.8125rem; white-space: nowrap;"
+                        onclick="alert('Đang gọi lại số 02...')">
+                        Gọi lại
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary text-nowrap"
+                        style="min-height: 32px; height: 32px; padding: 0 8px; font-size: 0.8125rem; white-space: nowrap;"
+                        onclick="alert('Đã bỏ qua số 02')">
+                        Bỏ qua
+                      </button>
+                      <button class="btn btn-sm btn-primary text-nowrap"
+                        style="min-height: 32px; height: 32px; padding: 0 8px; font-size: 0.8125rem; white-space: nowrap;"
+                        onclick="alert('Bệnh nhân đã vào phòng khám')">
+                        Vào phòng
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Hàng 3: Chờ gọi -->
+                <tr>
+                  <td>
+                    <span class="doctor-queue-number">03</span>
+                  </td>
+                  <td>
+                    <strong class="d-block text-dark">Phạm Quốc Dũng</strong>
+                    <small class="text-secondary">BN000067</small>
+                  </td>
+                  <td class="text-truncate" title="Đau thượng vị âm ỉ, ợ chua sau khi ăn">
+                    Đau thượng vị âm ỉ, ợ chua sau khi ăn
+                  </td>
+                  <td>Phòng khám 102</td>
+                  <td>
+                    <span class="doctor-status text-nowrap doctor-status--waiting">
+                      Chờ gọi
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-inline-flex flex-nowrap align-items-center justify-content-end gap-1">
+                      <button class="btn btn-sm btn-primary text-nowrap"
+                        style="min-height: 32px; height: 32px; padding: 0 8px; font-size: 0.8125rem; white-space: nowrap;"
+                        onclick="alert('Đang gọi số 03...')">
+                        Gọi số
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary text-nowrap"
+                        style="min-height: 32px; height: 32px; padding: 0 8px; font-size: 0.8125rem; white-space: nowrap;"
+                        onclick="alert('Đã bỏ qua số 03')">
+                        Bỏ qua
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Hàng 4: Đã bỏ qua -->
+                <tr>
+                  <td>
+                    <span class="doctor-queue-number" style="background: #94a3b8;">04</span>
+                  </td>
+                  <td>
+                    <strong class="d-block text-dark">Nguyễn Hoàng Nam</strong>
+                    <small class="text-secondary">BN000089</small>
+                  </td>
+                  <td class="text-truncate" title="Khám sức khỏe tổng quát theo lịch">
+                    Khám sức khỏe tổng quát theo lịch
+                  </td>
+                  <td>Phòng khám 102</td>
+                  <td>
+                    <span class="doctor-status text-nowrap doctor-status--done">
+                      Đã bỏ qua
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-inline-flex flex-nowrap align-items-center justify-content-end gap-1">
+                      <button class="btn btn-sm btn-primary text-nowrap"
+                        style="min-height: 32px; height: 32px; padding: 0 8px; font-size: 0.8125rem; white-space: nowrap;"
+                        onclick="alert('Gọi lại số 04 đã bỏ qua')">
+                        Gọi số
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Phân trang theo đúng FE -->
+          <footer
+            class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 py-2 border-top">
+            <span class="text-secondary small">
+              Hiển thị 1–4 trong tổng số 4 bệnh nhân
+            </span>
+            <nav aria-label="Phân trang hàng đợi khám">
+              <ul class="pagination mb-0 flex-wrap">
+                <li class="page-item disabled">
+                  <button type="button" class="page-link" aria-label="Trang trước" disabled>
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+                <li class="page-item active">
+                  <button type="button" class="page-link" aria-current="page">1</button>
+                </li>
+                <li class="page-item disabled">
+                  <button type="button" class="page-link" aria-label="Trang sau" disabled>
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
