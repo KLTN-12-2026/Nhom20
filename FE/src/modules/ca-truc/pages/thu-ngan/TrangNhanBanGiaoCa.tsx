@@ -105,20 +105,25 @@ export default function TrangNhanBanGiaoCa() {
   };
 
   return <div className="reception-page medicine-inventory admin-crud-page">
-    <div className="admin-crud-heading">
+    <div className="admin-crud-heading d-flex justify-content-between align-items-center flex-wrap gap-2">
       <div>
         <p className="admin-management-eyebrow">NHẬN CA VÀ ĐỐI CHIẾU</p>
-        <h1>NHẬN BÀN GIAO CA</h1>
-        <p className="admin-management-description">
+        <h1 className="mb-0">NHẬN BÀN GIAO CA</h1>
+        <p className="admin-management-description mb-0 mt-1">
           Kiểm tra quỹ tiền mặt, giao dịch và công việc tồn trước khi xác nhận nhận ca.
         </p>
+      </div>
+      <div>
+        <span className="reception-badge reception-badge--amber text-nowrap">{handovers.length} chờ xác nhận</span>
       </div>
     </div>
 
     <section className="reception-card">
       <div className="reception-card__header">
-        <div><h2>Bàn giao chờ bạn xác nhận</h2><p className="mb-0 text-secondary small">Chỉ bạn — người được chọn nhận ca — mới có thể xác nhận.</p></div>
-        <span className="reception-badge reception-badge--amber">{handovers.length} chờ xác nhận</span>
+        <div>
+          <h2>Bàn giao chờ bạn xác nhận</h2>
+          <p className="mb-0 text-secondary small">Chỉ bạn — người được chọn nhận ca — mới có thể xác nhận.</p>
+        </div>
       </div>
       <div className="table-responsive">
         <table

@@ -168,7 +168,7 @@ export const PHARMACIST_MENU_ITEMS: MenuItem[] = [
     permission: 'CAP_THUOC.VIEW',
   },
   {
-    label: 'Đang xử lý',
+    label: 'Đơn thuốc đang xử lý',
     icon: 'hourglass_top',
     href: '/duoc-si/dang-xu-ly',
     permission: 'CAP_THUOC.VIEW',
