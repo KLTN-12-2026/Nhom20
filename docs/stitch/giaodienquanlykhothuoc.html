@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Clinic - Quản lý kho thuốc</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1760f5;
+      --ink: #10213d;
+      --muted: #6d7d96;
+      --line: #d8e0eb;
+      --surface: #fff;
+      --page: #f3f6fa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--page); color: var(--ink);
+      font-family: Inter, "Segoe UI", Arial, sans-serif; font-size: 14px;
+    }
+    .sidebar {
+      width: 238px; position: fixed; inset: 0 auto 0 0; z-index: 1030;
+      background: #fff; border-right: 1px solid #dce3ed; padding: 18px 14px;
+    }
+    .brand { display:flex; align-items:center; gap:14px; padding:0 8px 24px; color:var(--primary); }
+    .brand-icon { font-size:28px; line-height:1; }
+    .brand-name { font-size:18px; font-weight:750; line-height:1.1; }
+    .brand-sub { color:var(--muted); font-size:12px; margin-top:4px; }
+    .nav-link {
+      display:flex; align-items:center; gap:16px; color:#536987; padding:9px 14px;
+      border-radius:9px; margin:2px 0; font-weight:500; white-space:nowrap;
+    }
+    .nav-link i { font-size:17px; width:19px; text-align:center; }
+    .nav-link.active { color:#0649df; background:#e3edff; border-left:3px solid #175cff; padding-left:11px; font-weight:700; }
+    .profile-link { position:absolute; bottom:20px; left:14px; right:14px; }
+    .main { margin-left:238px; min-height:100vh; }
+    .topbar {
+      height:46px; background:#fff; border-bottom:1px solid #dce3ed;
+      display:flex; align-items:center; justify-content:flex-end; padding:0 26px; gap:24px;
+    }
+    .notification { position:relative; font-size:19px; color:#56657a; }
+    .notification .count { position:absolute; top:-7px; right:-8px; background:#ff5b65; color:#fff; border-radius:20px; font-size:9px; padding:1px 4px; }
+    .user { display:flex; align-items:center; gap:12px; text-align:right; line-height:1.35; }
+    .user strong { font-size:13px; font-weight:650; }
+    .user small { color:var(--muted); font-size:12px; }
+    .avatar { width:34px; height:34px; border-radius:50%; background:#e8edf5; display:grid; place-items:center; color:#60718a; font-size:17px; }
+    .content { padding:23px 27px 28px; max-width:1600px; margin:auto; }
+    .eyebrow { color:#0755ed; font-size:11px; font-weight:800; letter-spacing:.5px; margin-bottom:6px; }
+    h1 { font-size:21px; font-weight:800; margin:0 0 4px; color:#101e34; }
+    .subtitle { color:#63748d; font-size:14px; }
+    .btn { font-size:13px; font-weight:650; border-radius:8px; padding:9px 18px; }
+    .btn-primary { background:var(--primary); border-color:var(--primary); }
+    .btn-outline-primary { color:var(--primary); border-color:#3d75ff; }
+    .stat-card {
+      height:73px; background:#fff; border:1px solid #d6deea; border-radius:11px;
+      box-shadow:0 4px 10px rgba(20,42,75,.05); display:flex; align-items:center; gap:12px; padding:13px 15px;
+    }
+    .stat-icon { width:38px; height:38px; border-radius:9px; display:grid; place-items:center; font-size:19px; flex:none; }
+    .blue { background:#eaf0ff; color:#145cff; } .orange { background:#fff2e4; color:#e45c00; } .green { background:#dcf9e9; color:#079653; }
+    .stat-label { color:#3e506b; font-size:11px; font-weight:650; margin-bottom:1px; }
+    .stat-value { font-size:20px; line-height:1.2; font-weight:800; color:#06152c; }
+    .filter-panel, .table-panel { background:#fff; border:1px solid #cfd9e7; border-radius:12px; box-shadow:0 5px 13px rgba(20,42,75,.05); }
+    .filter-panel { padding:11px 12px; margin:16px 0; }
+    .form-control, .form-select { border-color:#cbd5e3; border-radius:8px; min-height:38px; font-size:13px; color:#182943; }
+    .form-control::placeholder { color:#9aabc2; }
+    .search-wrap { position:relative; }
+    .search-wrap i { position:absolute; left:13px; top:11px; color:#64758e; font-size:15px; }
+    .search-wrap input { padding-left:37px; }
+    .tabs { display:flex; gap:4px; padding:9px 13px; border-bottom:1px solid #dce3ed; }
+    .tab { border:0; background:transparent; padding:8px 12px; color:#263a58; font-size:12px; font-weight:650; border-radius:7px; }
+    .tab.active { color:#0649df; background:#eaf0ff; }
+    .table-responsive { overflow-x:auto; }
+    table { min-width:940px; margin:0 !important; }
+    thead th { background:#eef2f8 !important; color:#10213a !important; font-size:12px; font-weight:750; padding:13px 10px !important; white-space:nowrap; border-bottom:1px solid #dce3ed; }
+    tbody td { padding:12px 10px !important; vertical-align:middle; border-color:#dce3ed; font-size:12px; white-space:nowrap; }
+    .product { display:flex; align-items:center; gap:10px; min-width:190px; }
+    .medicine-img { width:39px; height:39px; border:1px solid #e0e7f0; border-radius:8px; background:#f8faff; display:grid; place-items:center; color:#2671ff; font-size:18px; }
+    .product-name { font-weight:700; color:#10213a; max-width:145px; overflow:hidden; text-overflow:ellipsis; }
+    .sub { display:block; color:#71829a; font-size:10px; margin-top:2px; }
+    .code { background:#f0f2f6; border-radius:5px; padding:4px 7px; color:#43536b; font-size:10px; font-weight:700; }
+    .truncate { display:block; max-width:135px; overflow:hidden; text-overflow:ellipsis; font-weight:650; }
+    .price { font-weight:700; }
+    .stock { font-weight:800; font-size:14px; }
+    .stock.low { color:#e03131; } .stock.good { color:#008b55; }
+    .status { display:inline-block; border-radius:30px; padding:5px 9px; font-size:10px; font-weight:700; }
+    .status.expired { color:#b42318; background:#ffe0df; } .status.active { color:#00784a; background:#7df1bd; }
+    .actions { display:flex; gap:6px; }
+    .actions .btn { padding:6px 10px; font-size:11px; white-space:nowrap; }
+    .btn-light { background:#f6f7f9; border-color:#f1f3f6; }
+    .table-footer { padding:13px 20px; display:flex; align-items:center; justify-content:space-between; color:#71829a; font-size:12px; }
+    .pagination { margin:0; }
+    .page-link { color:#135cf5; border-color:#e0e5ec; font-size:12px; padding:7px 11px; }
+    .page-item.active .page-link { background:#1760f5; border-color:#1760f5; }
+    @media (max-width: 900px) {
+      .sidebar { width:72px; padding:18px 10px; }
+      .brand { justify-content:center; padding:0 0 25px; }
+      .brand-copy, .nav-link span, .profile-link span { display:none; }
+      .nav-link { justify-content:center; padding:11px 8px; }
+      .nav-link.active { padding-left:5px; }
+      .main { margin-left:72px; }
+      .content { padding:20px 16px; }
+    }
+    @media (max-width: 575px) {
+      .topbar { padding:0 14px; }
+      .content { padding:18px 12px; }
+      .header-actions { margin-top:14px; }
+      .header-actions .btn { padding:8px 10px; }
+      .table-footer { align-items:flex-start; gap:12px; flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><i class="bi bi-briefcase-medical-fill"></i></div>
+      <div class="brand-copy"><div class="brand-name">Smart Clinic</div><div class="brand-sub">Dược sĩ</div></div>
+    </div>
+    <nav class="nav flex-column">
+      <a class="nav-link" href="#"><i class="bi bi-grid"></i><span>Tổng quan</span></a>
+      <a class="nav-link" href="#"><i class="bi bi-clipboard2-pulse"></i><span>Đơn thuốc chờ cấp</span></a>
+      <a class="nav-link" href="#"><i class="bi bi-hourglass-split"></i><span>Đang xử lý</span></a>
+      <a class="nav-link active" href="#"><i class="bi bi-prescription2"></i><span>Quản lý kho thuốc</span></a>
+      <a class="nav-link" href="#"><i class="bi bi-clock-history"></i><span>Lịch sử cấp thuốc</span></a>
+      <a class="nav-link" href="#"><i class="bi bi-calendar3"></i><span>Lịch làm việc</span></a>
+    </nav>
+    <div class="profile-link"><a class="nav-link" href="#"><i class="bi bi-person"></i><span>Thông tin cá nhân</span></a></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="notification"><i class="bi bi-bell"></i><span class="count">17</span></div>
+      <div class="user">
+        <div><strong>Nguyễn Thảo Vy</strong><br><small>Dược sĩ</small></div>
+        <div class="avatar"><i class="bi bi-person"></i></div>
+        <i class="bi bi-chevron-down text-secondary small"></i>
+      </div>
+    </header>
+
+    <section class="content">
+      <div class="d-flex flex-wrap align-items-end justify-content-between">
+        <div>
+          <div class="eyebrow">QUẢN LÝ KHO THUỐC</div>
+          <h1>DANH MỤC THUỐC</h1>
+          <div class="subtitle">Quản lý thông tin thuốc, hoạt chất, giá bán và số lượng tồn kho.</div>
+        </div>
+        <div class="d-flex gap-2 header-actions">
+          <button class="btn btn-outline-primary"><i class="bi bi-clipboard-plus me-1"></i> Nhập kho</button>
+          <button class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Thêm thuốc mới</button>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon blue"><i class="bi bi-prescription2"></i></div><div><div class="stat-label">Tổng mặt hàng</div><div class="stat-value">69</div></div></div></div>
+        <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon orange"><i class="bi bi-calendar-x"></i></div><div><div class="stat-label">Sắp hết hạn</div><div class="stat-value">2</div></div></div></div>
+        <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon blue"><i class="bi bi-cash-stack"></i></div><div><div class="stat-label">Giá trị tồn kho</div><div class="stat-value">111.822.100 ₫</div></div></div></div>
+        <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon green"><i class="bi bi-flask"></i></div><div><div class="stat-label">Hoạt chất</div><div class="stat-value">100</div></div></div></div>
+      </div>
+
+      <div class="filter-panel">
+        <div class="row g-2">
+          <div class="col-lg-5">
+            <div class="search-wrap"><i class="bi bi-search"></i><input id="searchInput" class="form-control" placeholder="Tìm theo mã hoặc tên thuốc..."></div>
+          </div>
+          <div class="col-lg-3">
+            <select id="ingredientFilter" class="form-select"><option value="">Tất cả hoạt chất</option><option>Kháng histamin</option><option>Tai Mũi Họng</option><option>Thần kinh</option><option>Nhãn khoa</option></select>
+          </div>
+          <div class="col-lg-4">
+            <select id="statusFilter" class="form-select"><option value="">Tất cả trạng thái</option><option value="active">Đang kinh doanh</option><option value="expired">Hết hàng</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="tabs">
+          <button class="tab active" data-tab="all">Tất cả</button>
+          <button class="tab" data-tab="soon">Sắp hết hạn</button>
+          <button class="tab" data-tab="expired">Đã hết hạn</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr>
+              <th style="padding-left:20px!important">SẢN PHẨM</th><th>MÃ</th><th>HOẠT CHẤT</th><th>GIÁ BÁN</th><th>TỒN KHO</th><th>HẠN SỬ DỤNG</th><th>TRẠNG THÁI</th><th>THAO TÁC</th>
+            </tr></thead>
+            <tbody id="medicineRows">
+              <tr data-name="thuốc cúm" data-ingredient="Kháng histamin" data-status="expired" data-tab="expired">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">thuốc cúm</div><span class="sub">Dạng: 10</span></div></div></td>
+                <td><span class="code">MED-...</span></td><td><span class="truncate">Dùng cho bệnh cúm</span><span class="sub">Đơn vị: 10</span></td><td class="price">2.000 ₫</td><td><span class="stock low">0</span><span class="sub">10</span></td><td>Chưa cập nhật</td><td><span class="status expired">● Hết hàng</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="xylometazoline" data-ingredient="Tai Mũi Họng" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Xylometazoline 0,...</div><span class="sub">Dạng: Lọ</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Tai Mũi Họng, Xylo...</span><span class="sub">Đơn vị: Lọ</span></td><td class="price">14.000 ₫</td><td><span class="stock good">150</span><span class="sub">Lọ</span></td><td>15/08/2026</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="natri clorid" data-ingredient="Tai Mũi Họng" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Natri clorid 0,9% 1...</div><span class="sub">Dạng: Lọ</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Tai Mũi Họng, Natr...</span><span class="sub">Đơn vị: Lọ</span></td><td class="price">5.000 ₫</td><td><span class="stock good">500</span><span class="sub">Lọ</span></td><td>31/05/2029</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="ofloxacin" data-ingredient="Tai Mũi Họng" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Ofloxacin 0,3% 5ml</div><span class="sub">Dạng: Lọ</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Tai Mũi Họng, Oflo...</span><span class="sub">Đơn vị: Lọ</span></td><td class="price">24.000 ₫</td><td><span class="stock good">95</span><span class="sub">Lọ</span></td><td>31/10/2028</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="ketotifen" data-ingredient="Kháng histamin" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Ketotifen 0,025% ...</div><span class="sub">Dạng: Lọ</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Kháng histamin nh...</span><span class="sub">Đơn vị: Lọ</span></td><td class="price">35.000 ₫</td><td><span class="stock good">120</span><span class="sub">Lọ</span></td><td>31/03/2029</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="tobramycin" data-ingredient="Nhãn khoa" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Tobramycin 0,3% ...</div><span class="sub">Dạng: Lọ</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Nhãn khoa, Tobra...</span><span class="sub">Đơn vị: Lọ</span></td><td class="price">26.000 ₫</td><td><span class="stock good">100</span><span class="sub">Lọ</span></td><td>30/11/2028</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="flunarizine" data-ingredient="Thần kinh" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Flunarizine 5mg</div><span class="sub">Dạng: Viên</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Thần kinh, Flunari...</span><span class="sub">Đơn vị: Viên</span></td><td class="price">1.900 ₫</td><td><span class="stock good">379</span><span class="sub">Viên</span></td><td>30/06/2028</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="betahistine" data-ingredient="Tai Mũi Họng" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Betahistine 16mg</div><span class="sub">Dạng: Viên</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Tai Mũi Họng, Beta...</span><span class="sub">Đơn vị: Viên</span></td><td class="price">2.600 ₫</td><td><span class="stock good">418</span><span class="sub">Viên</span></td><td>31/07/2028</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="pregabalin" data-ingredient="Thần kinh" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Pregabalin 75mg</div><span class="sub">Dạng: Viên</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Thần kinh, Pregab...</span><span class="sub">Đơn vị: Viên</span></td><td class="price">6.500 ₫</td><td><span class="stock good">240</span><span class="sub">Viên</span></td><td>31/12/2028</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+              <tr data-name="gabapentin" data-ingredient="Thần kinh" data-status="active" data-tab="all">
+                <td style="padding-left:20px!important"><div class="product"><div class="medicine-img"><i class="bi bi-capsule"></i></div><div><div class="product-name">Gabapentin 300mg</div><span class="sub">Dạng: Viên</span></div></div></td><td><span class="code">MED-...</span></td><td><span class="truncate">Thần kinh, Gabape...</span><span class="sub">Đơn vị: Viên</span></td><td class="price">3.800 ₫</td><td><span class="stock good">360</span><span class="sub">Viên</span></td><td>31/01/2029</td><td><span class="status active">● Đang kinh doanh</span></td><td><div class="actions"><button class="btn btn-primary"><i class="bi bi-eye"></i> Chi tiết</button><button class="btn btn-light"><i class="bi bi-pencil"></i> Sửa</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span id="resultCount">Hiển thị 1–10 trong tổng số 69 thuốc</span>
+          <nav aria-label="Phân trang"><ul class="pagination pagination-sm">
+            <li class="page-item disabled"><a class="page-link" href="#">«</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item disabled"><a class="page-link" href="#">...</a></li><li class="page-item"><a class="page-link" href="#">7</a></li><li class="page-item"><a class="page-link" href="#">»</a></li>
+          </ul></nav>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const rows = [...document.querySelectorAll('#medicineRows tr')];
+    const searchInput = document.getElementById('searchInput');
+    const ingredientFilter = document.getElementById('ingredientFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    let currentTab = 'all';
+
+    function filterRows() {
+      const keyword = searchInput.value.trim().toLocaleLowerCase('vi');
+      const ingredient = ingredientFilter.value;
+      const status = statusFilter.value;
+      let visible = 0;
+      rows.forEach(row => {
+        const matchesKeyword = row.dataset.name.includes(keyword);
+        const matchesIngredient = !ingredient || row.dataset.ingredient === ingredient;
+        const matchesStatus = !status || row.dataset.status === status;
+        const matchesTab = currentTab === 'all' || row.dataset.tab === currentTab;
+        const show = matchesKeyword && matchesIngredient && matchesStatus && matchesTab;
+        row.classList.toggle('d-none', !show);
+        if (show) visible++;
+      });
+      document.getElementById('resultCount').textContent =
+        `Đang hiển thị ${visible} sản phẩm mẫu (tổng danh mục: 69 thuốc)`;
+    }
+    [searchInput, ingredientFilter, statusFilter].forEach(el => el.addEventListener('input', filterRows));
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelector('.tab.active').classList.remove('active');
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+      filterRows();
+    }));
+  </script>
+</body>
+</html>
