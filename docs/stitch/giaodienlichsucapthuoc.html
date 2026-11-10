@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Clinic - Lịch sử cấp thuốc</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+:root{--blue:#1760f5;--ink:#10213d;--muted:#71829a;--line:#dce4ef;--page:#f3f6fb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:14px}
+.sidebar{position:fixed;inset:0 auto 0 0;width:254px;background:#fff;border-right:1px solid #dce3ed;padding:18px 14px;z-index:10}
+.brand{display:flex;align-items:center;gap:15px;padding:0 8px 24px;color:var(--blue)}
+.brand-icon{font-size:28px}.brand-name{font-size:19px;font-weight:750;line-height:1.1}.brand-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.nav-link{display:flex;align-items:center;gap:16px;padding:9px 14px;margin:2px 0;border-radius:9px;color:#536987;font-weight:500;white-space:nowrap}
+.nav-link i{font-size:17px;width:21px;text-align:center}
+.nav-link.active{background:#e3edff;color:#0649df;border-left:3px solid var(--blue);padding-left:11px;font-weight:700}
+.profile-link{position:absolute;bottom:22px;left:14px;right:14px}
+.main{margin-left:254px;min-height:100vh}
+.topbar{height:49px;background:#fff;border-bottom:1px solid #dce3ed;display:flex;align-items:center;justify-content:flex-end;padding:0 29px;gap:24px}
+.notification{position:relative;color:#52627a;font-size:19px}.count{position:absolute;top:-7px;right:-8px;background:#ff5b65;color:white;border-radius:20px;font-size:9px;padding:1px 4px}
+.user{display:flex;align-items:center;gap:12px;text-align:right;line-height:1.35}.user strong{font-size:13px;font-weight:650}.user small{font-size:12px;color:var(--muted)}
+.avatar{width:36px;height:36px;border-radius:50%;background:#e9eef6;display:grid;place-items:center;color:#60718a;font-size:18px}
+.content{padding:25px 29px 30px;max-width:1600px;margin:auto}
+.eyebrow{color:#0755ed;font-size:11px;font-weight:800;letter-spacing:.5px;margin-bottom:6px}
+h1{font-size:22px;font-weight:800;margin:0 0 5px;color:#101e34}
+.subtitle{font-size:14px;color:#63748d}
+.history-panel{margin-top:22px;background:#fff;border:1px solid #d9e2ef;border-radius:13px;padding:18px 18px 31px;box-shadow:0 3px 10px rgba(20,42,75,.025)}
+.form-control,.form-select{border-color:#d5dfeb;border-radius:8px;min-height:38px;font-size:13px;color:#182943}
+.form-control::placeholder{color:#9aabc2}
+.search-group{max-width:237px}
+.search-group .input-group-text{background:#f8fafc;border-color:#dce3ed;color:#172b46;padding:0 13px}
+.search-group .form-control{border-left:0}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{min-width:900px;margin:0!important}
+thead th{background:#f0f3f8!important;color:#10213a!important;font-size:12px;font-weight:750;padding:15px 12px!important;white-space:nowrap;border-bottom:1px solid #dce3ed}
+tbody td{padding:15px 12px!important;vertical-align:middle;border-color:#dce3ed;font-size:13px;white-space:nowrap;color:#071a35}
+tbody tr:hover{background:#f7faff}
+.order-code{color:#075cff;font-weight:750;line-height:1.45;display:inline-block}
+.patient{font-weight:700;color:#101e34}.sub{display:block;color:#71829a;font-size:11px;margin-top:3px}
+.status{display:inline-block;border-radius:30px;padding:5px 9px;font-size:10px;font-weight:700}
+.status.done{color:#00784a;background:#7df1bd}.status.rejected{color:#b42318;background:#ffe0df}
+.btn-primary{background:var(--blue);border-color:var(--blue)}
+.detail-btn{font-size:11px;font-weight:650;padding:6px 11px;border-radius:7px;white-space:nowrap}
+.table-footer{padding:14px 21px 0;display:flex;align-items:center;justify-content:space-between;color:#71829a;font-size:12px}
+.pagination{margin:0}.page-link{color:#135cf5;border-color:#e0e5ec;font-size:12px;padding:7px 11px}.page-item.active .page-link{background:var(--blue);border-color:var(--blue)}
+@media(max-width:900px){.sidebar{width:74px;padding:18px 10px}.brand{justify-content:center;padding:0 0 25px}.brand-copy,.nav-link span,.profile-link span{display:none}.nav-link{justify-content:center;padding:11px 8px}.nav-link.active{padding-left:5px}.main{margin-left:74px}.content{padding:20px 16px}}
+@media(max-width:575px){.topbar{padding:0 14px}.content{padding:18px 12px}.history-panel{padding:12px}.table-footer{align-items:flex-start;gap:12px;flex-direction:column}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand"><div class="brand-icon"><i class="bi bi-briefcase-medical-fill"></i></div><div class="brand-copy"><div class="brand-name">Smart Clinic</div><div class="brand-sub">Dược sĩ</div></div></div>
+  <nav class="nav flex-column">
+    <a class="nav-link" href="#"><i class="bi bi-grid"></i><span>Tổng quan</span></a>
+    <a class="nav-link" href="#"><i class="bi bi-clipboard2-pulse"></i><span>Đơn thuốc chờ cấp</span></a>
+    <a class="nav-link" href="#"><i class="bi bi-hourglass-split"></i><span>Đang xử lý</span></a>
+    <a class="nav-link" href="#"><i class="bi bi-prescription2"></i><span>Quản lý kho thuốc</span></a>
+    <a class="nav-link active" href="#"><i class="bi bi-clock-history"></i><span>Lịch sử cấp thuốc</span></a>
+    <a class="nav-link" href="#"><i class="bi bi-calendar3"></i><span>Lịch làm việc</span></a>
+  </nav>
+  <div class="profile-link"><a class="nav-link" href="#"><i class="bi bi-person"></i><span>Thông tin cá nhân</span></a></div>
+</aside>
+<main class="main">
+  <header class="topbar">
+    <div class="notification"><i class="bi bi-bell"></i><span class="count">17</span></div>
+    <div class="user"><div><strong>Nguyễn Thảo Vy</strong><br><small>Dược sĩ</small></div><div class="avatar"><i class="bi bi-person"></i></div><i class="bi bi-chevron-down small text-secondary"></i></div>
+  </header>
+  <section class="content">
+    <div class="eyebrow">THEO DÕI CẤP PHÁT THUỐC</div>
+    <h1>LỊCH SỬ CẤP THUỐC</h1>
+    <div class="subtitle">Tra cứu các đơn thuốc đã hoàn tất hoặc bị từ chối cấp phát.</div>
+
+    <div class="history-panel">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="input-group search-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input id="searchInput" type="text" class="form-control" placeholder="Tìm mã đơn hoặc bệnh n...">
+        </div>
+        <select id="statusFilter" class="form-select" style="width:200px">
+          <option value="">Tất cả trạng thái (100)</option>
+          <option value="done">Đã cấp thuốc</option>
+          <option value="rejected">Từ chối cấp</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="table align-middle">
+          <thead><tr><th style="padding-left:22px!important">MÃ ĐƠN</th><th>BỆNH NHÂN</th><th>DƯỢC SĨ</th><th>SỐ LOẠI</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead>
+          <tbody id="historyRows">
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1794155451029</span></td><td><span class="patient">Phan Thị Minh Trúc</span><span class="sub">BN-PHAN-TRUC</span></td><td>Nguyễn Thảo Vy</td><td>2</td><td>08/11/2026 23:32</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="rejected"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1794121245002</span></td><td><span class="patient">que11</span><span class="sub">1793903541435689</span></td><td>Nguyễn Thảo Vy</td><td>1</td><td>08/11/2026 22:34</td><td><span class="status rejected">● Từ chối cấp</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1794127131848</span></td><td><span class="patient">que11</span><span class="sub">1793903541435689</span></td><td>Nguyễn Thảo Vy</td><td>1</td><td>08/11/2026 17:01</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1794130644247</span></td><td><span class="patient">que11</span><span class="sub">1793903541435689</span></td><td>Nguyễn Thảo Vy</td><td>1</td><td>08/11/2026 17:00</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1792758411239</span></td><td><span class="patient">Lê Ngọc Mai</span><span class="sub">BN-1785669107568-1</span></td><td>Trần Thu Hà</td><td>1</td><td>08/11/2026 10:47</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1794109577217</span></td><td><span class="patient">Lê Hoàng Nam</span><span class="sub">1794101871651096</span></td><td>Trần Thu Hà</td><td>1</td><td>08/11/2026 10:47</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1792829842700</span></td><td><span class="patient">kiet</span><span class="sub">1792829526502466</span></td><td>Nguyễn Thảo Vy</td><td>1</td><td>24/10/2026 15:18</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1792829078230</span></td><td><span class="patient">Nguyễn Văn D</span><span class="sub">1792817400778031</span></td><td>Nguyễn Thảo Vy</td><td>2</td><td>24/10/2026 15:06</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1792758541205</span></td><td><span class="patient">Đinh Viên</span><span class="sub">1792758246415189</span></td><td>Nguyễn Thảo Vy</td><td>1</td><td>23/10/2026 22:15</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+            <tr data-status="done"><td style="padding-left:22px!important"><span class="order-code">DT-<br>1786721004675</span></td><td><span class="patient">Trần Văn Minh</span><span class="sub">BN-TRAN-MINH</span></td><td>Nguyễn Thảo Vy</td><td>1</td><td>10/10/2026 20:50</td><td><span class="status done">● Đã cấp thuốc</span></td><td><button class="btn btn-primary detail-btn"><i class="bi bi-eye"></i> Chi tiết</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span id="resultCount">Hiển thị 1–10 trong tổng số 100 đơn thuốc</span>
+        <nav aria-label="Phân trang"><ul class="pagination pagination-sm">
+          <li class="page-item disabled"><a class="page-link" href="#">«</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item disabled"><a class="page-link" href="#">...</a></li><li class="page-item"><a class="page-link" href="#">10</a></li><li class="page-item"><a class="page-link" href="#">»</a></li>
+        </ul></nav>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+const rows=[...document.querySelectorAll('#historyRows tr')];
+const search=document.getElementById('searchInput');
+const status=document.getElementById('statusFilter');
+function applyFilters(){
+  const q=search.value.trim().toLocaleLowerCase('vi');let count=0;
+  rows.forEach(row=>{
+    const matchText=row.innerText.toLocaleLowerCase('vi').includes(q);
+    const matchStatus=!status.value||row.dataset.status===status.value;
+    const show=matchText&&matchStatus;row.classList.toggle('d-none',!show);if(show)count++;
+  });
+  document.getElementById('resultCount').textContent=`Đang hiển thị ${count} đơn thuốc mẫu (tổng danh sách: 100 đơn thuốc)`;
+}
+search.addEventListener('input',applyFilters);status.addEventListener('change',applyFilters);
+</script>
+</body>
+</html>
