@@ -177,33 +177,33 @@ export default function TrangQuanLyBenhNhan() {
           </div>
           <div className="table-responsive">
             <table
-              className="table admin-management-table align-middle mb-0"
-              style={{ tableLayout: 'fixed', minWidth: '1029px', width: '100%' }}
+              className="table admin-management-table admin-management-table--patients align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1050px', width: '100%' }}
             >
               <colgroup>
-                <col style={{ width: '13%', minWidth: '135px' }} />
-                <col style={{ width: '18%', minWidth: '180px' }} />
-                <col style={{ width: '9%', minWidth: '92px' }} />
-                <col style={{ width: '7%', minWidth: '72px' }} />
                 <col style={{ width: '11%', minWidth: '110px' }} />
-                <col style={{ width: '9%', minWidth: '90px' }} />
-                <col style={{ width: '11%', minWidth: '110px' }} />
-                <col style={{ width: '9%', minWidth: '90px' }} />
-                <col style={{ width: '13%', minWidth: '150px' }} />
+                <col style={{ width: '22%', minWidth: '220px' }} />
+                <col style={{ width: '9%', minWidth: '95px' }} />
+                <col style={{ width: '7%', minWidth: '70px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '9%', minWidth: '95px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '12%', minWidth: '145px' }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: '13%', minWidth: '135px' }}>Mã BN</th>
-                  <th style={{ width: '18%', minWidth: '180px' }}>Bệnh nhân</th>
-                  <th style={{ width: '9%', minWidth: '92px' }}>Ngày sinh</th>
-                  <th style={{ width: '7%', minWidth: '72px' }}>Giới tính</th>
-                  <th style={{ width: '11%', minWidth: '110px' }}>Số điện thoại</th>
-                  <th style={{ width: '9%', minWidth: '90px' }}>CCCD</th>
-                  <th style={{ width: '11%', minWidth: '110px' }}>BHYT</th>
-                  <th style={{ width: '9%', minWidth: '90px' }}>Địa chỉ</th>
+                  <th style={{ width: '11%', minWidth: '110px' }}>Mã BN</th>
+                  <th style={{ width: '22%', minWidth: '220px' }}>Bệnh nhân</th>
+                  <th style={{ width: '9%', minWidth: '95px' }}>Ngày sinh</th>
+                  <th style={{ width: '7%', minWidth: '70px' }}>Giới tính</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Số điện thoại</th>
+                  <th style={{ width: '9%', minWidth: '95px' }}>CCCD</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>BHYT</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Địa chỉ</th>
                   <th
                     className="text-end text-nowrap"
-                    style={{ width: '13%', minWidth: '150px' }}
+                    style={{ width: '12%', minWidth: '145px' }}
                   >
                     Thao tác
                   </th>
@@ -218,14 +218,28 @@ export default function TrangQuanLyBenhNhan() {
                     <td>
                       <div className="admin-management-entity">
                         <span
-                          className="doctor-card__avatar"
+                          className="doctor-card__avatar flex-shrink-0"
                           style={{ width: 38, height: 38, fontSize: '0.85rem' }}
                         >
                           {initials(patient.fullName)}
                         </span>
-                        <div>
-                          <strong>{patient.fullName}</strong>
-                          <small>{patient.email || 'Chưa có email'}</small>
+                        <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                          <strong
+                            className="d-block"
+                            style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                          >
+                            {patient.fullName}
+                          </strong>
+                          <small
+                            className="d-block text-muted"
+                            style={{
+                              wordBreak: 'break-word',
+                              overflowWrap: 'anywhere',
+                              whiteSpace: 'normal',
+                            }}
+                          >
+                            {patient.email || 'Chưa có email'}
+                          </small>
                         </div>
                       </div>
                     </td>
@@ -234,7 +248,9 @@ export default function TrangQuanLyBenhNhan() {
                     <td>{patient.phoneNumber}</td>
                     <td>{patient.identityNumber || '—'}</td>
                     <td>{patient.healthInsuranceNumber || '—'}</td>
-                    <td>{patient.address || '—'}</td>
+                    <td className="text-truncate" title={patient.address || '—'}>
+                      {patient.address || '—'}
+                    </td>
                     <td className="text-end">
                       <div className="admin-crud-actions justify-content-end flex-nowrap">
                         <button
