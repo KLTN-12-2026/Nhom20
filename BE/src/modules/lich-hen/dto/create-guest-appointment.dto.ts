@@ -17,6 +17,9 @@ export class CreateGuestAppointmentDto {
   @IsString()
   @MinLength(2)
   @MaxLength(150)
+  @Matches(/^[\p{Lu}\p{Lt}][\p{L}]*(?:\s+[\p{Lu}\p{Lt}][\p{L}]*)*$/u, {
+    message: 'Họ tên chỉ gồm chữ cái và khoảng trắng, mỗi từ phải viết hoa chữ cái đầu (ví dụ: Nguyễn Văn A)',
+  })
   fullName: string;
 
   @ApiProperty({ example: '0901234567' })
