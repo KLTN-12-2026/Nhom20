@@ -349,3 +349,22 @@
     flex-direction: column;
   }
 }
+
+
+.admin-management-table--appointments {
+  min-width: 0;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-management-table--appointments th,
+.admin-management-table--appointments td {
+  padding-left: 12px;
+  padding-right: 12px;
+  vertical-align: middle;
+}
+
+.admin-management-table--appointments .admin-management-entity {
+  min-width: 0;
+  gap: 8px;
+}

@@ -1,10 +1,27 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
 import { maHoaNoiDung, moCuaSoIn } from '@/utils/in-an';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { examinationApi } from '../../api/examination.api';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
+
+const RECORDS_PER_PAGE = 10;
+
+const getPageNumbers = (currentPage: number, totalPages: number) => {
+  const pages = new Set([
+    1,
+    totalPages,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+  ]);
+  return [...pages]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+};
 
 type HoSoKham = {
   id: number;
@@ -12,7 +29,7 @@ type HoSoKham = {
   patient: { fullName: string; phoneNumber: string };
   diagnosis: string | null;
   conclusion: string | null;
-  submittedAt: string | null;
+  submittedAt: string | null; 
   prescription: {
     items: Array<{
       medicine: { name: string; unit: string };
@@ -28,6 +45,7 @@ export default function TrangLichSuKham() {
   const { showToast } = useAppToast();
   const [rows, setRows] = useState<HoSoKham[]>([]);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<HoSoKham | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +68,28 @@ export default function TrangLichSuKham() {
         .includes(keyword),
     );
   }, [rows, search]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredRows.length / RECORDS_PER_PAGE),
+  );
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    filteredRows.length === 0 ? 0 : (currentPage - 1) * RECORDS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * RECORDS_PER_PAGE,
+    filteredRows.length,
+  );
+  const paginatedRows = useMemo(() => {
+    return filteredRows.slice(
+      (currentPage - 1) * RECORDS_PER_PAGE,
+      currentPage * RECORDS_PER_PAGE,
+    );
+  }, [filteredRows, currentPage]);
 
   const handlePrintExam = (record: HoSoKham) => {
     const medicineRows = record.prescription?.items.length
@@ -118,12 +158,16 @@ export default function TrangLichSuKham() {
   };
 
   return (
-    <div className="doctor-page">
-      <div className="doctor-page__eyebrow">Hồ sơ chuyên môn</div>
-      <h1 className="doctor-page__title">Lịch sử khám bệnh</h1>
-      <p className="doctor-page__description">
-        Dữ liệu thật từ các phiếu khám đã hoàn tất của bác sĩ đang đăng nhập.
-      </p>
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Quản lý hồ sơ bệnh án</p>
+          <h1>LỊCH SỬ KHÁM BỆNH</h1>
+          <p className="admin-management-description">
+            Tra cứu hồ sơ các lượt khám đã hoàn tất, được ghi nhận bởi bác sĩ đang đăng nhập.
+          </p>
+        </div>
+      </header>
 
       <section className="doctor-panel overflow-hidden">
         <div className="doctor-filter-bar border-bottom">
@@ -136,7 +180,10 @@ export default function TrangLichSuKham() {
               <input
                 className="form-control"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
                 placeholder="Tên bệnh nhân, mã hồ sơ hoặc chẩn đoán..."
               />
             </div>
@@ -144,40 +191,70 @@ export default function TrangLichSuKham() {
         </div>
 
         <div className="table-responsive">
-          <table className="table doctor-table mb-0">
+          <table
+            className="table doctor-table align-middle mb-0"
+            style={{ tableLayout: 'fixed', minWidth: '1000px', width: '100%' }}
+          >
+            <colgroup>
+              <col style={{ width: '14%', minWidth: '130px' }} />
+              <col style={{ width: '22%', minWidth: '190px' }} />
+              <col style={{ width: '24%', minWidth: '200px' }} />
+              <col style={{ width: '16%', minWidth: '150px' }} />
+              <col style={{ width: '12%', minWidth: '120px' }} />
+              <col style={{ width: '12%', minWidth: '120px' }} />
+            </colgroup>
             <thead>
               <tr>
-                <th>Mã hồ sơ</th>
-                <th>Bệnh nhân</th>
-                <th>Chẩn đoán</th>
-                <th>Ngày khám</th>
-                <th>Đơn thuốc</th>
-                <th>Thao tác</th>
+                <th style={{ width: '14%', minWidth: '130px' }}>Mã hồ sơ</th>
+                <th style={{ width: '22%', minWidth: '190px' }}>Bệnh nhân</th>
+                <th style={{ width: '24%', minWidth: '200px' }}>Chẩn đoán</th>
+                <th style={{ width: '16%', minWidth: '150px' }}>Ngày khám</th>
+                <th style={{ width: '12%', minWidth: '120px' }}>Đơn thuốc</th>
+                <th
+                  className="text-end text-nowrap"
+                  style={{ width: '12%', minWidth: '120px' }}
+                >
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((record) => (
+              {paginatedRows.map((record) => (
                 <tr key={record.id}>
-                  <td className="fw-bold text-primary">{record.code}</td>
-                  <td>
-                    <strong>{record.patient.fullName}</strong>
-                    <small className="d-block text-secondary">{record.patient.phoneNumber}</small>
+                  <td className="fw-bold text-primary text-truncate" title={record.code}>
+                    {record.code}
                   </td>
-                  <td>{record.diagnosis || '—'}</td>
-                  <td>{dinhDangNgayGio(record.submittedAt)}</td>
                   <td>
-                    <span className="doctor-status doctor-status--ready">
+                    <strong className="d-block text-truncate" title={record.patient.fullName}>
+                      {record.patient.fullName}
+                    </strong>
+                    <small className="d-block text-secondary text-truncate" title={record.patient.phoneNumber}>
+                      {record.patient.phoneNumber}
+                    </small>
+                  </td>
+                  <td className="text-truncate" title={record.diagnosis || '—'}>
+                    {record.diagnosis || '—'}
+                  </td>
+                  <td className="text-nowrap">{dinhDangNgayGio(record.submittedAt)}</td>
+                  <td>
+                    <span className="doctor-status doctor-status--ready text-nowrap">
                       {record.prescription?.items.length ?? 0} loại thuốc
                     </span>
                   </td>
-                  <td>
+                  <td className="text-end">
                     <button
                       type="button"
-                      className="btn btn-sm btn-light border"
-                      aria-label={`Xem hồ sơ ${record.code}`}
+                      className="btn btn-sm btn-primary text-nowrap d-inline-flex align-items-center gap-1"
+                      aria-label={`Xem chi tiết hồ sơ ${record.code}`}
                       onClick={() => setSelected(record)}
                     >
-                      <span className="material-symbols-outlined">visibility</span>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{ fontSize: 18 }}
+                      >
+                        visibility
+                      </span>
+                      Chi tiết
                     </button>
                   </td>
                 </tr>
@@ -192,6 +269,62 @@ export default function TrangLichSuKham() {
             </tbody>
           </table>
         </div>
+
+        {filteredRows.length > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {filteredRows.length} hồ sơ
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang hồ sơ">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={currentPage <= 1 || loading}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === currentPage ? 'page' : undefined}
+                        disabled={loading}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={currentPage >= totalPages || loading}
+                    onClick={() =>
+                      setPage((current) => Math.min(totalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        )}
       </section>
 
       {selected && (
@@ -230,7 +363,7 @@ export default function TrangLichSuKham() {
                 <div className="modal-footer">
                   <button
                     type="button"
-                    className="btn btn-outline-primary"
+                    className="btn btn-primary"
                     onClick={() => handlePrintExam(selected)}
                   >
                     <span className="material-symbols-outlined align-text-bottom">print</span> In phiếu khám

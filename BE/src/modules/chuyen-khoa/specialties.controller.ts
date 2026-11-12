@@ -23,6 +23,7 @@ import type { AuthenticatedUser } from '../../common/auth/authenticated-user.typ
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { Permissions } from '../../common/auth/permissions.decorator';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
 import { SpecialtyQueryDto } from './dto/specialty-query.dto';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
@@ -48,6 +49,7 @@ export class SpecialtiesController {
   }
 
   @Post()
+  @Permissions('CHUYEN_KHOA.CREATE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Thêm chuyên khoa' })
@@ -60,6 +62,7 @@ export class SpecialtiesController {
   }
 
   @Patch(':id')
+  @Permissions('CHUYEN_KHOA.UPDATE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Cập nhật chuyên khoa' })
@@ -73,6 +76,7 @@ export class SpecialtiesController {
   }
 
   @Delete(':id')
+  @Permissions('CHUYEN_KHOA.DELETE')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @HttpCode(200)

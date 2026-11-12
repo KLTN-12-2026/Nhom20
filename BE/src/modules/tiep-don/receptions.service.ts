@@ -1,4 +1,10 @@
-import { BadRequestException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   MucDoDiUng,
   MucDoUuTienTiepDon,
@@ -30,6 +36,33 @@ export class ReceptionsService {
     private readonly auditLogsService: AuditLogsService,
     private readonly thongBaoService: ThongBaoService,
   ) {}
+
+  // Không đưa dữ liệu khám, dị ứng hoặc đơn thuốc vào hồ sơ hành chính của thu ngân.
+  async findPatientAdministrativeInfo(id: number) {
+    const patient =
+      await this.receptionRepository.findPatientAdministrativeInfo(id);
+    if (!patient)
+      throw new NotFoundException(
+        'Không tìm thấy bệnh nhân trong danh sách tiếp đón',
+      );
+    return {
+      message: 'Lấy thông tin hành chính bệnh nhân thành công',
+      data: {
+        id: patient.id,
+        code: patient.maBenhNhan,
+        fullName: patient.hoTen,
+        phoneNumber: patient.soDienThoai,
+        email: patient.email,
+        dateOfBirth: patient.ngaySinh?.toISOString().slice(0, 10) ?? null,
+        gender: patient.gioiTinh,
+        address: patient.diaChi,
+        identityNumber: patient.soCanCuoc,
+        healthInsuranceNumber: patient.maTheBaoHiemYTe,
+        emergencyContactName: patient.nguoiLienHeKhanCap,
+        emergencyContactPhone: patient.soDienThoaiKhanCap,
+      },
+    };
+  }
 
   // Xử lý logic nghiệp vụ cho chức năng: tiếp đón
   async searchPatients(search: string) {
@@ -290,7 +323,7 @@ export class ReceptionsService {
   }
 
   // Tạo mới dữ liệu cho chức năng: tiếp đón
-  async create(dto: CreateReceptionDto, currentUserId: number) {
+  async create(dto: CreateReceptionDto, currentUserId: number, canUpdatePatient: boolean) {
     if (!dto.patientId) {
       if (
         !dto.fullName ||
@@ -332,6 +365,7 @@ export class ReceptionsService {
     }
     const reception = await this.receptionRepository.create({
       patientId: dto.patientId,
+      canUpdatePatient,
       ...(!dto.patientId
         ? {
             patient: {

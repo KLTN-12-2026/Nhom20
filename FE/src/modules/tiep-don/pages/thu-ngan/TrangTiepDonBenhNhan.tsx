@@ -8,7 +8,8 @@ import { specialtyApi } from '@/modules/chuyen-khoa/api/specialty.api';
 import type { Specialty } from '@/modules/chuyen-khoa/types/specialty.types';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
-import ReceptionistPageHeader from '../../components/ReceptionistPageHeader';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 import { useReception } from '../../hooks/use-reception';
 import type { ReceptionTicketData } from '../../types/reception-ticket.types';
 import type {
@@ -16,6 +17,8 @@ import type {
   ReceptionPatient,
   ReceptionRecord,
 } from '../../types/reception.types';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '../../receptionist-workspace.css';
 
 type PatientMode = 'existing' | 'new';
@@ -207,6 +210,9 @@ function BirthDateField({ value, onChange }: { value: string; onChange: (value: 
 
 export default function TrangTiepDonBenhNhan() {
   const { showToast } = useAppToast();
+  const user = useAuthStore((state) => state.user);
+  const canCreateReception = hasPermission(user, 'TIEP_DON.CREATE');
+  const canCreatePatient = hasPermission(user, 'BENH_NHAN.CREATE');
   const navigate = useNavigate();
   const [mode, setMode] = useState<PatientMode>('existing');
   const [search, setSearch] = useState('');
@@ -338,6 +344,11 @@ export default function TrangTiepDonBenhNhan() {
   };
 
   const issueTicket = async () => {
+    if (!canCreateReception) return;
+    if (!selectedPatient && !canCreatePatient) {
+      showToast('Bạn không có quyền thêm bệnh nhân mới', 'warning');
+      return;
+    }
     if (!isConfirmed) return;
     if (isCompleted) return;
     if (!form.specialty || !form.doctor || !form.reason.trim()) {
@@ -456,34 +467,38 @@ export default function TrangTiepDonBenhNhan() {
   };
 
   return (
-    <div className="reception-page">
-      <ReceptionistPageHeader
-        eyebrow="Quy trình tiếp nhận"
-        title="Tiếp đón bệnh nhân"
-        description="Tra cứu bệnh nhân cũ hoặc tạo đầy đủ hồ sơ cho bệnh nhân đến khám lần đầu."
-      />
+    <div className="reception-page medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Quy trình tiếp nhận</p>
+          <h1>TIẾP ĐÓN BỆNH NHÂN</h1>
+          <p className="admin-management-description">
+            Tra cứu bệnh nhân cũ hoặc tạo đầy đủ hồ sơ cho bệnh nhân đến khám lần đầu.
+          </p>
+        </div>
+      </header>
       <div className="reception-grid">
         <section className="reception-card overflow-hidden">
           <div className="p-3 border-bottom">
-            <div className="btn-group w-100" role="group" aria-label="Loại bệnh nhân">
+            <div className="d-flex gap-2 w-100" role="group" aria-label="Loại bệnh nhân">
               <button
                 type="button"
-                className={`btn ${mode === 'existing' ? 'btn-primary' : 'btn-outline-primary'
+                className={`btn flex-fill rounded ${mode === 'existing' ? 'btn-primary' : 'btn-outline-primary'
                   }`}
                 onClick={() => switchMode('existing')}
               >
                 <span className="material-symbols-outlined me-2">history</span>
                 Bệnh nhân cũ
               </button>
-              <button
+              {canCreatePatient && <button
                 type="button"
-                className={`btn ${mode === 'new' ? 'btn-primary' : 'btn-outline-primary'
+                className={`btn flex-fill rounded ${mode === 'new' ? 'btn-primary' : 'btn-outline-primary'
                   }`}
                 onClick={() => switchMode('new')}
               >
                 <span className="material-symbols-outlined me-2">person_add</span>
                 Bệnh nhân mới
-              </button>
+              </button>}
             </div>
           </div>
 
@@ -551,7 +566,7 @@ export default function TrangTiepDonBenhNhan() {
                           )}
                         </div>
                         <button
-                          className="btn btn-outline-primary"
+                          className="btn btn-primary"
                           type="button"
                           onClick={() => selectPatient(patient)}
                         >
@@ -576,7 +591,9 @@ export default function TrangTiepDonBenhNhan() {
                     Nhập thông tin để bắt đầu tra cứu
                   </strong>
                   <div className="mt-1">
-                    Nếu chưa có hồ sơ, chọn tab “Bệnh nhân mới”.
+                    {canCreatePatient
+                      ? 'Nếu chưa có hồ sơ, chọn tab “Bệnh nhân mới”.'
+                      : 'Bạn chưa được cấp quyền thêm bệnh nhân mới. Vui lòng liên hệ quản trị viên.'}
                   </div>
                 </div>
               )}
@@ -842,7 +859,7 @@ export default function TrangTiepDonBenhNhan() {
                             <p>Hỏi lại bệnh nhân trước khi bác sĩ kê đơn.</p>
                           )}
                         </div>
-                        <button className="btn btn-outline-primary btn-sm" type="button" onClick={() => setStep(1)}>
+                        <button className="btn btn-primary btn-sm" type="button" onClick={() => setStep(1)}>
                           Cập nhật dị ứng
                         </button>
                       </div>
@@ -1066,7 +1083,7 @@ export default function TrangTiepDonBenhNhan() {
                   </button>
                 ) : (
                   <div className="d-flex flex-wrap gap-2">
-                    <button
+                    {canCreateReception && <button
                       type="button"
                       className="btn btn-outline-primary"
                       disabled={isConfirmed}
@@ -1076,8 +1093,8 @@ export default function TrangTiepDonBenhNhan() {
                         {isConfirmed ? 'check_circle' : 'fact_check'}
                       </span>
                       {isConfirmed ? 'Đã xác nhận' : 'Xác nhận'}
-                    </button>
-                    <button
+                    </button>}
+                    {canCreateReception && <button
                       type="button"
                       className="btn btn-primary"
                       disabled={!isConfirmed || isCompleted || isSubmitting}
@@ -1091,7 +1108,7 @@ export default function TrangTiepDonBenhNhan() {
                         : isCompleted
                           ? 'Đã cấp phiếu'
                           : 'Cấp phiếu'}
-                    </button>
+                    </button>}
                     <button
                       type="button"
                       className="btn btn-outline-dark"

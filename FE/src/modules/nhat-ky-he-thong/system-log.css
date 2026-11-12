@@ -6,7 +6,7 @@
 
 .system-log-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
 }
@@ -14,8 +14,8 @@
 .system-log-heading h1 {
   margin: 6px 0;
   color: var(--sc-on-surface);
-  font-size: 28px;
-  line-height: 36px;
+  font-size: 24px;
+  line-height: 32px;
   font-weight: 700;
 }
 
@@ -29,8 +29,8 @@
   align-items: center;
   gap: 8px;
   color: var(--sc-primary);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -105,6 +105,19 @@
 .system-log-table-card td:nth-child(2),
 .system-log-table-card td:nth-child(4) {
   min-width: 270px;
+}
+
+.admin-management-table--system-logs {
+  min-width: 960px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-management-table--system-logs th,
+.admin-management-table--system-logs td {
+  min-width: 0;
+  padding-left: 14px;
+  padding-right: 14px;
 }
 
 .system-log-avatar {

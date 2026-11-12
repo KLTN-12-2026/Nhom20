@@ -7,6 +7,15 @@ export type DoctorWithRelations = Prisma.BacSiGetPayload<{
         email: true;
         anhDaiDienUrl: true;
         anhDaiDienPublicId: true;
+        benhNhan: { select: { id: true } };
+        _count: { select: {
+          phieuHangChoDaGoi: true; phieuHangChoXacNhan: true; donThuocDaCap: true;
+          donThuocDaTuChoi: true; giaoDichKho: true; hoaDonDaTao: true;
+          thanhToanDaThu: true; lichHenDaXacNhan: true; duLieuYTeDaGhi: true;
+          tienSuBenhDaGhi: true; canhBaoDaXuLy: true; phanCongCa: true;
+          caDaSapXep: true; caDaDuyet: true; donViDangQuanLy: true;
+          caDaBanGiao: true; caDaNhanBanGiao: true; goiYThuocDaDuyet: true; phienChat: true;
+        } };
       };
     };
     chuyenKhoa: {
@@ -16,8 +25,6 @@ export type DoctorWithRelations = Prisma.BacSiGetPayload<{
     _count: {
       select: {
         luotKham: true;
-        hoSoKham: true;
-        donThuoc: true;
         lichHen: true;
         danhGia: true;
       };

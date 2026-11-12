@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import AppModal from '@/components/ui/AppModal';
 import { axiosClient, getApiErrorMessage } from '@/services/axios-client';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
+import '@/modules/bac-si/doctor-workspace.css';
 import '../../patients.css';
 
 type Patient = {
@@ -34,18 +37,28 @@ type PatientRecord = Patient & {
   }>;
 };
 
+const PATIENTS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
+
 const dateText = (value: string | null) => dinhDangNgay(value);
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((part) => part[0]).join('').toUpperCase();
 
 export default function TrangHoSoBenhNhanTruongKhoa() {
   const { showToast } = useAppToast();
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [managedSpecialty, setManagedSpecialty] = useState<string | null>(null);
   const [record, setRecord] = useState<PatientRecord | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setPage(1);
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
@@ -66,6 +79,36 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
     return () => window.clearTimeout(timer);
   }, [search, showToast]);
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(patients.length / PATIENTS_PER_PAGE),
+  );
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    patients.length === 0 ? 0 : (currentPage - 1) * PATIENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * PATIENTS_PER_PAGE,
+    patients.length,
+  );
+  const visiblePatients = useMemo(
+    () =>
+      patients.slice(
+        (currentPage - 1) * PATIENTS_PER_PAGE,
+        currentPage * PATIENTS_PER_PAGE,
+      ),
+    [currentPage, patients],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   const openRecord = async (patient: Patient) => {
     try {
       const response = await axiosClient.get<{ data: PatientRecord }>(`/receptions/patients/${patient.id}`);
@@ -76,20 +119,30 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
   };
 
   return (
-    <div className="patient-management">
-      <div className="patient-management__heading">
+    <div className="medicine-inventory admin-crud-page">
+      <div className="admin-crud-heading">
         <div>
-          <p className="text-uppercase text-primary fw-bold mb-1" style={{ letterSpacing: '0.08em' }}>
-            Bác sĩ trưởng khoa {managedSpecialty ? `• Khoa ${managedSpecialty}` : ''}
+          <p className="admin-management-eyebrow">
+            Quản lý bệnh nhân chuyên khoa {managedSpecialty ? `• Khoa ${managedSpecialty}` : ''}
           </p>
           <h1>HỒ SƠ BỆNH NHÂN CỦA KHOA</h1>
-          <span className="text-secondary">
-            Danh sách bệnh nhân và lịch sử khám bệnh thuộc chuyên khoa bạn phụ trách.
+          <p className="admin-management-description">
+            Quản lý danh sách bệnh nhân, tra cứu thông tin hồ sơ và lịch sử khám bệnh thuộc chuyên khoa phụ trách.
+          </p>
+        </div>
+        <div className="admin-management-summary" aria-label="Tổng quan bệnh nhân">
+          <span>
+            <strong>{patients.length}</strong> bệnh nhân
           </span>
         </div>
-        <div className="patient-management__search">
+      </div>
+
+      <div className="admin-crud-toolbar">
+        <div className="admin-crud-search">
           <span className="material-symbols-outlined">search</span>
           <input
+            type="search"
+            className="form-control"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm theo tên, mã hoặc số điện thoại..."
@@ -97,53 +150,90 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
         </div>
       </div>
 
-      <section className="patient-table-card">
+      <section className="admin-management-table-card">
         <div className="table-responsive">
-          <table className="table patient-table align-middle mb-0">
+          <table
+            className="table admin-management-table align-middle mb-0"
+            style={{ tableLayout: 'fixed', minWidth: '1029px', width: '100%' }}
+          >
+            <colgroup>
+              <col style={{ width: '13%', minWidth: '135px' }} />
+              <col style={{ width: '18%', minWidth: '180px' }} />
+              <col style={{ width: '9%', minWidth: '92px' }} />
+              <col style={{ width: '7%', minWidth: '72px' }} />
+              <col style={{ width: '11%', minWidth: '110px' }} />
+              <col style={{ width: '9%', minWidth: '90px' }} />
+              <col style={{ width: '11%', minWidth: '110px' }} />
+              <col style={{ width: '9%', minWidth: '90px' }} />
+              <col style={{ width: '13%', minWidth: '150px' }} />
+            </colgroup>
             <thead>
               <tr>
-                <th>Mã BN</th>
-                <th>Họ tên</th>
-                <th>Ngày sinh</th>
-                <th>Giới tính</th>
-                <th>Số điện thoại</th>
-                <th>CCCD</th>
-                <th>BHYT</th>
-                <th>Địa chỉ</th>
-                <th className="text-center">Hồ sơ</th>
+                <th style={{ width: '13%', minWidth: '135px' }}>Mã BN</th>
+                <th style={{ width: '18%', minWidth: '180px' }}>Họ tên</th>
+                <th style={{ width: '9%', minWidth: '92px' }}>Ngày sinh</th>
+                <th style={{ width: '7%', minWidth: '72px' }}>Giới tính</th>
+                <th style={{ width: '11%', minWidth: '110px' }}>Số điện thoại</th>
+                <th style={{ width: '9%', minWidth: '90px' }}>CCCD</th>
+                <th style={{ width: '11%', minWidth: '110px' }}>BHYT</th>
+                <th style={{ width: '9%', minWidth: '90px' }}>Địa chỉ</th>
+                <th
+                  className="text-end text-nowrap"
+                  style={{ width: '13%', minWidth: '150px' }}
+                >
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody>
-              {patients.map((patient) => (
+              {visiblePatients.map((patient) => (
                 <tr key={patient.id}>
-                  <td>
-                    <span className="patient-table__code">{patient.code}</span>
+                  <td className="text-truncate" title={patient.code}>
+                    <span className="fw-semibold text-primary">{patient.code}</span>
                   </td>
                   <td>
-                    <div className="patient-table__identity">
-                      <span className="patient-table__avatar patient-table__avatar--primary">
+                    <div className="admin-management-entity">
+                      <span
+                        className="doctor-card__avatar"
+                        style={{ width: 38, height: 38, fontSize: '0.85rem' }}
+                      >
                         {initials(patient.fullName)}
                       </span>
-                      <strong>{patient.fullName}</strong>
+                      <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                        <strong className="text-truncate d-block" title={patient.fullName}>
+                          {patient.fullName}
+                        </strong>
+                        <small className="text-truncate d-block" title={patient.email || 'Chưa có email'}>
+                          {patient.email || 'Chưa có email'}
+                        </small>
+                      </div>
                     </div>
                   </td>
-                  <td>{dateText(patient.dateOfBirth)}</td>
-                  <td>{patient.gender === 'NU' ? 'Nữ' : patient.gender === 'NAM' ? 'Nam' : 'Khác'}</td>
-                  <td>{patient.phoneNumber}</td>
-                  <td>{patient.identityNumber || '—'}</td>
-                  <td>{patient.healthInsuranceNumber || '—'}</td>
-                  <td>{patient.address || '—'}</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
-                      type="button"
-                      onClick={() => void openRecord(patient)}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                        visibility
-                      </span>
-                      <span>Xem hồ sơ</span>
-                    </button>
+                  <td className="text-nowrap">{dateText(patient.dateOfBirth)}</td>
+                  <td className="text-nowrap">
+                    {patient.gender === 'NU' ? 'Nữ' : patient.gender === 'NAM' ? 'Nam' : 'Khác'}
+                  </td>
+                  <td className="text-nowrap">{patient.phoneNumber}</td>
+                  <td className="text-truncate" title={patient.identityNumber || '—'}>
+                    {patient.identityNumber || '—'}
+                  </td>
+                  <td className="text-truncate" title={patient.healthInsuranceNumber || '—'}>
+                    {patient.healthInsuranceNumber || '—'}
+                  </td>
+                  <td className="text-truncate" title={patient.address || '—'}>
+                    {patient.address || '—'}
+                  </td>
+                  <td className="text-end">
+                    <div className="admin-crud-actions justify-content-end flex-nowrap">
+                      <button
+                        className="btn btn-sm btn-primary text-nowrap"
+                        type="button"
+                        onClick={() => void openRecord(patient)}
+                      >
+                        <span className="material-symbols-outlined">visibility</span>
+                        Xem hồ sơ
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -158,11 +248,60 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
           </table>
           {loading && <div className="p-3 text-secondary">Đang tải...</div>}
         </div>
-        <footer className="patient-pagination">
-          <span>
-            Hiển thị <strong>{patients.length}</strong> bệnh nhân thuộc chuyên khoa
-          </span>
-        </footer>
+        {patients.length > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {patients.length} bệnh nhân
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang bệnh nhân">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <span aria-hidden="true">«</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === currentPage ? 'page' : undefined}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={currentPage >= totalPages}
+                    onClick={() =>
+                      setPage((current) => Math.min(totalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">»</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        )}
       </section>
 
       {record && (
@@ -171,7 +310,7 @@ export default function TrangHoSoBenhNhanTruongKhoa() {
           size="xl"
           onClose={() => setRecord(null)}
           footer={
-            <button className="btn btn-secondary" type="button" onClick={() => setRecord(null)}>
+            <button className="btn btn-primary" type="button" onClick={() => setRecord(null)}>
               Đóng
             </button>
           }

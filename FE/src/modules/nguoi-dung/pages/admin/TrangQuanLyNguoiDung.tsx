@@ -5,7 +5,8 @@ import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { useAuthStore } from '@/stores/auth.store';
-import { dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
+import { hasPermission } from '@/utils/permissions';
 
 import { useUsers } from '../../hooks/use-users';
 import type {
@@ -15,7 +16,7 @@ import type {
   UserStatus,
 } from '../../types/user.types';
 
-type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
+type ModalMode = 'create' | 'edit' | 'view' | 'delete' | 'lock' | null;
 
 const EMPTY_FORM: CreateUserPayload = {
   fullName: '',
@@ -52,7 +53,7 @@ function getInitials(fullName: string) {
 
 function formatDate(value: string | null) {
   return value
-    ? dinhDangNgayGio(value)
+    ? dinhDangNgay(value)
     : 'Chưa có';
 }
 
@@ -69,6 +70,7 @@ export default function TrangQuanLyNguoiDung() {
     reload,
     createUser,
     updateUser,
+    setUserLock,
     removeUser,
     uploadUserAvatar,
     removeUserAvatar,
@@ -77,6 +79,9 @@ export default function TrangQuanLyNguoiDung() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const setSession = useAuthStore((state) => state.setSession);
   const { showToast } = useAppToast();
+  const canCreate = hasPermission(currentUser, 'NGUOI_DUNG.CREATE');
+  const canUpdate = hasPermission(currentUser, 'NGUOI_DUNG.UPDATE');
+  const canDelete = hasPermission(currentUser, 'NGUOI_DUNG.DELETE');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -255,11 +260,27 @@ export default function TrangQuanLyNguoiDung() {
   };
 
   const handleDelete = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !canDelete) return;
     setIsSubmitting(true);
     try {
       const message = await removeUser(selectedUser.id);
       showToast(message);
+      setModalMode(null);
+      setSelectedUser(null);
+    } catch (requestError) {
+      showToast(getApiErrorMessage(requestError), 'danger');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleLock = async () => {
+    if (!selectedUser || selectedUser.id === currentUser?.id) return;
+    const unlock = selectedUser.status === 'BI_KHOA';
+    setIsSubmitting(true);
+    try {
+      await setUserLock(selectedUser.id, !unlock);
+      showToast(unlock ? 'Đã mở khóa tài khoản' : 'Đã khóa tài khoản');
       setModalMode(null);
       setSelectedUser(null);
     } catch (requestError) {
@@ -312,14 +333,16 @@ export default function TrangQuanLyNguoiDung() {
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          className="btn btn-primary d-flex align-items-center gap-2 ms-auto"
-          onClick={openCreateModal}
-        >
-          <span className="material-symbols-outlined">add</span>
-          Thêm người dùng
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            className="btn btn-primary d-flex align-items-center gap-2 ms-auto"
+            onClick={openCreateModal}
+          >
+            <span className="material-symbols-outlined">add</span>
+            Thêm người dùng
+          </button>
+        )}
       </div>
 
       {isLoading && (
@@ -350,15 +373,26 @@ export default function TrangQuanLyNguoiDung() {
             </div>
           </div>
           <div className="table-responsive">
-            <table className="table admin-management-table align-middle mb-0">
+            <table
+              className="table admin-management-table align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1250px', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '22%', minWidth: '190px' }} />
+                <col style={{ width: '21%', minWidth: '175px' }} />
+                <col style={{ width: '10%', minWidth: '100px' }} />
+                <col style={{ width: '13%', minWidth: '135px' }} />
+                <col style={{ width: '13%', minWidth: '130px' }} />
+                <col style={{ width: '21%', minWidth: '220px' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Người dùng</th>
-                  <th>Liên hệ</th>
-                  <th>Vai trò</th>
-                  <th>Trạng thái</th>
-                  <th>Ngày tạo</th>
-                  <th className="text-end">Hành động</th>
+                  <th style={{ width: '22%', minWidth: '190px' }}>Người dùng</th>
+                  <th style={{ width: '21%', minWidth: '175px' }}>Liên hệ</th>
+                  <th style={{ width: '10%', minWidth: '100px' }}>Vai trò</th>
+                  <th style={{ width: '13%', minWidth: '135px' }}>Trạng thái</th>
+                  <th style={{ width: '13%', minWidth: '130px' }}>Ngày tạo</th>
+                  <th className="text-end" style={{ width: '21%', minWidth: '220px' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -418,39 +452,57 @@ export default function TrangQuanLyNguoiDung() {
                       </span>
                     </td>
                     <td className="text-nowrap">{formatDate(user.createdAt)}</td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        className="btn btn-sm btn-icon border-0"
-                        title="Xem chi tiết"
-                        onClick={() => openUserModal('view', user)}
-                      >
-                        <span className="material-symbols-outlined text-secondary">
-                          visibility
-                        </span>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-icon border-0 ms-1"
-                        title="Sửa thông tin"
-                        onClick={() => openUserModal('edit', user)}
-                      >
-                        <span className="material-symbols-outlined text-secondary">edit</span>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-icon border-0 ms-1"
-                        title={
-                          user.id === currentUser?.id
-                            ? 'Không thể tự xóa tài khoản'
-                            : hasLinkedProfile(user)
-                              ? 'Tài khoản đang gắn hồ sơ nghiệp vụ'
-                              : 'Xóa người dùng'
-                        }
-                        disabled={
-                          user.id === currentUser?.id || hasLinkedProfile(user)
-                        }
-                        onClick={() => openUserModal('delete', user)}
-                      >
-                        <span className="material-symbols-outlined text-danger">delete</span>
-                      </button>
+                    <td>
+                      <div className="admin-crud-actions justify-content-end">
+                        <button
+                          className="btn btn-sm btn-primary"
+                          title="Chi tiết"
+                          aria-label={`Chi tiết ${user.fullName}`}
+                          onClick={() => openUserModal('view', user)}
+                        >
+                          <span className="material-symbols-outlined">visibility</span>
+                        </button>
+                        {canUpdate && (
+                          <button
+                            className="btn btn-sm btn-light"
+                            title="Sửa"
+                            aria-label={`Sửa ${user.fullName}`}
+                            onClick={() => openUserModal('edit', user)}
+                          >
+                            <span className="material-symbols-outlined">edit</span>
+                          </button>
+                        )}
+                        {canUpdate && user.status !== 'NGUNG_HOAT_DONG' && (
+                          <button
+                            type="button"
+                            className={`btn btn-sm ${user.status === 'BI_KHOA' ? 'btn-success' : 'btn-warning'}`}
+                            disabled={user.id === currentUser?.id}
+                            title={user.id === currentUser?.id ? 'Không thể tự khóa tài khoản' : user.status === 'BI_KHOA' ? 'Mở khóa' : 'Khóa'}
+                            aria-label={`${user.status === 'BI_KHOA' ? 'Mở khóa' : 'Khóa'} ${user.fullName}`}
+                            onClick={() => openUserModal('lock', user)}
+                          >
+                            <span className="material-symbols-outlined">{user.status === 'BI_KHOA' ? 'lock_open' : 'lock'}</span>
+                          </button>
+                        )}
+                        {canDelete && (
+                          <span title={user.hasBusinessData ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.' : user.id === currentUser?.id ? 'Không thể tự xóa tài khoản' : undefined}>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-danger text-white"
+                              aria-label={`Xóa ${user.fullName}`}
+                              title={user.id === currentUser?.id
+                                ? 'Không thể tự xóa tài khoản'
+                                : user.hasBusinessData
+                                  ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.'
+                                  : 'Xóa tài khoản'}
+                              disabled={user.id === currentUser?.id || user.hasBusinessData}
+                              onClick={() => openUserModal('delete', user)}
+                            >
+                              <span className="material-symbols-outlined">delete</span>
+                            </button>
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -813,32 +865,38 @@ export default function TrangQuanLyNguoiDung() {
         </AppModal>
       )}
 
-      {modalMode === 'delete' && selectedUser && (
+      {modalMode === 'delete' && selectedUser && canDelete && (
         <AppModal
-          title="Xác nhận xóa người dùng"
+          title="Xác nhận xóa tài khoản"
           onClose={closeModal}
           footer={
             <>
-              <button
-                className="btn btn-outline-secondary"
-                onClick={closeModal}
-                disabled={isSubmitting}
-              >
-                Hủy
-              </button>
-              <button
-                className="btn btn-danger"
-                onClick={() => void handleDelete()}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Đang xóa...' : 'Xóa người dùng'}
+              <button className="btn btn-outline-secondary" onClick={closeModal} disabled={isSubmitting}>Hủy</button>
+              <button className="btn btn-danger" onClick={() => void handleDelete()} disabled={isSubmitting}>
+                {isSubmitting ? 'Đang xóa...' : 'Xóa tài khoản'}
               </button>
             </>
           }
         >
-          Bạn có chắc muốn xóa tài khoản{' '}
-          <strong>{selectedUser.fullName}</strong>? Thao tác này không thể hoàn
-          tác.
+          Bạn có chắc muốn xóa tài khoản <strong>{selectedUser.fullName}</strong>? Thao tác này không thể hoàn tác.
+        </AppModal>
+      )}
+      {modalMode === 'lock' && selectedUser && (
+        <AppModal
+          title={selectedUser.status === 'BI_KHOA' ? 'Xác nhận mở khóa tài khoản' : 'Xác nhận khóa tài khoản'}
+          onClose={closeModal}
+          footer={
+            <>
+              <button className="btn btn-outline-secondary" onClick={closeModal} disabled={isSubmitting}>Hủy</button>
+              <button className="btn btn-primary" onClick={() => void handleToggleLock()} disabled={isSubmitting}>
+                {isSubmitting ? 'Đang lưu...' : selectedUser.status === 'BI_KHOA' ? 'Mở khóa' : 'Khóa tài khoản'}
+              </button>
+            </>
+          }
+        >
+          {selectedUser.status === 'BI_KHOA' ? 'Mở khóa' : 'Khóa'} tài khoản{' '}
+          <strong>{selectedUser.fullName}</strong>?
+          {selectedUser.status !== 'BI_KHOA' && ' Tài khoản sẽ không thể truy cập hệ thống cho đến khi được mở khóa.'}
         </AppModal>
       )}
     </div>

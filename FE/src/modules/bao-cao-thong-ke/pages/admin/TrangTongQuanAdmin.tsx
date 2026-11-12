@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import {
   ArcElement,
   BarElement,
@@ -18,6 +18,7 @@ import { dinhDangNgay, giaTriInputNgay } from '@/utils/dinh-dang-ngay';
 import { BaoCaoDateInput } from '../../components/BaoCaoDateInput';
 import { useAdminReport } from '../../hooks/use-admin-report';
 import type { ReportMetricItem } from '../../types/admin-report.types';
+import '@/components/ui/admin-crud.css';
 import '../../admin-reports.css';
 
 ChartJS.register(
@@ -41,6 +42,7 @@ const STATUS_LABELS: Record<string, string> = {
   DA_HOAN_TAT: 'Đã hoàn tất',
   DA_HUY: 'Đã hủy',
   KHONG_DEN: 'Không đến',
+  DA_TU_CHOI: 'Đã từ chối',
 };
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -218,24 +220,20 @@ export default function TrangTongQuanAdmin() {
   };
 
   return (
-    <main className="admin-dashboard-page">
-      <header className="admin-dashboard-heading">
-        <div className="admin-dashboard-heading__intro">
-          <p>Tổng quan vận hành</p>
-          <h1>Dashboard quản trị</h1>
-          <span>Theo dõi nhanh lịch hẹn, lượt khám, doanh thu và chất lượng phục vụ.</span>
+    <div className="admin-dashboard-page">
+      <div className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Tổng quan quản trị</p>
+          <h1>DASHBOARD QUẢN TRỊ</h1>
+          <p className="admin-management-description">Theo dõi nhanh lịch hẹn, lượt khám, doanh thu và chất lượng phục vụ.</p>
         </div>
         <div className="admin-dashboard-heading__actions">
-          <Link className="btn btn-outline-primary" to="/admin/bao-cao">
+          <Link className="btn btn-primary" to="/admin/bao-cao">
             <span className="material-symbols-outlined">analytics</span>
             Xem báo cáo chi tiết
           </Link>
-          <button type="button" className="btn btn-primary" onClick={() => void reload()} disabled={isLoading}>
-            <span className="material-symbols-outlined">refresh</span>
-            Làm mới
-          </button>
         </div>
-      </header>
+      </div>
 
       <section className="admin-dashboard-filter" aria-label="Bộ lọc dữ liệu Dashboard">
         <div>
@@ -347,6 +345,6 @@ export default function TrangTongQuanAdmin() {
           </div>
         </article>
       </section>
-    </main>
+    </div>
   );
 }

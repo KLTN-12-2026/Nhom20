@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useState,
@@ -9,9 +10,10 @@ import {
 import { useLocation } from 'react-router-dom';
 
 import AppModal from '@/components/ui/AppModal';
+import '@/components/ui/admin-crud.css';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { useAuthStore } from '@/stores/auth.store';
-import { isDepartmentHeadEmail } from '@/utils/department-head';
+import { hasPermission } from '@/utils/permissions';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 
 import { useMedicines } from '../../hooks/use-medicines';
@@ -34,6 +36,7 @@ type ModalMode =
 
 type MedicineForm = CreateMedicineDto;
 type StockInForm = StockInDto & { medicineId: number };
+const MEDICINES_PER_PAGE = 10;
 
 const EMPTY_FORM: MedicineForm = {
   name: '',
@@ -89,16 +92,32 @@ const getPageNumbers = (currentPage: number, totalPages: number) => {
 
 const getStockState = (medicine: Medicine) => {
   if (medicine.trangThai === 'NGUNG_HOAT_DONG') {
-    return { className: 'inactive', label: 'Ngừng kinh doanh' };
+    return {
+      className: 'inactive',
+      badgeClass: 'badge-status-neutral',
+      label: 'Ngừng kinh doanh',
+    };
   }
   if (medicine.soLuongTon === 0) {
-    return { className: 'out', label: 'Hết hàng' };
+    return {
+      className: 'out',
+      badgeClass: 'badge-status-locked',
+      label: 'Hết hàng',
+    };
   }
   if (medicine.soLuongTon <= medicine.mucTonToiThieu) {
-    return { className: 'low', label: 'Sắp hết hàng' };
+    return {
+      className: 'low',
+      badgeClass: 'badge-status-pending',
+      label: 'Sắp hết hàng',
+    };
   }
   return {
     className: medicine.trangThai === 'DANG_HOAT_DONG' ? 'active' : 'inactive',
+    badgeClass:
+      medicine.trangThai === 'DANG_HOAT_DONG'
+        ? 'badge-status-active'
+        : 'badge-status-neutral',
     label:
       medicine.trangThai === 'DANG_HOAT_DONG'
         ? 'Đang kinh doanh'
@@ -112,7 +131,7 @@ export default function TrangQuanLyKhoThuoc() {
   const isAdmin =
     location.pathname.startsWith('/admin') ||
     (user?.roles?.includes('ADMIN') && !user?.roles?.includes('PHARMACIST'));
-  const isDepartmentHead = isDepartmentHeadEmail(user?.email);
+  const isDepartmentHead = Boolean(user?.isPharmacyHead);
 
   const { showToast } = useAppToast();
   const [activeTab, setActiveTab] = useState<MedicineTab>('ALL');
@@ -122,7 +141,6 @@ export default function TrangQuanLyKhoThuoc() {
     'ALL',
   );
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
   const {
     medicines,
     medicineOptions,
@@ -143,7 +161,7 @@ export default function TrangQuanLyKhoThuoc() {
     refresh,
   } = useMedicines({
     page,
-    limit,
+    limit: MEDICINES_PER_PAGE,
     search: searchTerm.trim() || undefined,
     group: groupFilter !== 'ALL' ? groupFilter : undefined,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
@@ -306,48 +324,37 @@ export default function TrangQuanLyKhoThuoc() {
   };
 
   return (
-    <div className="medicine-inventory">
-      <header className="medicine-inventory__header">
+    <div className="medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading align-items-end">
         <div>
-          <div className="medicine-inventory__eyebrow">
-            <span />
-            Quản lý kho thuốc
-          </div>
-          <h1>Danh mục thuốc</h1>
-          <p>
-            Quản lý biệt dược, hoạt chất, giá bán và số lượng tồn kho của phòng
-            khám.
+          <p className="admin-management-eyebrow">
+            KIỂM SOÁT KHO DƯỢC
+          </p>
+          <h1>QUẢN LÝ KHO THUỐC</h1>
+          <p className="admin-management-description">
+            Quản lý thông tin thuốc, hoạt chất, giá bán và số lượng tồn kho.
           </p>
         </div>
-        <div className="medicine-inventory__header-actions">
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => void refresh()}
-            disabled={isLoading}
-          >
-            <span className="material-symbols-outlined">sync</span>
-            Tải lại dữ liệu
-          </button>
+        <div className="d-flex flex-wrap align-items-center gap-2">
           {!isAdmin && (
             <>
-              <button
+              {hasPermission(user, 'THUOC.UPDATE') && <button
                 type="button"
-                className="btn btn-outline-primary"
+                className="btn btn-outline-primary d-flex align-items-center gap-2"
                 onClick={() => openStockInModal()}
                 disabled={medicineOptions.length === 0}
               >
                 <span className="material-symbols-outlined">inventory</span>
                 Nhập kho
-              </button>
-              <button
+              </button>}
+              {hasPermission(user, 'THUOC.CREATE') && <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary d-flex align-items-center gap-2"
                 onClick={openCreateModal}
               >
                 <span className="material-symbols-outlined">add_circle</span>
                 Thêm thuốc mới
-              </button>
+              </button>}
             </>
           )}
         </div>
@@ -448,10 +455,6 @@ export default function TrangQuanLyKhoThuoc() {
               {label}
             </button>
           ))}
-          <span>
-            Hiển thị <strong>{displayedFrom}–{displayedTo}</strong> trong{' '}
-            <strong>{meta.total}</strong>
-          </span>
         </div>
 
         {error && (
@@ -470,7 +473,20 @@ export default function TrangQuanLyKhoThuoc() {
 
         {!error && (
           <div className="table-responsive">
-            <table className="table medicine-inventory__table mb-0">
+            <table
+              className="table medicine-inventory__table mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1100px', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '21%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '6%' }} />
+                <col style={{ width: '5%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '20%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Sản phẩm</th>
@@ -480,12 +496,12 @@ export default function TrangQuanLyKhoThuoc() {
                   <th className="text-center">Tồn kho</th>
                   <th>Hạn sử dụng</th>
                   <th>Trạng thái</th>
-                  <th className="text-end">Thao tác</th>
+                  <th className="text-end text-nowrap">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading &&
-                  Array.from({ length: Math.min(limit, 5) }).map((_, index) => (
+                  Array.from({ length: Math.min(MEDICINES_PER_PAGE, 5) }).map((_, index) => (
                     <tr className="medicine-inventory__skeleton" key={index}>
                       <td colSpan={8}>
                         <span />
@@ -513,8 +529,8 @@ export default function TrangQuanLyKhoThuoc() {
                     return (
                       <tr key={medicine.id}>
                         <td>
-                          <div className="medicine-inventory__product">
-                            <div className="medicine-inventory__image">
+                          <div className="medicine-inventory__product" style={{ minWidth: 0 }}>
+                            <div className="medicine-inventory__image flex-shrink-0">
                               {medicine.anhThuocUrl ? (
                                 <img
                                   src={medicine.anhThuocUrl}
@@ -535,48 +551,64 @@ export default function TrangQuanLyKhoThuoc() {
                                 medication
                               </span>
                             </div>
-                            <div>
-                              <strong>{medicine.tenThuoc}</strong>
-                              <small>Dạng: {medicine.donViTinh}</small>
+                            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                              <strong className="text-truncate d-block" title={medicine.tenThuoc}>
+                                {medicine.tenThuoc}
+                              </strong>
+                              <small className="text-truncate d-block">
+                                Dạng: {medicine.donViTinh}
+                              </small>
                             </div>
                           </div>
                         </td>
                         <td>
-                          <span className="medicine-inventory__code">
+                          <span
+                            className="medicine-inventory__code text-truncate d-inline-block"
+                            style={{ maxWidth: '100%' }}
+                            title={medicine.maThuoc}
+                          >
                             {medicine.maThuoc}
                           </span>
                         </td>
                         <td>
-                          <strong>{medicine.hoatChat || 'Chưa cập nhật'}</strong>
-                          <small className="d-block">
-                            Đơn vị: {medicine.donViTinh}
-                          </small>
+                          <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                            <strong
+                              className="text-truncate d-block"
+                              title={medicine.hoatChat || 'Chưa cập nhật'}
+                            >
+                              {medicine.hoatChat || 'Chưa cập nhật'}
+                            </strong>
+                            <small className="d-block text-truncate">
+                              Đơn vị: {medicine.donViTinh}
+                            </small>
+                          </div>
                         </td>
-                        <td className="fw-semibold">
+                        <td className="fw-semibold text-nowrap">
                           {formatCurrency(medicine.giaBan)}
                         </td>
                         <td className="text-center">
                           <strong
-                            className={`medicine-inventory__stock is-${stockState.className}`}
+                            className={`medicine-inventory__stock is-${stockState.className} text-nowrap`}
                           >
                             {medicine.soLuongTon}
                           </strong>
-                          <small className="d-block">
+                          <small className="d-block text-nowrap">
                             {medicine.donViTinh}
                           </small>
                         </td>
-                        <td>{formatDate(medicine.hanSuDung)}</td>
+                        <td className="text-nowrap">{formatDate(medicine.hanSuDung)}</td>
                         <td>
                           <span
-                            className={`medicine-inventory__status is-${stockState.className}`}
+                            className={`${stockState.badgeClass} text-nowrap`}
                           >
                             {stockState.label}
                           </span>
                         </td>
-                        <td>
-                          <div className="medicine-inventory__actions">
+                        <td className="text-end">
+                          <div className="admin-crud-actions justify-content-end flex-nowrap">
                             <button
                               type="button"
+                              className="btn btn-sm btn-primary text-nowrap"
                               title="Xem chi tiết"
                               aria-label={`Xem chi tiết ${medicine.tenThuoc}`}
                               onClick={() =>
@@ -586,11 +618,13 @@ export default function TrangQuanLyKhoThuoc() {
                               <span className="material-symbols-outlined">
                                 visibility
                               </span>
+                              Chi tiết
                             </button>
                             {!isAdmin && (
                               <>
-                                <button
+                                {hasPermission(user, 'THUOC.UPDATE') && <button
                                   type="button"
+                                  className="btn btn-sm btn-light text-nowrap"
                                   title="Chỉnh sửa"
                                   aria-label={`Chỉnh sửa ${medicine.tenThuoc}`}
                                   onClick={() =>
@@ -598,13 +632,14 @@ export default function TrangQuanLyKhoThuoc() {
                                   }
                                 >
                                   <span className="material-symbols-outlined">
-                                    edit_square
+                                    edit
                                   </span>
-                                </button>
-                                {isDepartmentHead && (
+                                  Sửa
+                                </button>}
+                                {isDepartmentHead && hasPermission(user, 'THUOC.DELETE') && (
                                   <button
                                     type="button"
-                                    className="is-danger"
+                                    className="btn btn-sm btn-danger text-nowrap"
                                     title="Xóa thuốc"
                                     aria-label={`Xóa ${medicine.tenThuoc}`}
                                     onClick={() =>
@@ -614,6 +649,7 @@ export default function TrangQuanLyKhoThuoc() {
                                     <span className="material-symbols-outlined">
                                       delete
                                     </span>
+                                    Xóa
                                   </button>
                                 )}
                               </>
@@ -628,58 +664,61 @@ export default function TrangQuanLyKhoThuoc() {
           </div>
         )}
 
-        <footer className="medicine-inventory__pagination">
-          <span>
-            Hiển thị {displayedFrom}–{displayedTo} trong {meta.total} thuốc
-          </span>
-          <div className="medicine-inventory__page-buttons">
-            <button
-              type="button"
-              aria-label="Trang trước"
-              disabled={meta.page <= 1 || isLoading}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-            >
-              <span className="material-symbols-outlined">chevron_left</span>
-            </button>
-            {pageNumbers.map((pageNumber, index) => (
-              <span className="d-flex align-items-center" key={pageNumber}>
-                {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
-                  <span className="medicine-inventory__ellipsis">…</span>
-                )}
-                <button
-                  type="button"
-                  className={pageNumber === meta.page ? 'active' : ''}
-                  disabled={isLoading}
-                  onClick={() => setPage(pageNumber)}
-                >
-                  {pageNumber}
-                </button>
-              </span>
-            ))}
-            <button
-              type="button"
-              aria-label="Trang sau"
-              disabled={meta.page >= meta.totalPages || isLoading}
-              onClick={() =>
-                setPage((current) => Math.min(meta.totalPages, current + 1))
-              }
-            >
-              <span className="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
-          <select
-            className="form-select"
-            aria-label="Số dòng mỗi trang"
-            value={limit}
-            onChange={(event) => {
-              setLimit(Number(event.target.value));
-              setPage(1);
-            }}
-          >
-            <option value={10}>10 dòng</option>
-            <option value={20}>20 dòng</option>
-          </select>
-        </footer>
+        {meta.total > 0 && (
+          <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+            <span className="text-secondary small">
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {meta.total} thuốc
+            </span>
+            <nav className="align-self-md-auto align-self-start" aria-label="Phân trang thuốc">
+              <ul className="pagination mb-0 flex-wrap">
+                <li className={`page-item ${meta.page <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang trước"
+                    disabled={meta.page <= 1 || isLoading}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+                {pageNumbers.map((pageNumber, index) => (
+                  <Fragment key={pageNumber}>
+                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                      <li className="page-item disabled" aria-hidden="true">
+                        <span className="page-link">…</span>
+                      </li>
+                    )}
+                    <li className={`page-item ${pageNumber === meta.page ? 'active' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        aria-current={pageNumber === meta.page ? 'page' : undefined}
+                        disabled={isLoading}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  </Fragment>
+                ))}
+                <li className={`page-item ${meta.page >= meta.totalPages ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    aria-label="Trang sau"
+                    disabled={meta.page >= meta.totalPages || isLoading}
+                    onClick={() =>
+                      setPage((current) => Math.min(meta.totalPages, current + 1))
+                    }
+                  >
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </footer>
+        )}
       </section>
 
       {['create', 'edit'].includes(modalMode ?? '') && (
@@ -925,15 +964,8 @@ export default function TrangQuanLyKhoThuoc() {
             </dl>
           </div>
           <div className="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" className="btn btn-light" onClick={closeModal}>
+            <button type="button" className="btn btn-primary" onClick={closeModal}>
               Đóng
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => openMedicineModal('edit', selectedMedicine)}
-            >
-              Chỉnh sửa
             </button>
           </div>
         </AppModal>

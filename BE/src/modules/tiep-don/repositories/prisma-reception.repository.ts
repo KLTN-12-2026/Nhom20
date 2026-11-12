@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   HinhThucKham,
   Prisma,
@@ -29,6 +29,35 @@ function countAll(item: { _count?: true | { _all?: number } }) {
 @Injectable()
 export class PrismaReceptionRepository implements ReceptionRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Chỉ lấy thông tin hành chính của bệnh nhân thuộc danh sách tiếp đón hiện tại.
+  findPatientAdministrativeInfo(id: number) {
+    return this.prisma.benhNhan.findFirst({
+      where: {
+        id,
+        luotKham: {
+          some: {
+            hoSoKham: { isNot: null },
+            hoaDon: { is: { trangThai: TrangThaiHoaDon.DA_THANH_TOAN } },
+          },
+        },
+      },
+      select: {
+        id: true,
+        maBenhNhan: true,
+        hoTen: true,
+        soDienThoai: true,
+        email: true,
+        ngaySinh: true,
+        gioiTinh: true,
+        diaChi: true,
+        soCanCuoc: true,
+        maTheBaoHiemYTe: true,
+        nguoiLienHeKhanCap: true,
+        soDienThoaiKhanCap: true,
+      },
+    });
+  }
 
   searchPatients(search: string) {
     return this.prisma.benhNhan.findMany({
@@ -240,6 +269,12 @@ export class PrismaReceptionRepository implements ReceptionRepository {
                 where: { soDienThoai: data.patient.phoneNumber },
                 orderBy: { id: 'asc' },
               });
+              // Không ghi đè hồ sơ có sẵn chỉ bằng quyền thêm bệnh nhân mới.
+              if (existing && !data.canUpdatePatient) {
+                throw new ForbiddenException(
+                  'Số điện thoại đã có hồ sơ. Hãy chọn bệnh nhân cũ hoặc xin quyền sửa bệnh nhân.',
+                );
+              }
               const patient = existing
                 ? await transaction.benhNhan.update({
                     where: { id: existing.id },

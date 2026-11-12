@@ -1,5 +1,4 @@
-import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
-import ReceptionistPageHeader from '@/modules/tiep-don/components/ReceptionistPageHeader';
+import { Fragment, useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import ReceptionistStatCard from '@/modules/tiep-don/components/ReceptionistStatCard';
 import { useRealtimeEvent } from '@/hooks/use-realtime-event';
 import { useAppToast } from '@/components/ui/use-app-toast';
@@ -7,7 +6,10 @@ import confetti from 'canvas-confetti';
 import { paymentApi } from '../../api/payment.api';
 import { dinhDangNgay, dinhDangNgayGio, giaTriInputNgay } from '@/utils/dinh-dang-ngay';
 import { inBillRawBT58mm, inBillSunmi58mm, khoiDongMayInSunmi, maHoaNoiDung, moCuaSoInBill58mm } from '@/utils/in-an';
+import '@/components/ui/admin-crud.css';
 import '@/modules/tiep-don/receptionist-workspace.css';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 type PaymentMethod = 'TIEN_MAT' | 'CHUYEN_KHOAN';
 type InvoiceStatus = 'Chưa thanh toán' | 'Thanh toán một phần' | 'Đã thanh toán' | 'Đã hủy';
@@ -29,6 +31,14 @@ const formatNumberWithDots = (val: string | number) => {
   if (!numStr) return '';
   return new Intl.NumberFormat('vi-VN').format(Number(numStr));
 };
+
+const INVOICES_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 const dateKey = (value: Date) => giaTriInputNgay(value);
 const displayDate = (key: string) => dinhDangNgay(key, '');
@@ -56,6 +66,8 @@ function toIsoDate(value: string) {
 }
 
 export default function TrangQuanLyThanhToan() {
+  const user = useAuthStore((state) => state.user);
+  const canUpdate = hasPermission(user, 'HOA_DON.UPDATE');
   const { showToast } = useAppToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
@@ -125,6 +137,7 @@ export default function TrangQuanLyThanhToan() {
   }, []);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Tất cả');
+  const [page, setPage] = useState(1);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [method, setMethod] = useState<PaymentMethod>('TIEN_MAT');
   const [amount, setAmount] = useState('');
@@ -162,6 +175,40 @@ export default function TrangQuanLyThanhToan() {
     const matchesSearch = `${invoice.code} ${invoice.patient} ${invoice.phone}`.toLowerCase().includes(search.toLowerCase());
     return matchesSearch && (filter === 'Tất cả' || invoice.status === filter);
   }).sort((a, b) => (a.paid < a.total ? 0 : 1) - (b.paid < b.total ? 0 : 1)), [filter, targetInvoices, search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, filter, selectedDate]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / INVOICES_PER_PAGE),
+  );
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    filtered.length === 0 ? 0 : (currentPage - 1) * INVOICES_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * INVOICES_PER_PAGE,
+    filtered.length,
+  );
+  const visibleInvoices = useMemo(
+    () =>
+      filtered.slice(
+        (currentPage - 1) * INVOICES_PER_PAGE,
+        currentPage * INVOICES_PER_PAGE,
+      ),
+    [currentPage, filtered],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
   const selected = invoices.find((invoice) => invoice.code === selectedCode);
   const remaining = selected ? selected.total - selected.paid : 0;
   const paymentAmount = Number(amount || 0);
@@ -314,9 +361,18 @@ export default function TrangQuanLyThanhToan() {
     }
   };
 
-  return <div className="reception-page">
-    <ReceptionistPageHeader eyebrow="Tài chính trong ca" title="Quản lý thanh toán" description="Thu tiền, theo dõi công nợ và lịch sử thanh toán của từng hóa đơn." />
-    <div className="reception-stats">
+  return (
+    <div className="reception-page medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Tài chính trong ca</p>
+          <h1>QUẢN LÝ THANH TOÁN</h1>
+          <p className="admin-management-description">
+            Thu tiền, theo dõi công nợ và lịch sử thanh toán của từng hóa đơn.
+          </p>
+        </div>
+      </header>
+      <div className="reception-stats">
       <ReceptionistStatCard icon="account_balance_wallet" label={selectedDate ? `Doanh thu ${displayDate(selectedDate)}` : 'Tổng doanh thu'} value={money(revenue)} tone="green" />
       <ReceptionistStatCard icon="pending_actions" label="Còn phải thu" value={money(receivable)} tone="amber" />
       <ReceptionistStatCard icon="receipt_long" label="Tổng hóa đơn" value={targetInvoices.length} />
@@ -418,7 +474,7 @@ export default function TrangQuanLyThanhToan() {
               </small>
               <button
                 type="button"
-                className="btn btn-sm btn-outline-primary"
+                className="btn btn-sm btn-primary"
                 onClick={() => {
                   setSelectedDate('');
                   setDateInput('');
@@ -434,21 +490,34 @@ export default function TrangQuanLyThanhToan() {
         <>
           {/* Giao diện Desktop / Màn hình rộng (Bảng 8 cột) */}
           <div className="d-none d-md-block table-responsive">
-            <table className="table reception-table">
+            <table
+              className="table reception-table align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1150px', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '13%', minWidth: '130px' }} />
+                <col style={{ width: '17%', minWidth: '170px' }} />
+                <col style={{ width: '12%', minWidth: '125px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '10%', minWidth: '105px' }} />
+                <col style={{ width: '12%', minWidth: '130px' }} />
+                <col style={{ width: '16%', minWidth: '190px' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Mã hóa đơn</th>
-                  <th>Bệnh nhân</th>
-                  <th>Ngày lập</th>
-                  <th>Tổng tiền</th>
-                  <th>Đã thu</th>
-                  <th>Còn lại</th>
-                  <th>Trạng thái</th>
-                  <th className="text-end">Thao tác</th>
+                  <th style={{ width: '13%', minWidth: '130px' }}>Mã hóa đơn</th>
+                  <th style={{ width: '17%', minWidth: '170px' }}>Bệnh nhân</th>
+                  <th style={{ width: '12%', minWidth: '125px' }}>Ngày lập</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Tổng tiền</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Đã thu</th>
+                  <th style={{ width: '10%', minWidth: '105px' }}>Còn lại</th>
+                  <th style={{ width: '12%', minWidth: '130px' }}>Trạng thái</th>
+                  <th className="text-end" style={{ width: '16%', minWidth: '190px' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((invoice) => (
+                {visibleInvoices.map((invoice) => (
                   <tr key={invoice.code}>
                     <td className="fw-bold text-primary">{invoice.code}</td>
                     <td>
@@ -473,17 +542,26 @@ export default function TrangQuanLyThanhToan() {
                       </span>
                     </td>
                     <td className="text-end">
-                      <div className="d-inline-flex gap-1">
-                        <button className="btn btn-sm btn-outline-primary" onClick={() => openInvoice(invoice)}>
-                          {invoice.status === 'Đã thanh toán' ? 'Xem chi tiết' : 'Thu tiền'}
+                      <div className="d-inline-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                        <button
+                          className="btn btn-sm btn-primary text-white text-nowrap d-inline-flex align-items-center gap-1"
+                          style={{ minHeight: '32px', height: '32px', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
+                          onClick={() => openInvoice(invoice)}
+                        >
+                          <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>
+                            {invoice.status === 'Đã thanh toán' || !canUpdate ? 'visibility' : 'payments'}
+                          </span>
+                          <span className="text-nowrap">{invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}</span>
                         </button>
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-dark"
+                          className="btn btn-sm btn-dark text-white text-nowrap d-inline-flex align-items-center gap-1"
+                          style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                           title="In bill 58mm (máy Sunmi POS)"
                           onClick={() => inHoaDon58mm(invoice)}
                         >
-                          <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>receipt_long</span>
+                          <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>print</span>
+                          <span className="text-nowrap">In</span>
                         </button>
                       </div>
                     </td>
@@ -495,7 +573,7 @@ export default function TrangQuanLyThanhToan() {
 
           {/* Giao diện Mobile & Máy in cầm tay Sunmi V2 (Dạng thẻ) */}
           <div className="d-md-none reception-invoice-cards">
-            {filtered.map((invoice) => {
+            {visibleInvoices.map((invoice) => {
               const invRemaining = invoice.total - invoice.paid;
               return (
                 <div key={invoice.code} className="reception-invoice-card">
@@ -536,28 +614,83 @@ export default function TrangQuanLyThanhToan() {
                   <div className="reception-invoice-card__actions">
                     <button
                       type="button"
-                      className="btn btn-outline-primary"
+                      className="btn btn-primary text-white"
                       onClick={() => openInvoice(invoice)}
                     >
                       <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                        {invoice.status === 'Đã thanh toán' ? 'visibility' : 'payments'}
+                        {invoice.status === 'Đã thanh toán' || !canUpdate ? 'visibility' : 'payments'}
                       </span>
-                      {invoice.status === 'Đã thanh toán' ? 'Chi tiết' : 'Thu tiền'}
+                      {invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}
                     </button>
                     <button
                       type="button"
-                      className="btn btn-outline-dark"
+                      className="btn btn-dark text-white"
                       onClick={() => inHoaDon58mm(invoice)}
                       title="In bill 58mm máy Sunmi V2"
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>receipt_long</span>
-                      In 58mm
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>print</span>
+                      In
                     </button>
                   </div>
                 </div>
               );
             })}
           </div>
+
+          {filtered.length > 0 && (
+            <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+              <span className="text-secondary small">
+                Hiển thị {displayedFrom}–{displayedTo} trong tổng số {filtered.length} hóa đơn
+              </span>
+              <nav className="align-self-md-auto align-self-start" aria-label="Phân trang hóa đơn">
+                <ul className="pagination mb-0 flex-wrap">
+                  <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang trước"
+                      disabled={currentPage <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      <span aria-hidden="true">«</span>
+                    </button>
+                  </li>
+                  {pageNumbers.map((pageNumber, index) => (
+                    <Fragment key={pageNumber}>
+                      {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                        <li className="page-item disabled" aria-hidden="true">
+                          <span className="page-link">…</span>
+                        </li>
+                      )}
+                      <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                        <button
+                          type="button"
+                          className="page-link"
+                          aria-current={pageNumber === currentPage ? 'page' : undefined}
+                          onClick={() => setPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
+                  <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang sau"
+                      disabled={currentPage >= totalPages}
+                      onClick={() =>
+                        setPage((current) => Math.min(totalPages, current + 1))
+                      }
+                    >
+                      <span aria-hidden="true">»</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </footer>
+          )}
         </>
       )}
     </section>
@@ -572,7 +705,7 @@ export default function TrangQuanLyThanhToan() {
           </div>
         </div>
         <div className="col-md-7">
-          {remaining > 0 ? (
+          {remaining > 0 && canUpdate ? (
             <>
               <label className="form-label fw-semibold">Phương thức cho lần thu mới</label>
               <div className="d-flex flex-wrap gap-2 mb-3">
@@ -639,6 +772,8 @@ export default function TrangQuanLyThanhToan() {
                 </div>
               )}
             </>
+          ) : remaining > 0 ? (
+            <div className="text-secondary">Bạn không có quyền thu tiền.</div>
           ) : (
             <div className="reception-payment-readonly">
               <span className="material-symbols-outlined">verified</span>
@@ -675,10 +810,10 @@ export default function TrangQuanLyThanhToan() {
           onClick={() => inHoaDon58mm()}
           title="In hoá đơn 58mm"
         >
-          <span className="material-symbols-outlined me-1" style={{ fontSize: 18 }}>receipt_long</span>
+          <span className="material-symbols-outlined me-1" style={{ fontSize: 18 }}>print</span>
           In bill 58mm
         </button>
-        {remaining > 0 && (
+        {remaining > 0 && canUpdate && (
           method === 'TIEN_MAT' ? (
             <button
               type="button"
@@ -691,7 +826,7 @@ export default function TrangQuanLyThanhToan() {
           ) : (
             <button
               type="button"
-              className="btn btn-outline-success"
+              className="btn btn-success"
               disabled={paymentAmount <= 0 || paymentAmount > remaining}
               onClick={recordPayment}
             >
@@ -703,5 +838,6 @@ export default function TrangQuanLyThanhToan() {
     </div>
   </div>
 </div>}
-  </div>;
+    </div>
+  );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
 import '@/components/ui/admin-crud.css';
@@ -6,6 +6,8 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { useSpecialties } from '@/modules/chuyen-khoa/hooks/use-specialties';
 import { userApi } from '@/modules/nguoi-dung/api/user.api';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 import { useDoctors } from '../../hooks/use-doctors';
 import type {
@@ -15,6 +17,14 @@ import type {
 } from '../../types/doctor.types';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
+
+const DOCTORS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 const EMPTY_FORM: CreateDoctorPayload = {
   code: '',
@@ -40,6 +50,7 @@ function getInitials(fullName: string) {
 }
 
 export default function TrangQuanLyBacSi() {
+  const user = useAuthStore((state) => state.user);
   const {
     doctors,
     isLoading,
@@ -52,6 +63,7 @@ export default function TrangQuanLyBacSi() {
   const { specialties } = useSpecialties();
   const { showToast } = useAppToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [form, setForm] = useState<CreateDoctorPayload>(EMPTY_FORM);
@@ -70,6 +82,32 @@ export default function TrangQuanLyBacSi() {
         doctor.email.toLocaleLowerCase('vi').includes(search),
     );
   }, [doctors, searchTerm]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredDoctors.length / DOCTORS_PER_PAGE),
+  );
+  const currentPage = Math.min(page, totalPages);
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    filteredDoctors.length === 0 ? 0 : (currentPage - 1) * DOCTORS_PER_PAGE + 1;
+  const displayedTo = Math.min(
+    currentPage * DOCTORS_PER_PAGE,
+    filteredDoctors.length,
+  );
+  const visibleDoctors = useMemo(() => {
+    const startIndex = (currentPage - 1) * DOCTORS_PER_PAGE;
+    return filteredDoctors.slice(startIndex, startIndex + DOCTORS_PER_PAGE);
+  }, [currentPage, filteredDoctors]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const closeModal = () => {
     if (isSubmitting) return;
@@ -149,6 +187,7 @@ export default function TrangQuanLyBacSi() {
         }
       }
       showToast(message);
+      setPage(1);
       setModalMode(null);
       setSelectedDoctor(null);
       setAvatarFile(null);
@@ -165,6 +204,7 @@ export default function TrangQuanLyBacSi() {
     try {
       const message = await removeDoctor(selectedDoctor.id);
       showToast(message);
+      setPage(1);
       setModalMode(null);
       setSelectedDoctor(null);
     } catch (requestError) {
@@ -207,11 +247,14 @@ export default function TrangQuanLyBacSi() {
             className="form-control"
             type="search"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(event) => {
+              setSearchTerm(event.target.value);
+              setPage(1);
+            }}
             placeholder="Tìm theo tên, mã, email hoặc chuyên khoa..."
           />
         </div>
-        <button
+        {hasPermission(user, 'BAC_SI.CREATE') && <button
           type="button"
           className="btn btn-primary d-flex align-items-center gap-2"
           onClick={openCreateModal}
@@ -224,7 +267,7 @@ export default function TrangQuanLyBacSi() {
         >
           <span className="material-symbols-outlined">add</span>
           Thêm bác sĩ
-        </button>
+        </button>}
       </div>
 
       {isLoading && (
@@ -251,73 +294,203 @@ export default function TrangQuanLyBacSi() {
           <div className="admin-management-table-heading">
             <div>
               <h2>Danh sách bác sĩ</h2>
-              <p>{filteredDoctors.length} kết quả phù hợp</p>
+              <p>Hiển thị {filteredDoctors.length} kết quả phù hợp</p>
             </div>
           </div>
           <div className="table-responsive">
-            <table className="table admin-management-table align-middle mb-0">
+            <table
+              className="table admin-management-table admin-management-table--doctors align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1140px', width: '100%' }}
+            >
+              <colgroup>
+                <col style={{ width: '23%', minWidth: '240px' }} />
+                <col style={{ width: '15%', minWidth: '150px' }} />
+                <col style={{ width: '14%', minWidth: '140px' }} />
+                <col style={{ width: '12%', minWidth: '125px' }} />
+                <col style={{ width: '13%', minWidth: '135px' }} />
+                <col style={{ width: '23%', minWidth: '240px' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Bác sĩ</th>
-                  <th>Chuyên khoa</th>
-                  <th>Chuyên môn</th>
-                  <th>Hiệu suất</th>
-                  <th>Trạng thái</th>
-                  <th className="text-end">Thao tác</th>
+                  <th style={{ width: '23%', minWidth: '240px' }}>Bác sĩ</th>
+                  <th style={{ width: '15%', minWidth: '150px' }}>Chuyên khoa</th>
+                  <th style={{ width: '14%', minWidth: '140px' }}>Chuyên môn</th>
+                  <th style={{ width: '12%', minWidth: '125px' }}>Hiệu suất</th>
+                  <th style={{ width: '13%', minWidth: '135px' }}>Trạng thái</th>
+                  <th
+                    className="text-end text-nowrap"
+                    style={{ width: '23%', minWidth: '240px' }}
+                  >
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredDoctors.map((doctor) => (
+                {visibleDoctors.map((doctor) => (
                   <tr key={doctor.id}>
                     <td>
                       <div className="admin-management-entity">
                         {doctor.avatarUrl ? (
-                          <img src={doctor.avatarUrl} alt={doctor.fullName} className="admin-management-avatar" />
+                          <img
+                            src={doctor.avatarUrl}
+                            alt={doctor.fullName}
+                            className="admin-management-avatar"
+                          />
                         ) : (
-                          <span className="doctor-card__avatar">{getInitials(doctor.fullName)}</span>
+                          <span
+                            className="doctor-card__avatar flex-shrink-0"
+                            style={{ width: 42, height: 42, fontSize: '0.9rem' }}
+                          >
+                            {getInitials(doctor.fullName)}
+                          </span>
                         )}
-                        <div>
-                          <strong>BS. {doctor.fullName}</strong>
-                          <small>{doctor.code} · {doctor.email}</small>
+                        <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                          <strong
+                            className="text-truncate d-block"
+                            title={`BS. ${doctor.fullName}`}
+                          >
+                            BS. {doctor.fullName}
+                          </strong>
+                          <small
+                            className="text-truncate d-block"
+                            title={`${doctor.code} · ${doctor.email}`}
+                          >
+                            {doctor.code} · {doctor.email}
+                          </small>
                         </div>
                       </div>
                     </td>
-                    <td>{doctor.specialty.name}</td>
-                    <td>
-                      <strong className="d-block">{doctor.academicDegree || 'Bác sĩ'}</strong>
-                      <small className="text-secondary">{doctor.experienceYears} năm kinh nghiệm</small>
+                    <td className="text-truncate" title={doctor.specialty.name}>
+                      {doctor.specialty.name}
                     </td>
                     <td>
-                      <strong className="d-block">{doctor.examinationCount} lượt khám</strong>
-                      <small className="text-secondary">★ {doctor.averageRating ?? 'Chưa có'} {doctor.ratingCount > 0 && `(${doctor.ratingCount})`}</small>
+                      <strong
+                        className="d-block text-truncate"
+                        title={doctor.academicDegree || 'Bác sĩ'}
+                      >
+                        {doctor.academicDegree || 'Bác sĩ'}
+                      </strong>
+                      <small className="text-secondary d-block text-nowrap">
+                        {doctor.experienceYears} năm kinh nghiệm
+                      </small>
                     </td>
                     <td>
-                      <span className={doctor.status === 'DANG_HOAT_DONG' ? 'badge-status-active' : 'badge-status-locked'}>
-                        {doctor.status === 'DANG_HOAT_DONG' ? 'Hoạt động' : 'Ngừng hoạt động'}
+                      <strong className="d-block text-nowrap">
+                        {doctor.examinationCount} lượt khám
+                      </strong>
+                      <small className="text-secondary d-block text-nowrap">
+                        ★ {doctor.averageRating ?? 'Chưa có'}{' '}
+                        {doctor.ratingCount > 0 && `(${doctor.ratingCount})`}
+                      </small>
+                    </td>
+                    <td>
+                      <span
+                        className={`${
+                          doctor.status === 'DANG_HOAT_DONG'
+                            ? 'badge-status-active'
+                            : 'badge-status-locked'
+                        } text-nowrap`}
+                      >
+                        {doctor.status === 'DANG_HOAT_DONG'
+                          ? 'Hoạt động'
+                          : 'Ngừng hoạt động'}
                       </span>
                     </td>
-                    <td>
-                      <div className="admin-crud-actions justify-content-end">
-                        <button className="btn btn-sm btn-outline-primary" onClick={() => openDoctorModal('view', doctor)}>
-                          <span className="material-symbols-outlined">visibility</span>Chi tiết
+                    <td className="text-end">
+                      <div className="admin-crud-actions justify-content-end flex-nowrap">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary text-nowrap"
+                          onClick={() => openDoctorModal('view', doctor)}
+                        >
+                          <span className="material-symbols-outlined">visibility</span>
+                          Chi tiết
                         </button>
-                        <button className="btn btn-sm btn-light" onClick={() => openDoctorModal('edit', doctor)}>
-                          <span className="material-symbols-outlined">edit</span>Sửa
-                        </button>
-                        <button className="btn btn-sm btn-light text-danger" onClick={() => openDoctorModal('delete', doctor)}>
-                          <span className="material-symbols-outlined">delete</span>Xóa
-                        </button>
+                        {hasPermission(user, 'BAC_SI.UPDATE') && <button
+                          type="button"
+                          className="btn btn-sm btn-light text-nowrap"
+                          onClick={() => openDoctorModal('edit', doctor)}
+                        >
+                          <span className="material-symbols-outlined">edit</span>
+                          Sửa
+                        </button>}
+                        {hasPermission(user, 'BAC_SI.DELETE') && <span title={doctor.hasBusinessData ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.' : undefined}><button
+                          type="button"
+                          className="btn btn-sm btn-danger text-white text-nowrap"
+                          disabled={doctor.hasBusinessData}
+                          title={doctor.hasBusinessData ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.' : 'Xóa bác sĩ'}
+                          onClick={() => openDoctorModal('delete', doctor)}
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                          Xóa
+                        </button></span>}
                       </div>
                     </td>
                   </tr>
                 ))}
+                {filteredDoctors.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-5 text-center text-secondary">
+                      {doctors.length === 0 ? 'Chưa có bác sĩ nào.' : 'Không tìm thấy bác sĩ phù hợp.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-          {filteredDoctors.length === 0 && (
-            <div className="admin-crud-empty py-5">
-              {doctors.length === 0 ? 'Chưa có bác sĩ nào.' : 'Không tìm thấy bác sĩ phù hợp.'}
-            </div>
+          {filteredDoctors.length > 0 && (
+            <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+              <span className="text-secondary small">
+                Hiển thị {displayedFrom}–{displayedTo} trong tổng số {filteredDoctors.length} bác sĩ
+              </span>
+              <nav className="align-self-md-auto align-self-start" aria-label="Phân trang bác sĩ">
+                <ul className="pagination mb-0 flex-wrap">
+                  <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang trước"
+                      disabled={currentPage <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </button>
+                  </li>
+                  {pageNumbers.map((pageNumber, index) => (
+                    <Fragment key={pageNumber}>
+                      {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                        <li className="page-item disabled" aria-hidden="true">
+                          <span className="page-link">…</span>
+                        </li>
+                      )}
+                      <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                        <button
+                          type="button"
+                          className="page-link"
+                          aria-current={pageNumber === currentPage ? 'page' : undefined}
+                          onClick={() => setPage(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
+                  <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-label="Trang sau"
+                      disabled={currentPage >= totalPages}
+                      onClick={() =>
+                        setPage((current) => Math.min(totalPages, current + 1))
+                      }
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </footer>
           )}
         </div>
       )}

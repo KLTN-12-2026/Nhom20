@@ -5,6 +5,8 @@ export interface AuthenticatedUser {
   phoneNumber: string | null;
   avatarUrl: string | null;
   roles: string[];
+  permissions: string[];
+  isPharmacyHead?: boolean;
 }
 
 export interface JwtPayload {

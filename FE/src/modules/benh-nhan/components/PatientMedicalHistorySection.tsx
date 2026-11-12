@@ -116,14 +116,14 @@ export function PatientMedicalHistorySection() {
         {!isLoading && error && <div className="text-center py-4"><p className="text-danger">{error}</p><button className="btn btn-outline-primary" onClick={() => void reload()}>Thử lại</button></div>}
         {!isLoading && !error && visits.length === 0 && <div className="text-center text-secondary py-4">Chưa có lịch sử khám.</div>}
         {!isLoading && !error && visits.length > 0 && (
-          <div className="table-responsive">
+          <div>
             <table className="table align-middle patient-history__table">
               <thead>
                 <tr>
-                  <th style={{ width: '28%' }}>Lượt khám</th>
-                  <th style={{ width: '28%' }}>Chẩn đoán & Đơn thuốc</th>
-                  <th style={{ width: '18%' }}>Thanh toán</th>
-                  <th style={{ width: '20%' }}>Đánh giá</th>
+                  <th style={{ width: '42%' }}>Lượt khám</th>
+                  <th style={{ width: '24%' }}>Chẩn đoán & Đơn thuốc</th>
+                  <th style={{ width: '15%' }}>Thanh toán</th>
+                  <th style={{ width: '12%' }}>Đánh giá</th>
                   <th style={{ width: '6%' }} className="text-end" aria-label="Thao tác" />
                 </tr>
               </thead>
@@ -142,7 +142,7 @@ export function PatientMedicalHistorySection() {
                       <div className="mt-1">
                         {visit.prescription ? (
                           <button
-                            className="btn btn-sm btn-outline-primary py-0 px-2 text-nowrap"
+                            className="btn btn-sm btn-primary py-0 px-2 text-nowrap text-white"
                             onClick={() => setSelectedVisit(visit)}
                             title="Xem đơn thuốc"
                           >
@@ -195,12 +195,13 @@ export function PatientMedicalHistorySection() {
                     </td>
                     <td className="text-end">
                       <button
-                        className="btn btn-sm btn-outline-secondary"
+                        className="btn btn-sm btn-primary text-white d-inline-flex align-items-center gap-1 text-nowrap"
                         onClick={() => setSelectedVisit(visit)}
                         aria-label="Xem chi tiết lượt khám"
                         title="Xem chi tiết"
                       >
                         <span className="material-symbols-outlined fs-6 align-middle">visibility</span>
+                        <span>Chi tiết</span>
                       </button>
                     </td>
                   </tr>
@@ -245,7 +246,7 @@ export function PatientMedicalHistorySection() {
           </div>
           <div className="patient-history-modal__footer">
             {selectedVisit.prescription && (
-              <button className="btn btn-outline-primary" onClick={() => printPrescription(selectedVisit)}>
+              <button className="btn btn-primary text-white" onClick={() => printPrescription(selectedVisit)}>
                 In đơn thuốc
               </button>
             )}

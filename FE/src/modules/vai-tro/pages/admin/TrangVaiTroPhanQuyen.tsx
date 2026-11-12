@@ -4,6 +4,8 @@ import AppModal from '@/components/ui/AppModal';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import '@/components/ui/admin-crud.css';
 import { getApiErrorMessage } from '@/services/axios-client';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 
 import { useRoles } from '../../hooks/use-roles';
 import type {
@@ -21,6 +23,7 @@ const ACTIONS: Array<{ key: PermissionAction; label: string }> = [
 ];
 
 export default function TrangVaiTroPhanQuyen() {
+  const user = useAuthStore((state) => state.user);
   const {
     roles,
     modules,
@@ -36,6 +39,7 @@ export default function TrangVaiTroPhanQuyen() {
   const [permissionDrafts, setPermissionDrafts] = useState<
     Record<number, number[]>
   >({});
+  const [touchedRoles, setTouchedRoles] = useState<Record<number, boolean>>({});
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [targetRole, setTargetRole] = useState<ManagedRole | null>(null);
   const [form, setForm] = useState({ name: '', description: '' });
@@ -46,6 +50,7 @@ export default function TrangVaiTroPhanQuyen() {
     setPermissionDrafts(
       Object.fromEntries(roles.map((role) => [role.id, role.permissionIds])),
     );
+    setTouchedRoles({});
     setSelectedRoleId((current) =>
       current && roles.some((role) => role.id === current)
         ? current
@@ -60,6 +65,7 @@ export default function TrangVaiTroPhanQuyen() {
   const selectedPermissionIds = selectedRole
     ? (permissionDrafts[selectedRole.id] ?? selectedRole.permissionIds)
     : [];
+  const isAdministrator = selectedRole?.code === 'ADMIN';
 
   const closeModal = () => {
     if (isSubmitting) return;
@@ -84,6 +90,7 @@ export default function TrangVaiTroPhanQuyen() {
 
   const togglePermission = (permissionId: number) => {
     if (!selectedRole) return;
+    setTouchedRoles((current) => ({ ...current, [selectedRole.id]: true }));
     setPermissionDrafts((current) => {
       const currentIds = current[selectedRole.id] ?? selectedRole.permissionIds;
       return {
@@ -101,8 +108,18 @@ export default function TrangVaiTroPhanQuyen() {
     try {
       const response = await savePermissions(
         selectedRole.id,
-        selectedPermissionIds,
+        isAdministrator
+          ? selectedPermissionIds.filter((id) => !modules.some((module) =>
+              module.code === 'THUOC' && module.permissions.some((permission) =>
+                permission.id === id && permission.action !== 'view',
+              ),
+            ))
+          : selectedPermissionIds,
       );
+      if (response.sessionRefreshFailed) {
+        showToast('Đã lưu quyền. Vui lòng tải lại trang để cập nhật phiên đăng nhập.', 'warning');
+        return;
+      }
       showToast(response.message);
     } catch (requestError) {
       showToast(
@@ -165,9 +182,15 @@ export default function TrangVaiTroPhanQuyen() {
 
   return (
     <div className="admin-crud-page">
-      <div className="admin-crud-heading">
-        <h1>VAI TRÒ VÀ PHÂN QUYỀN</h1>
-      </div>
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Quản trị truy cập</p>
+          <h1>VAI TRÒ VÀ PHÂN QUYỀN</h1>
+          <p className="admin-management-description">
+            Quản lý vai trò người dùng, thiết lập quyền hạn và kiểm soát phạm vi truy cập các chức năng trong hệ thống.
+          </p>
+        </div>
+      </header>
 
       {error && (
         <div className="alert alert-danger" role="alert">
@@ -209,35 +232,35 @@ export default function TrangVaiTroPhanQuyen() {
                         visibility
                       </span>
                     </button>
-                    <button
+                    {hasPermission(user, 'VAI_TRO.UPDATE') && <button
                       type="button"
                       className="btn btn-sm p-1"
                       title="Sửa vai trò"
                       onClick={() => openRoleModal('edit', role)}
                     >
                       <span className="material-symbols-outlined">edit</span>
-                    </button>
-                    <button
+                    </button>}
+                    {hasPermission(user, 'VAI_TRO.DELETE') && <button
                       type="button"
                       className="btn btn-sm p-1 text-danger"
                       title="Xóa vai trò"
                       onClick={() => openRoleModal('delete', role)}
                     >
                       <span className="material-symbols-outlined">delete</span>
-                    </button>
+                    </button>}
                   </div>
                 </div>
               ))
             )}
           </div>
-          <button
+          {hasPermission(user, 'VAI_TRO.CREATE') && <button
             type="button"
-            className="btn btn-outline-primary mt-auto d-flex align-items-center justify-content-center gap-2"
+            className="btn btn-primary mt-auto d-flex align-items-center justify-content-center gap-2"
             onClick={openCreateModal}
           >
             <span className="material-symbols-outlined">add</span>
             Thêm vai trò mới
-          </button>
+          </button>}
         </aside>
 
         <section className="permission-matrix">
@@ -256,12 +279,23 @@ export default function TrangVaiTroPhanQuyen() {
                   type="button"
                   className="btn btn-primary d-flex align-items-center gap-2"
                   onClick={() => void handleSavePermissions()}
-                  disabled={isSaving || !hasUnsavedChanges}
+                  disabled={isSaving || (!hasUnsavedChanges && !touchedRoles[selectedRole.id])}
                 >
                   <span className="material-symbols-outlined">save</span>
                   {isSaving ? 'Đang lưu...' : 'Lưu cấu hình'}
                 </button>
               </div>
+
+              <p className="small text-secondary mb-3">
+                Tích chọn hoặc bỏ chọn, sau đó bấm Lưu cấu hình. Di chuột lên ô
+                để xem thông tin về quyền và thao tác tương ứng.
+              </p>
+              {isAdministrator && (
+                <p className="small text-secondary mb-3">
+                  Quyền xem và cập nhật phân quyền của quản trị viên luôn được
+                  giữ để không tự khóa màn hình này.
+                </p>
+              )}
 
               <div className="table-responsive rounded border">
                 <table className="table align-middle mb-0">
@@ -290,25 +324,37 @@ export default function TrangVaiTroPhanQuyen() {
                           const permission = module.permissions.find(
                             (item) => item.action === action.key,
                           );
+                          const isProtectedAdminPermission = Boolean(
+                            isAdministrator && permission &&
+                              ['VAI_TRO.VIEW', 'VAI_TRO.UPDATE'].includes(permission.code),
+                          );
+                          const isPharmacistOnly = Boolean(isAdministrator && module.code === 'THUOC' && action.key !== 'view');
                           return (
-                            <td className="text-center" key={action.key}>
+                            <td className="text-center" key={action.key} title={isPharmacistOnly ? 'Quyền Thêm/Sửa/Xóa thuốc thuộc thẩm quyền chuyên môn của Dược sĩ' : undefined}>
                               <input
                                 type="checkbox"
                                 className="form-check-input permission-switch"
-                                role="switch"
-                                checked={
-                                  permission
-                                    ? selectedPermissionIds.includes(
-                                        permission.id,
-                                      )
-                                    : false
+                                checked={Boolean(
+                                  !isPharmacistOnly && permission &&
+                                    (isProtectedAdminPermission ||
+                                      selectedPermissionIds.includes(permission.id)),
+                                )}
+                                disabled={!permission || isProtectedAdminPermission || isPharmacistOnly || isSaving}
+                                onChange={() => {
+                                  if (permission) togglePermission(permission.id);
+                                }}
+                                aria-label={`${module.name} - ${action.label}${!permission?.implemented ? ' - Chưa hỗ trợ' : ''}`}
+                                title={
+                                  isPharmacistOnly
+                                    ? 'Quyền Thêm/Sửa/Xóa thuốc thuộc thẩm quyền chuyên môn của Dược sĩ'
+                                    : !permission
+                                    ? 'Thao tác này chưa được hỗ trợ'
+                                    : isProtectedAdminPermission
+                                      ? 'Quyền này được giữ để tránh tự khóa phân quyền'
+                                      : !permission.implemented
+                                        ? 'Quyền được lưu nhưng thao tác chưa được hỗ trợ'
+                                        : `${action.label} ${module.name}`
                                 }
-                                disabled={!permission || isSaving}
-                                onChange={() =>
-                                  permission &&
-                                  togglePermission(permission.id)
-                                }
-                                aria-label={`${module.name} - ${action.label}`}
                               />
                             </td>
                           );

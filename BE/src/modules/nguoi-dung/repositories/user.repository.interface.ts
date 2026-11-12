@@ -7,7 +7,7 @@ import type {
 
 export const managedUserInclude = {
   nguoiDungVaiTro: { include: { vaiTro: true } },
-  bacSi: { select: { id: true } },
+  bacSi: { select: { id: true, _count: { select: { luotKham: true, lichHen: true, danhGia: true } } } },
   nhanVien: { select: { id: true } },
   benhNhan: {
     select: {
@@ -17,6 +17,14 @@ export const managedUserInclude = {
       soDienThoaiKhanCap: true,
     },
   },
+  _count: { select: {
+    phieuHangChoDaGoi: true, phieuHangChoXacNhan: true, donThuocDaCap: true,
+    donThuocDaTuChoi: true, giaoDichKho: true, hoaDonDaTao: true,
+    thanhToanDaThu: true, lichHenDaXacNhan: true, duLieuYTeDaGhi: true,
+    tienSuBenhDaGhi: true, canhBaoDaXuLy: true, phanCongCa: true,
+    caDaSapXep: true, caDaDuyet: true, donViDangQuanLy: true,
+    caDaBanGiao: true, caDaNhanBanGiao: true, goiYThuocDaDuyet: true, phienChat: true,
+  } },
 } satisfies Prisma.NguoiDungInclude;
 
 export type ManagedUser = Prisma.NguoiDungGetPayload<{

@@ -1,16 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { doctorApi } from '@/modules/bac-si/api/doctor.api';
 import type { Doctor } from '@/modules/bac-si/types/doctor.types';
-import ReceptionistPageHeader from '@/modules/tiep-don/components/ReceptionistPageHeader';
 import ReceptionistStatCard from '@/modules/tiep-don/components/ReceptionistStatCard';
 import type { ReceptionTicketData } from '@/modules/tiep-don/types/reception-ticket.types';
 import { getApiErrorMessage } from '@/services/axios-client';
 import { dinhDangNgay, dinhDangNgayGio } from '@/utils/dinh-dang-ngay';
+import { useAuthStore } from '@/stores/auth.store';
+import { hasPermission } from '@/utils/permissions';
 import { useAppointments } from '../../hooks/use-appointments';
 import { APPOINTMENT_SOURCE_LABELS, type Appointment, type AppointmentStatus } from '../../types/appointment.types';
+import '@/components/ui/admin-crud.css';
+import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/tiep-don/receptionist-workspace.css';
+
+const APPOINTMENTS_PER_PAGE = 10;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((first, second) => first - second);
+}
 
 const FILTER_STATUS_OPTIONS: Array<{ value: AppointmentStatus; label: string }> = [
   { value: 'CHO_XAC_NHAN', label: 'Chờ xác nhận' },
@@ -63,6 +74,8 @@ function toIsoDate(value: string) {
 }
 
 export default function TrangLichHenThuNgan() {
+  const user = useAuthStore((state) => state.user);
+  const canUpdate = hasPermission(user, 'LICH_HEN.UPDATE');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { showToast } = useAppToast();
@@ -80,9 +93,18 @@ export default function TrangLichHenThuNgan() {
   const [cancelAction, setCancelAction] = useState<'DA_TU_CHOI' | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
-  const query = useMemo(() => ({ search: search.trim() || undefined, status: status || undefined, date: date || undefined, page, limit: 5 }), [date, page, search, status]);
+  const query = useMemo(() => ({ search: search.trim() || undefined, status: status || undefined, date: date || undefined, page, limit: APPOINTMENTS_PER_PAGE }), [date, page, search, status]);
   const { appointments, stats, total, totalPages, isLoading, error, reload, updateAppointment, checkInAppointment } = useAppointments(query);
   const selected = appointments.find((item) => item.id === selectedId) ?? null;
+
+  const currentPage = Math.min(page, Math.max(1, totalPages));
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, Math.max(1, totalPages)),
+    [currentPage, totalPages],
+  );
+  const displayedFrom =
+    total === 0 ? 0 : (currentPage - 1) * APPOINTMENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(currentPage * APPOINTMENTS_PER_PAGE, total);
 
   useEffect(() => {
     setSelectedDoctorId(selected?.doctor?.id ?? '');
@@ -200,8 +222,17 @@ export default function TrangLichHenThuNgan() {
     void navigate(`/thu-ngan/tiep-don/phieu/${appointment.ticket.queueNumber}`, { state: ticket });
   };
 
-  return <div className="reception-page">
-    <ReceptionistPageHeader eyebrow="Điều phối lịch khám" title="Quản lý lịch hẹn" description="Nhận lịch khách đặt tại nhà, xác nhận và cấp phiếu khi bệnh nhân đến phòng khám." actions={<Link className="btn btn-primary" to="/thu-ngan/tiep-don"><span className="material-symbols-outlined me-2">person_add</span>Tiếp đón trực tiếp</Link>} />
+  return (
+    <div className="reception-page medicine-inventory admin-crud-page">
+      <header className="admin-crud-heading">
+        <div>
+          <p className="admin-management-eyebrow">Điều phối lịch khám</p>
+          <h1>QUẢN LÝ LỊCH HẸN</h1>
+          <p className="admin-management-description">
+            Nhận lịch khách đặt tại nhà, xác nhận và cấp phiếu khi bệnh nhân đến phòng khám.
+          </p>
+        </div>
+      </header>
     <div className="reception-stats">
       <ReceptionistStatCard icon="calendar_month" label="Tổng lịch theo bộ lọc" value={total} />
       <ReceptionistStatCard icon="pending_actions" label="Chờ xác nhận hôm nay" value={stats.pending} tone="amber" />
@@ -252,45 +283,96 @@ export default function TrangLichHenThuNgan() {
         </div>
       </div>
       {error && <div className="reception-empty"><p>{error}</p><button className="btn btn-outline-primary" onClick={() => void reload()}>Thử lại</button></div>}
-      {!error && <div className="table-responsive"><table className="table reception-table"><thead><tr><th>Mã lịch</th><th>Bệnh nhân</th><th>Chuyên khoa</th><th>Bác sĩ</th><th>Thời gian</th><th>Trạng thái</th><th className="text-end">Hành động</th></tr></thead><tbody>
+      {!error && (
+        <div className="table-responsive">
+          <table
+            className="table reception-table align-middle mb-0"
+            style={{ tableLayout: 'fixed', width: '100%' }}
+          >
+            <colgroup>
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '18%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '24%' }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th style={{ width: '12%' }}>Mã lịch</th>
+                <th style={{ width: '18%' }}>Bệnh nhân</th>
+                <th style={{ width: '12%' }}>Chuyên khoa</th>
+                <th style={{ width: '13%' }}>Bác sĩ</th>
+                <th style={{ width: '10%' }}>Thời gian</th>
+                <th style={{ width: '11%' }}>Trạng thái</th>
+                <th
+                  className="text-end text-nowrap"
+                  style={{ width: '24%' }}
+                >
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody>
         {appointments.map((appointment) => (
           <tr key={appointment.id}>
-            <td className="fw-bold text-primary">{appointment.code}</td>
-            <td>
-              <strong className="d-block">{appointment.patient.fullName}</strong>
-              <small className="text-secondary">{appointment.patient.phoneNumber} · {APPOINTMENT_SOURCE_LABELS[appointment.source]}</small>
+            <td className="fw-bold text-primary text-truncate" title={appointment.code}>
+              {appointment.code}
             </td>
-            <td>{appointment.specialty.name}</td>
-            <td>{appointment.doctor?.fullName ?? 'Chưa phân công'}</td>
             <td>
+              <strong className="d-block text-truncate" title={appointment.patient.fullName}>
+                {appointment.patient.fullName}
+              </strong>
+              <small
+                className="text-secondary text-truncate d-block"
+                title={`${appointment.patient.phoneNumber} · ${APPOINTMENT_SOURCE_LABELS[appointment.source]}`}
+              >
+                {appointment.patient.phoneNumber} · {APPOINTMENT_SOURCE_LABELS[appointment.source]}
+              </small>
+            </td>
+            <td className="text-truncate" title={appointment.specialty.name}>
+              {appointment.specialty.name}
+            </td>
+            <td
+              className="text-truncate"
+              title={appointment.doctor?.fullName ?? 'Chưa phân công'}
+            >
+              {appointment.doctor?.fullName ?? 'Chưa phân công'}
+            </td>
+            <td className="text-nowrap">
               <strong>{appointment.startTime}</strong>
               <small className="d-block text-secondary">{formatDate(appointment.appointmentDate)}</small>
             </td>
             <td>
-              <span className={`reception-badge reception-badge--${STATUS_TONES[appointment.status]}`}>
+              <span className={`reception-badge reception-badge--${STATUS_TONES[appointment.status]} text-nowrap`}>
                 {STATUS_LABELS[appointment.status]}
               </span>
             </td>
             <td className="text-end">
-              <div className="reception-row-actions">
+              <div className="reception-row-actions justify-content-end flex-nowrap">
                 <button
-                  className="btn btn-sm btn-light border"
+                  className="btn btn-sm btn-primary text-white border text-nowrap d-inline-flex align-items-center gap-1"
+                  style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                   title="Xem chi tiết"
                   onClick={() => openAppointment(appointment)}
                 >
-                  <span className="material-symbols-outlined">visibility</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>visibility</span>
+                  <span className="text-nowrap">Chi tiết</span>
                 </button>
-                {appointment.status === 'CHO_XAC_NHAN' && (
+                {canUpdate && appointment.status === 'CHO_XAC_NHAN' && (
                   <>
                     <button
-                      className="btn btn-sm btn-danger reception-action-btn"
+                      className="btn btn-sm btn-danger text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Từ chối lịch hẹn"
                       onClick={() => openRejectModal(appointment)}
                     >
                       Từ chối
                     </button>
                     <button
-                      className="btn btn-sm btn-primary reception-action-btn"
+                      className="btn btn-sm btn-primary text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Xác nhận lịch hẹn"
                       onClick={() => openAppointment(appointment)}
                     >
@@ -298,17 +380,19 @@ export default function TrangLichHenThuNgan() {
                     </button>
                   </>
                 )}
-                {appointment.status === 'DA_XAC_NHAN' && (
+                {canUpdate && appointment.status === 'DA_XAC_NHAN' && (
                   <>
                     <button
-                      className="btn btn-sm btn-danger reception-action-btn"
+                      className="btn btn-sm btn-danger text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Từ chối lịch hẹn"
                       onClick={() => openRejectModal(appointment)}
                     >
                       Từ chối
                     </button>
                     <button
-                      className="btn btn-sm btn-primary reception-action-btn"
+                      className="btn btn-sm btn-primary text-nowrap"
+                      style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                       title="Cấp phiếu tiếp đón"
                       onClick={() => openAppointment(appointment)}
                     >
@@ -318,46 +402,74 @@ export default function TrangLichHenThuNgan() {
                 )}
                 {appointment.ticket && (
                   <button
-                    className="btn btn-sm btn-outline-dark"
+                    className="btn btn-sm btn-dark text-nowrap d-inline-flex align-items-center gap-1"
+                    style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
                     title="In phiếu tiếp đón"
                     onClick={() => printTicket(appointment)}
                   >
-                    <span className="material-symbols-outlined">print</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>print</span>
+                    <span className="text-nowrap">In</span>
                   </button>
                 )}
               </div>
             </td>
           </tr>
         ))}
-        {!isLoading && appointments.length === 0 && <tr><td colSpan={7} className="text-center py-5 text-secondary">Chưa có lịch hẹn phù hợp.</td></tr>}{isLoading && <tr><td colSpan={7} className="text-center py-5 text-secondary">Đang tải lịch hẹn...</td></tr>}
-      </tbody></table></div>}
-      <div className="reception-pagination">
-        <small className="text-secondary">Trang {page}/{totalPages} · {total} lịch hẹn</small>
-        <div className="btn-group" aria-label="Phân trang lịch hẹn">
-          <button type="button" className="btn btn-outline-primary" disabled={page <= 1 || isLoading} onClick={() => changePage(page - 1)} aria-label="Trang trước"><span className="material-symbols-outlined">chevron_left</span></button>
-          {(() => {
-            let start = Math.max(1, page - 2);
-            let end = Math.min(totalPages, page + 2);
-            if (end - start < 4) {
-              if (start === 1) end = Math.min(totalPages, 5);
-              else if (end === totalPages) start = Math.max(1, totalPages - 4);
-            }
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i).map((pageNumber) => (
-              <button
-                className={`btn ${pageNumber === page ? 'btn-primary' : 'btn-outline-primary'}`}
-                key={pageNumber}
-                type="button"
-                disabled={isLoading && pageNumber !== page}
-                onClick={() => changePage(pageNumber)}
-                aria-current={pageNumber === page ? 'page' : undefined}
-              >
-                {pageNumber}
-              </button>
-            ));
-          })()}
-          <button type="button" className="btn btn-outline-primary" disabled={page >= totalPages || isLoading} onClick={() => changePage(page + 1)} aria-label="Trang sau"><span className="material-symbols-outlined">chevron_right</span></button>
-        </div>
-      </div>
+        {appointments.length === 0 && <tr><td colSpan={7} className="text-center py-5 text-secondary">{isLoading ? 'Đang tải lịch hẹn...' : 'Chưa có lịch hẹn phù hợp.'}</td></tr>}
+      </tbody></table></div>
+      )}
+      {total > 0 && (
+        <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
+          <span className="text-secondary small">
+            Hiển thị {displayedFrom}–{displayedTo} trong tổng số {total} lịch hẹn
+          </span>
+          <nav className="align-self-md-auto align-self-start" aria-label="Phân trang lịch hẹn">
+            <ul className="pagination mb-0 flex-wrap">
+              <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                <button
+                  type="button"
+                  className="page-link"
+                  aria-label="Trang trước"
+                  disabled={currentPage <= 1}
+                  onClick={() => changePage(currentPage - 1)}
+                >
+                  <span aria-hidden="true">«</span>
+                </button>
+              </li>
+              {pageNumbers.map((pageNumber, index) => (
+                <Fragment key={pageNumber}>
+                  {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && (
+                    <li className="page-item disabled" aria-hidden="true">
+                      <span className="page-link">…</span>
+                    </li>
+                  )}
+                  <li className={`page-item ${pageNumber === currentPage ? 'active' : ''}`}>
+                    <button
+                      type="button"
+                      className="page-link"
+                      aria-current={pageNumber === currentPage ? 'page' : undefined}
+                      onClick={() => changePage(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  </li>
+                </Fragment>
+              ))}
+              <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                <button
+                  type="button"
+                  className="page-link"
+                  aria-label="Trang sau"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => changePage(currentPage + 1)}
+                >
+                  <span aria-hidden="true">»</span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </footer>
+      )}
     </section>
     {selected && (
       <div className="modal d-block reception-modal" role="dialog" aria-modal="true">
@@ -395,7 +507,7 @@ export default function TrangLichHenThuNgan() {
                 </dd>
               </dl>
 
-              {!cancelAction && (selected.status === 'CHO_XAC_NHAN' || selected.status === 'DA_XAC_NHAN') && (
+              {canUpdate && !cancelAction && (selected.status === 'CHO_XAC_NHAN' || selected.status === 'DA_XAC_NHAN') && (
                 <div className="mt-3">
                   <label className="form-label fw-semibold" htmlFor="appointment-doctor">
                     Bác sĩ tiếp nhận * <small className="text-secondary fw-normal">(chỉ hiển thị bác sĩ đang làm ngày {formatDate(selected.appointmentDate)})</small>
@@ -423,10 +535,10 @@ export default function TrangLichHenThuNgan() {
                 </div>
               )}
 
-              {!cancelAction && selected.status === 'CHO_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'CHO_XAC_NHAN' && (
                 <div className="doctor-note mt-3">Xác nhận lịch trước. Chỉ cấp phiếu khi bệnh nhân đã có mặt tại phòng khám.</div>
               )}
-              {!cancelAction && selected.status === 'DA_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'DA_XAC_NHAN' && (
                 <div className="doctor-note mt-3">Bệnh nhân đã được xác nhận. Kiểm tra bệnh nhân có mặt rồi cấp phiếu.</div>
               )}
               {!cancelAction && selected.ticket && (
@@ -458,7 +570,7 @@ export default function TrangLichHenThuNgan() {
             <div className="modal-footer">
               <button className="btn btn-outline-secondary" onClick={closeAppointment}>Đóng</button>
 
-              {!cancelAction && selected.status === 'CHO_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'CHO_XAC_NHAN' && (
                 <button
                   className="btn btn-primary"
                   disabled={isSubmitting || !selectedDoctorId || isLoadingDoctors}
@@ -468,7 +580,7 @@ export default function TrangLichHenThuNgan() {
                 </button>
               )}
 
-              {!cancelAction && selected.status === 'DA_XAC_NHAN' && (
+              {canUpdate && !cancelAction && selected.status === 'DA_XAC_NHAN' && (
                 <button
                   className="btn btn-primary"
                   disabled={isSubmitting || !selectedDoctorId || isLoadingDoctors}
@@ -479,7 +591,7 @@ export default function TrangLichHenThuNgan() {
               )}
 
               {!cancelAction && selected.ticket && (
-                <button className="btn btn-outline-dark" onClick={() => printTicket(selected)}>
+                <button className="btn btn-dark" onClick={() => printTicket(selected)}>
                   <span className="material-symbols-outlined me-1">print</span>Mở trang in phiếu
                 </button>
               )}
@@ -488,7 +600,7 @@ export default function TrangLichHenThuNgan() {
                 <button className="btn btn-outline-secondary" onClick={() => setCancelAction(null)}>Quay lại</button>
               )}
 
-              {cancelAction && (
+              {canUpdate && cancelAction && (
                 <button
                   className="btn btn-danger"
                   disabled={isSubmitting || !cancelReason.trim()}
@@ -502,5 +614,6 @@ export default function TrangLichHenThuNgan() {
         </div>
       </div>
     )}
-  </div>;
+    </div>
+  );
 }

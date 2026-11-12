@@ -165,10 +165,11 @@
 }
 
 .patient-history__table th { background: var(--sc-surface-container-low); font-size: .74rem; text-transform: uppercase; white-space: nowrap; }
-.patient-history__table td { min-width: 110px; }
-.patient-history__table td:last-child, .patient-history__table th:last-child { min-width: 48px; }
+.patient-history__table td { min-width: 60px; }
+.patient-history__table td:first-child { min-width: 140px; }
+.patient-history__table td:last-child, .patient-history__table th:last-child { min-width: 0; width: 1%; white-space: nowrap; }
 .patient-history__table small { font-size: .75rem; }
-.patient-history__review-cell { min-width: 110px; }
+.patient-history__review-cell { min-width: 80px; }
 .patient-history-modal { align-items: center; display: grid; inset: 0; justify-items: center; padding: 16px; position: fixed; z-index: 2000; }
 .patient-history-modal__backdrop { background: rgba(16, 30, 52, .52); border: 0; cursor: default; inset: 0; position: absolute; width: 100%; }
 .patient-history-modal__dialog { justify-self: center; max-height: calc(100dvh - 32px); min-width: 0; position: relative; width: min(720px, calc(100vw - 32px)); z-index: 1; }
