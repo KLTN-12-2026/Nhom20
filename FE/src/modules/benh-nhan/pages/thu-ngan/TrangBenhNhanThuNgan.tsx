@@ -104,7 +104,7 @@ export default function TrangBenhNhanThuNgan() {
           <p className="admin-management-eyebrow">Hệ thống dữ liệu</p>
           <h1>QUẢN LÝ BỆNH NHÂN</h1>
           <p className="admin-management-description mb-0">
-            Tra cứu hồ sơ bệnh nhân trực tiếp từ cơ sở dữ liệu.
+            Tra cứu thông tin hành chính, thẻ BHYT và lịch sử các lượt khám bệnh tại quầy tiếp đón.
           </p>
         </div>
         {hasPermission(user, 'TIEP_DON.CREATE') && hasPermission(user, 'BENH_NHAN.CREATE') && (
