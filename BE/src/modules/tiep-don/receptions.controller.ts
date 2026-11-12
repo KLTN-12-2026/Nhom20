@@ -46,6 +46,15 @@ export class ReceptionsController {
     return this.receptionsService.searchAllPatients(search, currentUser);
   }
 
+  // API hành chính riêng cho thu ngân; không cấp quyền xem bệnh án.
+  @Get('patients/:id/administrative')
+  @Roles('RECEPTIONIST', 'TIEP_DON_THU_NGAN')
+  @Permissions('BENH_NHAN.VIEW')
+  @ApiOkResponse()
+  findPatientAdministrativeInfo(@Param('id', ParseIntPipe) id: number) {
+    return this.receptionsService.findPatientAdministrativeInfo(id);
+  }
+
   @Get('patients/:id')
   @Roles('ADMIN', 'DOCTOR')
   @PermissionsByRole({ ADMIN: 'BENH_NHAN.VIEW', DOCTOR: 'BENH_AN.VIEW' })

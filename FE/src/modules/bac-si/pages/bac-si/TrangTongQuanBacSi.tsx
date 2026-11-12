@@ -36,9 +36,7 @@ export default function TrangTongQuanBacSi() {
     error,
     reload,
   } = useDoctorAppointments(query);
-  const checkedIn = appointments.filter(
-    (appointment) => appointment.status === 'DA_CHECK_IN',
-  ).length;
+  const statValue = (value: number) => (isLoading ? '…' : error ? '—' : value);
 
   const effectiveTotalPages = Math.max(1, totalPages);
   const currentPage = Math.min(page, effectiveTotalPages);
@@ -78,7 +76,7 @@ export default function TrangTongQuanBacSi() {
               <span className="material-symbols-outlined">calendar_today</span>
             </div>
             <div>
-              <div className="doctor-stat__value">{stats.total}</div>
+              <div className="doctor-stat__value">{statValue(stats.total)}</div>
               <div className="doctor-stat__label">Lịch khám hôm nay</div>
             </div>
           </div>
@@ -89,7 +87,7 @@ export default function TrangTongQuanBacSi() {
               <span className="material-symbols-outlined">person_check</span>
             </div>
             <div>
-              <div className="doctor-stat__value">{checkedIn}</div>
+              <div className="doctor-stat__value">{statValue(stats.checkedIn)}</div>
               <div className="doctor-stat__label">Đã check-in</div>
             </div>
           </div>
@@ -100,7 +98,7 @@ export default function TrangTongQuanBacSi() {
               <span className="material-symbols-outlined">schedule</span>
             </div>
             <div>
-              <div className="doctor-stat__value">{stats.confirmed}</div>
+              <div className="doctor-stat__value">{statValue(stats.confirmed)}</div>
               <div className="doctor-stat__label">Đã xác nhận</div>
             </div>
           </div>
@@ -111,7 +109,7 @@ export default function TrangTongQuanBacSi() {
               <span className="material-symbols-outlined">pending_actions</span>
             </div>
             <div>
-              <div className="doctor-stat__value">{stats.pending}</div>
+              <div className="doctor-stat__value">{statValue(stats.pending)}</div>
               <div className="doctor-stat__label">Chờ lễ tân xử lý</div>
             </div>
           </div>
@@ -124,7 +122,7 @@ export default function TrangTongQuanBacSi() {
             <span className="material-symbols-outlined text-primary">
               patient_list
             </span>
-            Lịch khám gần nhất
+            Lịch khám hôm nay
           </h2>
           <Link
             className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 text-white"
