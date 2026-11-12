@@ -30,6 +30,35 @@ function countAll(item: { _count?: true | { _all?: number } }) {
 export class PrismaReceptionRepository implements ReceptionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Chỉ lấy thông tin hành chính của bệnh nhân thuộc danh sách tiếp đón hiện tại.
+  findPatientAdministrativeInfo(id: number) {
+    return this.prisma.benhNhan.findFirst({
+      where: {
+        id,
+        luotKham: {
+          some: {
+            hoSoKham: { isNot: null },
+            hoaDon: { is: { trangThai: TrangThaiHoaDon.DA_THANH_TOAN } },
+          },
+        },
+      },
+      select: {
+        id: true,
+        maBenhNhan: true,
+        hoTen: true,
+        soDienThoai: true,
+        email: true,
+        ngaySinh: true,
+        gioiTinh: true,
+        diaChi: true,
+        soCanCuoc: true,
+        maTheBaoHiemYTe: true,
+        nguoiLienHeKhanCap: true,
+        soDienThoaiKhanCap: true,
+      },
+    });
+  }
+
   searchPatients(search: string) {
     return this.prisma.benhNhan.findMany({
       where: search

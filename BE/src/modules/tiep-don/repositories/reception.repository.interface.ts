@@ -109,6 +109,20 @@ export interface ReceptionDashboardData {
 }
 
 export interface ReceptionRepository {
+  findPatientAdministrativeInfo(id: number): Promise<{
+    id: number;
+    maBenhNhan: string;
+    hoTen: string;
+    soDienThoai: string;
+    email: string | null;
+    ngaySinh: Date | null;
+    gioiTinh: GioiTinh | null;
+    diaChi: string | null;
+    soCanCuoc: string | null;
+    maTheBaoHiemYTe: string | null;
+    nguoiLienHeKhanCap: string | null;
+    soDienThoaiKhanCap: string | null;
+  } | null>;
   searchPatients(search: string): Promise<
     Array<{
       id: number;

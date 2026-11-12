@@ -7,6 +7,7 @@ import { useAppToast } from '@/components/ui/use-app-toast';
 import { dinhDangNgay } from '@/utils/dinh-dang-ngay';
 import { useAuthStore } from '@/stores/auth.store';
 import { hasPermission } from '@/utils/permissions';
+import { usePatientAdministration } from '../../hooks/use-patient-administration';
 import '@/modules/tiep-don/receptionist-workspace.css';
 
 interface Patient {
@@ -22,23 +23,13 @@ interface Patient {
   healthInsuranceNumber?: string | null;
 }
 
-type PatientRecord = Patient & {
-  visits: Array<{
-    id: number;
-    date: string;
-    specialty: string;
-    doctor: string | null;
-    reason: string;
-    examination: { diagnosis: string | null; conclusion: string | null; notes: string | null } | null;
-    prescription: {
-      status: string;
-      refusal: { reason: string; refusedAt: string | null; pharmacist: string | null } | null;
-      items: Array<{ medicine: string; quantity: number; dosage: string; frequency: string }>;
-    } | null;
-  }>;
-};
-
 const PATIENTS_PER_PAGE = 10;
+
+const GENDER_BADGE_MAP: Record<string, { label: string; className: string }> = {
+  NAM: { label: 'Nam', className: 'text-primary bg-primary-subtle' },
+  NU: { label: 'Nữ', className: 'text-danger bg-danger-subtle' },
+  KHAC: { label: 'Khác', className: 'text-secondary bg-secondary-subtle' },
+};
 
 function getPageNumbers(currentPage: number, totalPages: number) {
   return [...new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])]
@@ -49,9 +40,11 @@ function getPageNumbers(currentPage: number, totalPages: number) {
 export default function TrangBenhNhanThuNgan() {
   const { showToast } = useAppToast();
   const user = useAuthStore((state) => state.user);
+  const canViewPatient = hasPermission(user, 'BENH_NHAN.VIEW');
   const [search, setSearch] = useState('');
+  const [genderFilter, setGenderFilter] = useState<'' | 'NAM' | 'NU' | 'KHAC'>('');
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [record, setRecord] = useState<PatientRecord | null>(null);
+  const { record, loadingId, openRecord, closeRecord } = usePatientAdministration();
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -75,31 +68,27 @@ export default function TrangBenhNhanThuNgan() {
     return () => window.clearTimeout(timer);
   }, [search, showToast]);
 
-  const openRecord = async (patient: Patient) => {
-    try {
-      const response = await axiosClient.get<{ data: PatientRecord }>(`/receptions/patients/${patient.id}`);
-      setRecord(response.data.data);
-    } catch (err) {
-      showToast(getApiErrorMessage(err, 'Không thể tải hồ sơ bệnh nhân'), 'danger');
-    }
-  };
+  const filteredPatients = useMemo(() => {
+    if (!genderFilter) return patients;
+    return patients.filter((patient) => patient.gender === genderFilter);
+  }, [genderFilter, patients]);
 
-  const totalPages = Math.max(1, Math.ceil(patients.length / PATIENTS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(filteredPatients.length / PATIENTS_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
   const pageNumbers = useMemo(
     () => getPageNumbers(currentPage, totalPages),
     [currentPage, totalPages],
   );
   const displayedFrom =
-    patients.length === 0 ? 0 : (currentPage - 1) * PATIENTS_PER_PAGE + 1;
-  const displayedTo = Math.min(currentPage * PATIENTS_PER_PAGE, patients.length);
+    filteredPatients.length === 0 ? 0 : (currentPage - 1) * PATIENTS_PER_PAGE + 1;
+  const displayedTo = Math.min(currentPage * PATIENTS_PER_PAGE, filteredPatients.length);
   const paginatedPatients = useMemo(
     () =>
-      patients.slice(
+      filteredPatients.slice(
         (currentPage - 1) * PATIENTS_PER_PAGE,
         currentPage * PATIENTS_PER_PAGE,
       ),
-    [currentPage, patients],
+    [currentPage, filteredPatients],
   );
 
   useEffect(() => {
@@ -129,12 +118,31 @@ export default function TrangBenhNhanThuNgan() {
       </div>
 
       <section className="reception-card overflow-hidden">
-        <div className="reception-filter">
-          <div className="reception-filter__search">
-            <label className="form-label fw-semibold">Tìm bệnh nhân</label>
+        <header className="reception-card__header align-items-center flex-wrap gap-2">
+          <div className="d-flex align-items-center gap-2">
+            <span className="material-symbols-outlined text-primary">groups</span>
+            <h2 className="h6 fw-bold mb-0">Danh sách bệnh nhân</h2>
+          </div>
+          <span className="reception-badge reception-badge--blue">
+            {filteredPatients.length} bệnh nhân
+          </span>
+        </header>
+
+        <div
+          className="reception-filter bg-light bg-opacity-50 align-items-end"
+          style={{ borderBottom: '1px solid #e6ebf3' }}
+        >
+          <div className="reception-filter__search" style={{ flex: '1 1 340px' }}>
+            <label
+              className="form-label fw-semibold small text-secondary mb-1"
+              htmlFor="cashier-patient-search"
+            >
+              Tìm bệnh nhân
+            </label>
             <div className="app-search-field">
               <span className="material-symbols-outlined">search</span>
               <input
+                id="cashier-patient-search"
                 className="form-control"
                 placeholder="Nhập họ tên hoặc số điện thoại (tối thiểu 2 ký tự)..."
                 value={search}
@@ -142,95 +150,162 @@ export default function TrangBenhNhanThuNgan() {
               />
             </div>
           </div>
+          <div style={{ flex: '0 1 220px', minWidth: '180px' }}>
+            <label
+              className="form-label fw-semibold small text-secondary mb-1"
+              htmlFor="cashier-patient-gender"
+            >
+              Giới tính
+            </label>
+            <select
+              id="cashier-patient-gender"
+              className="form-select"
+              value={genderFilter}
+              onChange={(event) => {
+                setGenderFilter(event.target.value as '' | 'NAM' | 'NU' | 'KHAC');
+                setPage(1);
+              }}
+            >
+              <option value="">Tất cả giới tính</option>
+              <option value="NAM">Nam</option>
+              <option value="NU">Nữ</option>
+              <option value="KHAC">Khác</option>
+            </select>
+          </div>
         </div>
 
         <div className="table-responsive">
           <table
-            className="table reception-table align-middle mb-0"
-            style={{ tableLayout: 'fixed', width: '100%' }}
+            className="table reception-table table-hover align-middle mb-0"
+            style={{ tableLayout: 'fixed', minWidth: '960px', width: '100%' }}
           >
             <colgroup>
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '18%' }} />
+              <col style={{ width: '22%' }} />
               <col style={{ width: '11%' }} />
-              <col style={{ width: '9%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '14%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '18%' }} />
               <col style={{ width: '14%' }} />
               <col style={{ width: '12%' }} />
             </colgroup>
             <thead>
               <tr>
-                <th style={{ width: '10%' }}>Mã BN</th>
-                <th style={{ width: '18%' }}>Họ tên</th>
-                <th style={{ width: '11%' }}>Ngày sinh</th>
-                <th style={{ width: '9%' }}>Giới tính</th>
-                <th style={{ width: '12%' }}>Số điện thoại</th>
-                <th style={{ width: '14%' }}>Email</th>
-                <th style={{ width: '14%' }}>Địa chỉ</th>
-                <th className="text-end" style={{ width: '12%' }}>Thao tác</th>
+                <th className="ps-4">Họ tên</th>
+                <th>Ngày sinh</th>
+                <th>Giới tính</th>
+                <th>Số điện thoại</th>
+                <th>Email</th>
+                <th>Địa chỉ</th>
+                <th className="text-end pe-4">Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedPatients.map((patient) => (
+              {paginatedPatients.map((patient) => {
+                const genderBadge = patient.gender ? GENDER_BADGE_MAP[patient.gender] : undefined;
+                return (
                 <tr key={patient.id}>
-                  <td className="fw-bold text-primary text-truncate" title={patient.code}>
-                    {patient.code}
-                  </td>
-                  <td>
+                  <td className="ps-4">
                     <div className="reception-person" style={{ minWidth: 0 }}>
-                      <span className="reception-person__avatar">
+                      <span className="reception-person__avatar flex-shrink-0">
                         {patient.fullName
+                          .trim()
                           .split(/\s+/)
+                          .filter(Boolean)
                           .slice(-2)
                           .map((part) => part[0])
                           .join('')
                           .toUpperCase()}
                       </span>
-                      <strong className="text-truncate" title={patient.fullName}>
-                        {patient.fullName}
-                      </strong>
+                      <div className="min-w-0 d-flex flex-column">
+                        <strong className="text-truncate" title={patient.fullName}>
+                          {patient.fullName}
+                        </strong>
+                        {patient.code ? (
+                          <small className="text-truncate">{patient.code}</small>
+                        ) : null}
+                      </div>
                     </div>
                   </td>
                   <td className="text-nowrap">
-                    {patient.dateOfBirth
-                      ? dinhDangNgay(patient.dateOfBirth)
-                      : '—'}
+                    {patient.dateOfBirth ? (
+                      dinhDangNgay(patient.dateOfBirth)
+                    ) : (
+                      <span className="text-body-tertiary">—</span>
+                    )}
                   </td>
-                  <td>{patient.gender === 'NU' ? 'Nữ' : patient.gender === 'NAM' ? 'Nam' : '—'}</td>
-                  <td className="text-nowrap">{patient.phoneNumber}</td>
+                  <td>
+                    {genderBadge ? (
+                      <span
+                        className={`badge rounded-pill fw-semibold px-2 py-1 ${genderBadge.className}`}
+                        style={{ fontSize: '0.75rem' }}
+                      >
+                        {genderBadge.label}
+                      </span>
+                    ) : (
+                      <span className="text-body-tertiary">—</span>
+                    )}
+                  </td>
+                  <td className="text-nowrap fw-medium">
+                    {patient.phoneNumber || (
+                      <span className="text-body-tertiary fw-normal">—</span>
+                    )}
+                  </td>
                   <td className="text-truncate" title={patient.email || ''}>
-                    {patient.email || '—'}
+                    {patient.email ? (
+                      patient.email
+                    ) : (
+                      <span className="text-body-tertiary">—</span>
+                    )}
                   </td>
                   <td className="text-truncate" title={patient.address || ''}>
-                    {patient.address || '—'}
+                    {patient.address ? (
+                      patient.address
+                    ) : (
+                      <span className="text-body-tertiary">—</span>
+                    )}
                   </td>
-                  <td className="text-end">
+                  <td className="text-end pe-4">
                     <div className="reception-row-actions justify-content-end flex-nowrap">
-                      <button
-                        className="btn btn-sm btn-primary text-white border text-nowrap d-inline-flex align-items-center gap-1"
-                        style={{ minHeight: '32px', height: '32px', width: 'auto', minWidth: 'auto', padding: '0 10px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
-                        type="button"
-                        title="Xem hồ sơ bệnh nhân"
-                        onClick={() => void openRecord(patient)}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>visibility</span>
-                        <span className="text-nowrap">Xem hồ sơ</span>
-                      </button>
+                      {canViewPatient && (
+                        <button
+                          className="btn btn-sm btn-primary text-white text-nowrap d-inline-flex align-items-center gap-1"
+                          style={{
+                            minHeight: '32px',
+                            height: '32px',
+                            width: 'auto',
+                            minWidth: 'auto',
+                            padding: '0 12px',
+                            fontSize: '0.8125rem',
+                            whiteSpace: 'nowrap',
+                          }}
+                          type="button"
+                          title="Xem hồ sơ bệnh nhân"
+                          disabled={loadingId !== null}
+                          onClick={() => void openRecord(patient.id)}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                            visibility
+                          </span>
+                          <span className="text-nowrap">
+                            {loadingId === patient.id ? 'Đang tải...' : 'Xem hồ sơ'}
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))}
-              {loading && patients.length === 0 && (
+                );
+              })}
+              {loading && filteredPatients.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-3 text-center text-secondary">
+                  <td colSpan={7} className="p-4 text-center text-secondary">
                     Đang tải...
                   </td>
                 </tr>
               )}
-              {!loading && patients.length === 0 && (
+              {!loading && filteredPatients.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-5 text-center text-secondary">
+                  <td colSpan={7} className="py-5 text-center text-secondary">
                     Không tìm thấy bệnh nhân phù hợp.
                   </td>
                 </tr>
@@ -238,10 +313,10 @@ export default function TrangBenhNhanThuNgan() {
             </tbody>
           </table>
         </div>
-        {patients.length > 0 && (
+        {filteredPatients.length > 0 && (
           <footer className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-4 py-3 border-top">
             <span className="text-secondary small">
-              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {patients.length} bệnh nhân
+              Hiển thị {displayedFrom}–{displayedTo} trong tổng số {filteredPatients.length} bệnh nhân
             </span>
             <nav className="align-self-md-auto align-self-start" aria-label="Phân trang bệnh nhân">
               <ul className="pagination mb-0 flex-wrap">
@@ -298,12 +373,12 @@ export default function TrangBenhNhanThuNgan() {
         <AppModal
           title={`Hồ sơ bệnh nhân: ${record.fullName}`}
           size="xl"
-          onClose={() => setRecord(null)}
+          onClose={closeRecord}
           footer={
             <button
               className="btn btn-primary"
               type="button"
-              onClick={() => setRecord(null)}
+              onClick={closeRecord}
             >
               Đóng
             </button>
@@ -315,8 +390,24 @@ export default function TrangBenhNhanThuNgan() {
               <strong className="text-primary">{record.code}</strong>
             </div>
             <div className="col-md-3">
+              <span className="text-secondary small d-block">Họ tên</span>
+              <strong>{record.fullName}</strong>
+            </div>
+            <div className="col-md-3">
+              <span className="text-secondary small d-block">Ngày sinh</span>
+              <strong>{record.dateOfBirth ? dinhDangNgay(record.dateOfBirth) : '—'}</strong>
+            </div>
+            <div className="col-md-3">
+              <span className="text-secondary small d-block">Giới tính</span>
+              <strong>{record.gender === 'NU' ? 'Nữ' : record.gender === 'NAM' ? 'Nam' : record.gender === 'KHAC' ? 'Khác' : '—'}</strong>
+            </div>
+            <div className="col-md-3">
               <span className="text-secondary small d-block">Điện thoại</span>
               <strong>{record.phoneNumber}</strong>
+            </div>
+            <div className="col-md-3">
+              <span className="text-secondary small d-block">Email</span>
+              <strong>{record.email || '—'}</strong>
             </div>
             <div className="col-md-3">
               <span className="text-secondary small d-block">CCCD</span>
@@ -330,57 +421,15 @@ export default function TrangBenhNhanThuNgan() {
               <span className="text-secondary small d-block">Địa chỉ</span>
               <div>{record.address || '—'}</div>
             </div>
+            <div className="col-md-6">
+              <span className="text-secondary small d-block">Người liên hệ khẩn cấp</span>
+              <strong>{record.emergencyContactName || '—'}</strong>
+            </div>
+            <div className="col-md-6">
+              <span className="text-secondary small d-block">SĐT liên hệ khẩn cấp</span>
+              <strong>{record.emergencyContactPhone || '—'}</strong>
+            </div>
           </div>
-
-          <h5 className="mb-3">Lịch sử khám và đơn thuốc</h5>
-          {record.visits.length === 0 ? (
-            <p className="text-secondary">Chưa có hồ sơ khám.</p>
-          ) : (
-            record.visits.map((visit) => (
-              <article className="border rounded-3 p-3 mb-3 bg-light-subtle" key={visit.id}>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <strong className="text-primary fs-6">{visit.specialty}</strong>
-                  <span className="badge bg-secondary-subtle text-secondary">{dinhDangNgay(visit.date)}</span>
-                </div>
-                <div className="small text-secondary mb-1">
-                  <strong>Bác sĩ:</strong> {visit.doctor || 'Chưa phân công'}
-                </div>
-                <div className="small mb-2">
-                  <strong>Lý do khám:</strong> {visit.reason}
-                </div>
-                {visit.examination && (
-                  <div className="p-2 rounded bg-white border mb-2 small">
-                    <div><strong>Chẩn đoán:</strong> {visit.examination.diagnosis || '—'}</div>
-                    <div><strong>Kết luận:</strong> {visit.examination.conclusion || '—'}</div>
-                    {visit.examination.notes && <div><strong>Ghi chú:</strong> {visit.examination.notes}</div>}
-                  </div>
-                )}
-                {visit.prescription && (
-                  <div className="mt-2">
-                    <strong className="small d-block mb-1">Đơn thuốc:</strong>
-                    {visit.prescription.items.length > 0 && (
-                      <ul className="mb-0 small ps-3">
-                        {visit.prescription.items.map((line, index) => (
-                          <li key={`${visit.id}-${index}`}>
-                            <span className="fw-semibold">{line.medicine}</span> × {line.quantity} — {line.dosage}, {line.frequency}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {visit.prescription.refusal && (
-                      <div className="alert alert-danger py-2 mt-2 mb-0 small">
-                        <strong>Đã từ chối cấp thuốc:</strong> {visit.prescription.refusal.reason}
-                        <div className="text-muted mt-1">
-                          Dược sĩ: {visit.prescription.refusal.pharmacist || '—'}
-                          {visit.prescription.refusal.refusedAt ? ` · ${dinhDangNgay(visit.prescription.refusal.refusedAt)}` : ''}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </article>
-            ))
-          )}
         </AppModal>
       )}
     </div>
