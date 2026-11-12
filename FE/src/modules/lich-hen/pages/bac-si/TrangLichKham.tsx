@@ -56,7 +56,7 @@ export default function TrangLichKham() {
       <div className="admin-crud-heading">
         <div>
           <p className="admin-management-eyebrow">Quản lý lịch khám</p>
-            <h1>LỊCH KHÁM BỆNH</h1>
+          <h1>LỊCH KHÁM BỆNH</h1>
           <p className="admin-management-description">
             Danh sách lịch được lễ tân phân công cho đúng tài khoản bác sĩ.
           </p>
