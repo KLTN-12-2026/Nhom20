@@ -436,6 +436,34 @@
   min-width: 0;
 }
 
+.admin-management-table--patients {
+  min-width: 1050px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-management-table--patients th,
+.admin-management-table--patients td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.admin-management-table--patients .admin-management-entity {
+  min-width: 0;
+}
+
+.admin-management-table--patients .admin-management-entity small {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.admin-management-table--patients .admin-management-entity strong {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 .admin-management-table--handovers {
   min-width: 1080px;
   table-layout: fixed;

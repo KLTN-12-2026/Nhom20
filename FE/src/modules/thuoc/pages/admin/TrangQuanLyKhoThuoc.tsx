@@ -330,7 +330,7 @@ export default function TrangQuanLyKhoThuoc() {
           <p className="admin-management-eyebrow">
             KIỂM SOÁT KHO DƯỢC
           </p>
-          <h1>DANH MỤC THUỐC</h1>
+          <h1>QUẢN LÝ KHO THUỐC</h1>
           <p className="admin-management-description">
             Quản lý thông tin thuốc, hoạt chất, giá bán và số lượng tồn kho.
           </p>

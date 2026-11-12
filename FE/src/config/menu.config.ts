@@ -68,7 +68,7 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     permission: 'BAO_CAO.VIEW',
   },
   {
-    label: 'Đánh giá bác sĩ',
+    label: 'Quản lý đánh giá bác sĩ',
     icon: 'star_rate',
     href: '/admin/danh-gia-bac-si',
     permission: 'DANH_GIA_BAC_SI.VIEW',
@@ -80,7 +80,7 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     permission: 'CHATBOX_AI.VIEW',
   },
   {
-    label: 'Bàn giao ca',
+    label: 'Quản lý bàn giao ca',
     icon: 'assignment_turned_in',
     href: '/admin/ban-giao-ca',
     permission: 'BAN_GIAO_CA.VIEW',
