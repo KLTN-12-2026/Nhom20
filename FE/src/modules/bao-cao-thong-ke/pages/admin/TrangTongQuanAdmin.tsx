@@ -223,7 +223,7 @@ export default function TrangTongQuanAdmin() {
     <div className="admin-dashboard-page">
       <div className="admin-crud-heading">
         <div>
-          <p className="admin-management-eyebrow">Tổng quan vận hành</p>
+          <p className="admin-management-eyebrow">Tổng quan quản trị</p>
           <h1>DASHBOARD QUẢN TRỊ</h1>
           <p className="admin-management-description">Theo dõi nhanh lịch hẹn, lượt khám, doanh thu và chất lượng phục vụ.</p>
         </div>
