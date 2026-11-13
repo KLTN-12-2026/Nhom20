@@ -123,9 +123,9 @@ export default function TrangQuanLyBenhNhan() {
     <div className="admin-crud-page">
       <div className="admin-crud-heading">
         <div>
-          <p className="admin-management-eyebrow">QUẢN TRỊ HỆ THỐNG</p>
+          <p className="admin-management-eyebrow">Quản lý đối tượng khám chữa bệnh</p>
           <h1>QUẢN LÝ BỆNH NHÂN</h1>
-          <p className="admin-management-description">Hồ sơ khám đã lưu.</p>
+          <p className="admin-management-description">Theo dõi hồ sơ bệnh nhân và lịch sử khám chữa bệnh đã lưu.</p>
         </div>
         <div className="admin-management-summary" aria-label="Tổng quan bệnh nhân">
           <span>
