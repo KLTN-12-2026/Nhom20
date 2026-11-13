@@ -103,8 +103,8 @@ export default function TrangQuanLyBanGiaoCa() {
     <div className="admin-crud-page">
       <div className="admin-crud-heading">
         <div>
-          <p className="admin-management-eyebrow">Kiểm soát ca làm</p>
-          <h1>QUẢN LÝ BÀN GIAO CA</h1>
+          <p className="admin-management-eyebrow">Hoạt động ca làm</p>
+          <h1>THEO DÕI BÀN GIAO CA</h1>
           <p className="admin-management-description">
             Theo dõi các ca đã lưu nháp và gửi bàn giao của lễ tân / thu ngân.
           </p>
