@@ -56,7 +56,7 @@ export default function TrangLichKham() {
       <div className="admin-crud-heading">
         <div>
           <p className="admin-management-eyebrow">Quản lý lịch khám</p>
-            <h1>LỊCH KHÁM BỆNH</h1>
+          <h1>LỊCH KHÁM BỆNH</h1>
           <p className="admin-management-description">
             Danh sách lịch được lễ tân phân công cho đúng tài khoản bác sĩ.
           </p>
@@ -93,7 +93,7 @@ export default function TrangLichKham() {
             </div>
             <div>
               <div className="doctor-stat__value">{stats.pending}</div>
-              <div className="doctor-stat__label">Chờ xác nhận hôm nay</div>
+              <div className="doctor-stat__label">Chờ xác nhận hômm nay</div>
             </div>
           </div>
         </div>
