@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Settings, Building2, Clock, CreditCard, Bell, Database, Eye, EyeOff } from 'lucide-react';
 import { useAppToast } from '@/components/ui/use-app-toast';
+import '@/components/ui/admin-crud.css';
 
 export default function TrangCaiDatHeThong() {
   const { showToast } = useAppToast();
@@ -20,12 +21,12 @@ export default function TrangCaiDatHeThong() {
   };
 
   return (
-    <div className="container-fluid py-4 px-4">
-      <div className="d-flex justify-content-between align-items-start mb-4">
+    <div className="admin-crud-page">
+      <div className="admin-crud-heading">
         <div>
-          <div className="text-primary fw-semibold small text-uppercase mb-1">Hệ thống</div>
-          <h1 className="h3 fw-bold mb-1">Cài đặt hệ thống</h1>
-          <p className="text-muted mb-0">Quản lý thông tin phòng khám và cấu hình tích hợp.</p>
+          <p className="admin-management-eyebrow">Hệ thống</p>
+          <h1>CÀI ĐẶT HỆ THỐNG</h1>
+          <p className="admin-management-description">Quản lý thông tin phòng khám và cấu hình tích hợp.</p>
         </div>
         <button className="btn btn-primary d-flex align-items-center gap-2" onClick={handleSave}>
           <Settings size={18} />
