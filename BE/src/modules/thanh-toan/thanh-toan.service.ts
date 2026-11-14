@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { RealtimeService } from '../thoi-gian-thuc/realtime.service';
 import {
@@ -10,6 +15,7 @@ import {
   TrangThaiHoaDon,
   PhuongThucThanhToan,
   TrangThaiThanhToan,
+  Prisma,
 } from '@prisma/client';
 
 @Injectable()
@@ -23,7 +29,7 @@ export class ThanhToanService {
 
   // Xử lý logic nghiệp vụ cho chức năng: thanh toán
   async handleSePayWebhook(dto: SePayWebhookDto) {
-    this.logger.log(`Received SePay Webhook: ${JSON.stringify(dto)}`);
+    this.logger.log('Đang xử lý webhook thanh toán');
 
     // 1. Kiểm tra đây có phải giao dịch tiền vào hay không.
     if (dto.transferType !== 'in') {
@@ -33,6 +39,14 @@ export class ThanhToanService {
       };
     }
 
+    if (!Number.isFinite(dto.transferAmount) || dto.transferAmount <= 0) {
+      throw new BadRequestException('Số tiền giao dịch phải lớn hơn 0');
+    }
+    const receivedAmount = new Prisma.Decimal(String(dto.transferAmount));
+    if (receivedAmount.decimalPlaces() > 2) {
+      throw new BadRequestException('Số tiền giao dịch không hợp lệ');
+    }
+
     // 2. Trích xuất mã hóa đơn (maHoaDon) từ nội dung giao dịch.
     //    Ngân hàng thường loại bỏ dấu gạch ngang khi chuyển tiền, nên nội dung
     //    webhook có thể là "HD178748002935192" thay vì "HD-1787480023456-190".
@@ -40,9 +54,7 @@ export class ThanhToanService {
     const rawCode = match ? match[0].toUpperCase() : null;
 
     if (!rawCode) {
-      this.logger.warn(
-        `Không tìm thấy mã hóa đơn trong nội dung: ${dto.content}`,
-      );
+      this.logger.warn('Webhook không có mã hóa đơn hợp lệ');
       return {
         success: true,
         message: 'Không tìm thấy mã hóa đơn trong nội dung chuyển khoản',
@@ -66,12 +78,11 @@ export class ThanhToanService {
         },
       });
       hoaDon =
-        candidates.find((c) => normalize(c.maHoaDon) === normalizedRaw) ??
-        null;
+        candidates.find((c) => normalize(c.maHoaDon) === normalizedRaw) ?? null;
     }
 
     if (!hoaDon) {
-      this.logger.warn(`Không tìm thấy hóa đơn với mã: ${rawCode}`);
+      this.logger.warn('Webhook không khớp hóa đơn');
       return { success: true, message: 'Không tìm thấy hóa đơn' };
     }
 
@@ -79,15 +90,60 @@ export class ThanhToanService {
       return { success: true, message: 'Hóa đơn đã được thanh toán trước đó' };
     }
 
-    // 4. Cập nhật cơ sở dữ liệu.
-    await this.prisma.$transaction(async (tx) => {
+    const transactionCode = String(dto.id || dto.referenceCode);
+    // Đối chiếu các khoản đã thu và ghi khoản mới cùng transaction.
+    const result = await this.prisma.$transaction(async (tx) => {
+      const currentInvoice = await tx.hoaDon.findUnique({
+        where: { id: hoaDon.id },
+      });
+      if (!currentInvoice)
+        throw new BadRequestException('Không tìm thấy hóa đơn');
+      if (currentInvoice.trangThai === TrangThaiHoaDon.DA_HUY) {
+        throw new ConflictException(
+          'Hóa đơn đã hủy, giao dịch cần được đối soát',
+        );
+      }
+      if (currentInvoice.trangThai === TrangThaiHoaDon.DA_THANH_TOAN) {
+        throw new ConflictException(
+          'Hóa đơn đã thanh toán, giao dịch cần được đối soát',
+        );
+      }
+      // Chặn retry tuần tự; chống trùng đồng thời cần khóa duy nhất ở database.
+      const duplicate = await tx.thanhToan.findFirst({
+        where: {
+          maGiaoDich: transactionCode,
+          phuongThuc: PhuongThucThanhToan.CHUYEN_KHOAN,
+          trangThai: TrangThaiThanhToan.THANH_CONG,
+        },
+        select: { hoaDonId: true },
+      });
+      if (duplicate) {
+        if (duplicate.hoaDonId !== currentInvoice.id) {
+          throw new ConflictException('Giao dịch đã gắn với hóa đơn khác');
+        }
+        return { duplicate: true as const };
+      }
+      const previous = await tx.thanhToan.aggregate({
+        where: {
+          hoaDonId: currentInvoice.id,
+          trangThai: TrangThaiThanhToan.THANH_CONG,
+        },
+        _sum: { soTien: true },
+      });
+      const totalPaid = new Prisma.Decimal(previous._sum.soTien ?? 0).add(
+        receivedAmount,
+      );
+      const invoiceTotal = new Prisma.Decimal(currentInvoice.tongTien);
+      const fullyPaid = totalPaid.gte(invoiceTotal);
+      const excess = Prisma.Decimal.max(totalPaid.sub(invoiceTotal), 0);
+      const remaining = Prisma.Decimal.max(invoiceTotal.sub(totalPaid), 0);
       // Tạo bản ghi thanh toán.
       await tx.thanhToan.create({
         data: {
           hoaDonId: hoaDon.id,
-          soTien: dto.transferAmount,
+          soTien: receivedAmount,
           phuongThuc: PhuongThucThanhToan.CHUYEN_KHOAN,
-          maGiaoDich: String(dto.id || dto.referenceCode),
+          maGiaoDich: transactionCode,
           trangThai: TrangThaiThanhToan.THANH_CONG,
           thoiGianThanhToan: new Date(dto.transactionDate),
           ghiChu: dto.content,
@@ -98,25 +154,45 @@ export class ThanhToanService {
       await tx.hoaDon.update({
         where: { id: hoaDon.id },
         data: {
-          trangThai: TrangThaiHoaDon.DA_THANH_TOAN,
-          thoiGianThanhToan: new Date(dto.transactionDate),
+          trangThai: fullyPaid
+            ? TrangThaiHoaDon.DA_THANH_TOAN
+            : TrangThaiHoaDon.CHUA_THANH_TOAN,
+          thoiGianThanhToan: fullyPaid ? new Date(dto.transactionDate) : null,
         },
       });
+      return {
+        duplicate: false as const,
+        fullyPaid,
+        excessAmount: excess.toString(),
+        remainingAmount: remaining.toString(),
+      };
     });
+
+    if (result.duplicate) {
+      return { success: true, message: 'Giao dịch đã được ghi nhận' };
+    }
 
     // 5. Gửi thông báo WebSocket đến toàn bộ thu ngân.
     this.realtimeService.emitToRoom(
       REALTIME_ROOMS.role('RECEPTIONIST'),
-      REALTIME_EVENTS.PAYMENT_SUCCESS,
+      result.fullyPaid
+        ? REALTIME_EVENTS.PAYMENT_SUCCESS
+        : REALTIME_EVENTS.PAYMENT_PARTIAL,
       {
         maHoaDon: hoaDon.maHoaDon,
         soTien: dto.transferAmount,
         maGiaoDich: dto.referenceCode,
+        excessAmount: result.excessAmount,
+        remainingAmount: result.remainingAmount,
       },
     );
 
-    this.logger.log(`Đã xử lý thanh toán thành công cho hóa đơn: ${hoaDon.maHoaDon}`);
-    return { success: true };
+    this.logger.log(
+      result.fullyPaid
+        ? 'Hóa đơn đã được thanh toán đủ'
+        : 'Đã ghi nhận thanh toán một phần',
+    );
+    return { success: true, ...result };
   }
 
   // Lấy danh sách dữ liệu cho chức năng: thanh toán

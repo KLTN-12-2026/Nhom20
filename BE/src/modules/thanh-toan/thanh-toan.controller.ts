@@ -6,6 +6,7 @@ import {
   Param,
   Headers,
   UnauthorizedException,
+  ServiceUnavailableException,
   UseGuards,
   Logger,
 } from '@nestjs/common';
@@ -31,18 +32,21 @@ export class ThanhToanController {
     @Body() dto: SePayWebhookDto,
     @Headers('authorization') authHeader: string,
   ) {
-    this.logger.log(`[SePay Webhook] Nhận request — authorization: "${authHeader ?? '(trống)'}"`);
-    this.logger.log(`[SePay Webhook] Body: ${JSON.stringify(dto)}`);
+    this.logger.log('[SePay Webhook] Nhận yêu cầu');
 
-    const apiToken = process.env.SEPAY_API_TOKEN;
+    const apiToken = process.env.SEPAY_API_TOKEN?.trim();
+    // Thiếu cấu hình xác thực phải từ chối, không được xử lý thanh toán.
+    if (!apiToken) {
+      this.logger.warn('[SePay Webhook] Thiếu cấu hình xác thực');
+      throw new ServiceUnavailableException(
+        'Webhook chưa được cấu hình xác thực',
+      );
+    }
     if (
-      apiToken &&
       authHeader !== `Apikey ${apiToken}` &&
       authHeader !== `Bearer ${apiToken}`
     ) {
-      this.logger.warn(
-        `[SePay Webhook] Từ chối do sai token — Nhận: "${authHeader}" — Kỳ vọng: "Apikey ${apiToken?.slice(0, 8)}..."`
-      );
+      this.logger.warn('[SePay Webhook] Từ chối xác thực');
       throw new UnauthorizedException('Invalid SePay API Token');
     }
     return this.thanhToanService.handleSePayWebhook(dto);

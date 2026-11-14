@@ -11,6 +11,7 @@ export const REALTIME_EVENTS = {
   PRESCRIPTION_DISPENSED: 'prescription.dispensed',
   PRESCRIPTION_WARNING_CREATED: 'prescription.warning_created',
   PAYMENT_SUCCESS: 'payment.success',
+  PAYMENT_PARTIAL: 'payment.partial',
 } as const;
 
 export const REALTIME_ROOMS = {
