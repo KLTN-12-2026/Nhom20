@@ -143,9 +143,12 @@ export default function TrangQuanLyThanhToan() {
   const [amount, setAmount] = useState('');
   const [cashReceived, setCashReceived] = useState('');
 
-  useRealtimeEvent<{ maHoaDon: string, soTien: number, maGiaoDich: string }>('payment.success', useCallback((payload) => {
+  useRealtimeEvent<{ maHoaDon: string, soTien: number, maGiaoDich: string, excessAmount?: string }>('payment.success', useCallback((payload) => {
     fetchInvoices();
-    showToast(`Nhận thành công ${money(payload.soTien)} cho hóa đơn ${payload.maHoaDon}`, 'success');
+    const excess = Number(payload.excessAmount || 0);
+    showToast(excess > 0
+      ? `Hóa đơn ${payload.maHoaDon} đã thanh toán; nhận dư ${money(excess)}, cần đối soát.`
+      : `Nhận thành công ${money(payload.soTien)} cho hóa đơn ${payload.maHoaDon}`, excess > 0 ? 'warning' : 'success');
     confetti({
       particleCount: 100,
       spread: 70,
@@ -159,6 +162,11 @@ export default function TrangQuanLyThanhToan() {
       }
       return currentCode;
     });
+  }, [showToast, fetchInvoices]));
+
+  useRealtimeEvent<{ maHoaDon: string; soTien: number; remainingAmount: string }>('payment.partial', useCallback((payload) => {
+    void fetchInvoices();
+    showToast(`Đã nhận ${money(payload.soTien)} cho hóa đơn ${payload.maHoaDon}; còn ${money(Number(payload.remainingAmount))}.`, 'warning');
   }, [showToast, fetchInvoices]));
 
   useRealtimeEvent<{ code: string; patient: { fullName: string } }>('prescription.dispensed', useCallback((payload) => {
@@ -210,8 +218,13 @@ export default function TrangQuanLyThanhToan() {
     }
   }, [page, totalPages]);
   const selected = invoices.find((invoice) => invoice.code === selectedCode);
-  const remaining = selected ? selected.total - selected.paid : 0;
+  const remaining = selected ? Math.max(0, selected.total - selected.paid) : 0;
+  const excess = selected ? Math.max(0, selected.paid - selected.total) : 0;
   const paymentAmount = Number(amount || 0);
+  useEffect(() => {
+    // QR phải phản ánh số còn lại mới nhất sau khi nhận thanh toán một phần.
+    if (selectedCode && method === 'CHUYEN_KHOAN') setAmount(String(remaining));
+  }, [selectedCode, method, remaining]);
   // Không sinh QR khi chưa có tài khoản thụ hưởng thật để tránh khách quét nhầm mã.
   const sepayAccount = import.meta.env.VITE_SEPAY_ACCOUNT?.trim();
   const sepayBank = import.meta.env.VITE_SEPAY_BANK?.trim();
@@ -231,7 +244,7 @@ export default function TrangQuanLyThanhToan() {
     : null;
   const change = method === 'TIEN_MAT' ? Math.max(0, Number(cashReceived || 0) - paymentAmount) : 0;
   const revenue = targetInvoices.reduce((sum, invoice) => sum + invoice.paid, 0);
-  const receivable = targetInvoices.reduce((sum, item) => sum + item.total - item.paid, 0);
+  const receivable = targetInvoices.reduce((sum, item) => sum + Math.max(0, item.total - item.paid), 0);
   const paidCount = targetInvoices.filter((item) => item.status === 'Đã thanh toán').length;
 
   const openInvoice = (invoice: Invoice) => {
@@ -527,7 +540,7 @@ export default function TrangQuanLyThanhToan() {
                     <td>{invoice.createdAt}</td>
                     <td className="fw-bold">{money(invoice.total)}</td>
                     <td>{money(invoice.paid)}</td>
-                    <td className="fw-bold">{money(invoice.total - invoice.paid)}</td>
+                    <td className="fw-bold">{money(Math.max(0, invoice.total - invoice.paid))}</td>
                     <td>
                       <span
                         className={`reception-badge reception-badge--${
@@ -574,7 +587,7 @@ export default function TrangQuanLyThanhToan() {
           {/* Giao diện Mobile & Máy in cầm tay Sunmi V2 (Dạng thẻ) */}
           <div className="d-md-none reception-invoice-cards">
             {visibleInvoices.map((invoice) => {
-              const invRemaining = invoice.total - invoice.paid;
+              const invRemaining = Math.max(0, invoice.total - invoice.paid);
               return (
                 <div key={invoice.code} className="reception-invoice-card">
                   <div className="reception-invoice-card__header">
@@ -702,6 +715,7 @@ export default function TrangQuanLyThanhToan() {
             <span>Tổng hóa đơn</span><strong>{money(selected.total)}</strong>
             <span>Đã thanh toán</span><strong>{money(selected.paid)}</strong>
             <span>Còn phải thu</span><strong className="text-danger">{money(remaining)}</strong>
+            {excess > 0 && <><span>Tiền nhận dư — cần đối soát</span><strong>{money(excess)}</strong></>}
           </div>
         </div>
         <div className="col-md-7">
