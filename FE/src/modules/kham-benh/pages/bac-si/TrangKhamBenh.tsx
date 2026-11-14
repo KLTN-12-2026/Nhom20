@@ -410,7 +410,7 @@ export default function TrangKhamBenh() {
       const hasPrescription = payload.prescription && payload.prescription.length > 0;
       showToast(
         hasPrescription
-          ? 'Đã hoàn tất khám bệnh và chuyển đơn sang Dược sĩ'
+          ? 'Đã hoàn tất khám bệnh và chuyển đơn sang bộ phận Dược sĩ'
           : 'Đã hoàn tất khám bệnh thành công',
         'success',
       );
