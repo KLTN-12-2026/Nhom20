@@ -275,7 +275,7 @@ export default function TrangXuLyDonThuoc() {
             disabled={!allChecked || isSubmitting}
             onClick={() => void handleDispense()}
           >
-            {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất & chuyển Thu ngân'}
+            {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất & chuyển quầy Thu ngân'}
           </button>}
         </aside>
       </div>
