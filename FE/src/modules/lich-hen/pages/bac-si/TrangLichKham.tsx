@@ -93,7 +93,7 @@ export default function TrangLichKham() {
             </div>
             <div>
               <div className="doctor-stat__value">{stats.pending}</div>
-              <div className="doctor-stat__label">Chờ xác nhận hômm nay</div>
+              <div className="doctor-stat__label">Chờ xác nhận hôm nay</div>
             </div>
           </div>
         </div>
