@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useMemo, useState, Fragment } from 'react';
 import { useServices } from '../hooks/use-services';
 import { getServiceIcon } from '@/utils/icon-mapper';
+import HomeCardSlider from '@/modules/trang-chu/components/HomeCardSlider';
 import '@/modules/trang-chu/public-pages.css';
 
 function currency(value: number) {
@@ -44,7 +45,7 @@ function ServiceCard({ item }: { item: ReturnType<typeof useServices>['services'
   );
 }
 
-export default function ServiceCards() {
+export default function ServiceCards({ presentation = 'pagination' }: { presentation?: 'pagination' | 'slider' }) {
   const { services, isLoading, error, reload } = useServices('DANG_HOAT_DONG');
   const [page, setPage] = useState(1);
 
@@ -74,6 +75,12 @@ export default function ServiceCards() {
     </div>
   );
   if (!items.length) return <div className="public-page-empty">Chưa có dịch vụ đang hoạt động.</div>;
+
+  if (presentation === 'slider') return (
+    <HomeCardSlider itemWidth={260}>
+      {items.map((item) => <ServiceCard key={item.id} item={item} />)}
+    </HomeCardSlider>
+  );
 
   return (
     <>
