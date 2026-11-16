@@ -7,8 +7,26 @@ import pg from 'pg';
 
 const digest = (value) => createHash('sha256').update(value).digest('hex');
 
-// Không suy luận chứng chỉ từ học vị, chuyên khoa hay tên bác sĩ.
-export function makePlan(entries, doctors, schemaReady) {
+// Nội dung minh họa được chủ dự án phê duyệt; không phải chứng chỉ pháp lý đã xác minh.
+const DEMO_TRAINING = new Set([
+  'Đào tạo điện tâm đồ cơ bản',
+  'Đào tạo siêu âm tim cơ bản',
+  'Đào tạo cấp cứu nhi khoa',
+  'Đào tạo soi da và nhận diện tổn thương da',
+  'Đào tạo nội soi Tai Mũi Họng',
+  'Đào tạo khám mắt và sử dụng sinh hiển vi',
+  'Đào tạo siêu âm cơ xương khớp',
+  'Đào tạo siêu âm sản phụ khoa cơ bản',
+  'Đào tạo điện tâm đồ',
+  'Đào tạo siêu âm tim',
+  'Đào tạo siêu âm sản phụ khoa',
+]);
+export function makePlan(
+  entries,
+  doctors,
+  schemaReady,
+  { replaceDemo = false } = {},
+) {
   if (!Array.isArray(entries))
     throw new Error('Danh sách đầu vào phải là mảng');
   const existing = new Map(doctors.map((doctor) => [doctor.code, doctor]));
@@ -22,6 +40,50 @@ export function makePlan(entries, doctors, schemaReady) {
     seen.add(code);
     const doctor = existing.get(code);
     if (!doctor) return { code, reason: 'không khớp mã bác sĩ' };
+    if (replaceDemo) {
+      const beforeCertificate = entry.chungChiHienTai;
+      const certificate =
+        typeof entry.chungChiDuKien === 'string'
+          ? entry.chungChiDuKien.trim()
+          : '';
+      if (!certificate || [...certificate].length > 255)
+        throw new Error(`Chứng chỉ mới rỗng hoặc quá 255 ký tự: ${code}`);
+      if (
+        entry.duLieuDemoDaXacNhan !== true ||
+        typeof entry.nguon !== 'string' ||
+        !entry.nguon.startsWith('DEMO') ||
+        !DEMO_TRAINING.has(certificate) ||
+        typeof beforeCertificate !== 'string' ||
+        !(beforeCertificate.startsWith('Mô phỏng, chưa xác minh: chuyên môn ') || DEMO_TRAINING.has(beforeCertificate))
+      ) {
+        throw new Error(
+          `Thiếu xác nhận demo, nguồn, nội dung được duyệt hoặc giá trị seed cũ: ${code}`,
+        );
+      }
+      const detail = {
+        code,
+        name: doctor.name,
+        specialty: doctor.specialty,
+        beforeCertificate,
+        currentCertificate: doctor.certificate,
+        certificate,
+        source: entry.nguon,
+      };
+      if (!schemaReady) return { ...detail, reason: 'chưa có cột chứng chỉ' };
+      if (
+        (entry.hoTen && doctor.name !== entry.hoTen) ||
+        (entry.chuyenKhoa && doctor.specialty !== entry.chuyenKhoa)
+      )
+        return { ...detail, reason: 'conflict: khác tên hoặc chuyên khoa' };
+      if (doctor.certificate === certificate)
+        return { ...detail, reason: 'đã đúng kế hoạch' };
+      if (doctor.certificate !== beforeCertificate)
+        return { ...detail, reason: 'conflict: giá trị cũ không khớp' };
+      return {
+        ...detail,
+        reason: entry.daPheDuyet === true ? 'sẽ cập nhật' : 'chờ duyệt',
+      };
+    }
     if (entry.daPheDuyet !== true) return { code, reason: 'chưa duyệt' };
     if (
       typeof entry.chungChiDuKien !== 'string' ||
@@ -53,7 +115,14 @@ export function makePlan(entries, doctors, schemaReady) {
 export async function runSeed(
   client,
   entries,
-  { apply = false, target, confirmTarget, confirmPlan, approved = false } = {},
+  {
+    apply = false,
+    target,
+    confirmTarget,
+    confirmPlan,
+    approved = false,
+    replaceDemo = false,
+  } = {},
 ) {
   await client.query(apply ? 'BEGIN' : 'BEGIN READ ONLY');
   try {
@@ -65,9 +134,9 @@ export async function runSeed(
     const rows = await client.query(
       `SELECT b.ma_bac_si AS code, b.ho_ten AS name, k.ten_chuyen_khoa AS specialty, ${certificateSql} AS certificate FROM bac_si b JOIN chuyen_khoa k ON k.id=b.chuyen_khoa_id ORDER BY b.ma_bac_si`,
     );
-    const plan = makePlan(entries, rows.rows, schemaReady);
+    const plan = makePlan(entries, rows.rows, schemaReady, { replaceDemo });
     const planHash = digest(
-      JSON.stringify({ target, candidates: plan.candidates }),
+      JSON.stringify({ target, replaceDemo, details: plan.details }),
     );
     if (apply) {
       if (!schemaReady) throw new Error('Chưa có cột chứng chỉ; không ghi');
@@ -83,10 +152,19 @@ export async function runSeed(
       }
       for (const candidate of plan.candidates) {
         // Điều kiện này ngăn ghi đè chứng chỉ đã được cập nhật sau dry-run.
-        const result = await client.query(
-          "UPDATE bac_si SET chung_chi=$1 WHERE ma_bac_si=$2 AND (chung_chi IS NULL OR btrim(chung_chi)='')",
-          [candidate.certificate, candidate.code],
-        );
+        const result = replaceDemo
+          ? await client.query(
+              'UPDATE bac_si SET chung_chi=$1 WHERE ma_bac_si=$2 AND chung_chi IS NOT DISTINCT FROM $3',
+              [
+                candidate.certificate,
+                candidate.code,
+                candidate.beforeCertificate,
+              ],
+            )
+          : await client.query(
+              "UPDATE bac_si SET chung_chi=$1 WHERE ma_bac_si=$2 AND (chung_chi IS NULL OR btrim(chung_chi)='')",
+              [candidate.certificate, candidate.code],
+            );
         if (result.rowCount !== 1)
           throw new Error(
             `Dữ liệu đã thay đổi, dừng toàn bộ: ${candidate.code}`,
@@ -104,6 +182,12 @@ export async function runSeed(
       candidates: plan.candidates.length,
       skipped: plan.details.length - plan.candidates.length,
       updated: apply ? plan.candidates.length : 0,
+      pendingApproval: plan.details.filter(
+        (item) => item.reason === 'chờ duyệt',
+      ).length,
+      conflicts: plan.details.filter((item) =>
+        item.reason.startsWith('conflict:'),
+      ).length,
       details: plan.details,
     };
   } catch (error) {
@@ -143,6 +227,7 @@ async function main() {
       confirmTarget: option('--confirm-target='),
       confirmPlan: option('--confirm-plan='),
       approved: args.includes('--approved'),
+      replaceDemo: args.includes('--replace-demo'),
     });
     console.log(
       JSON.stringify({ mode: apply ? 'apply' : 'dry-run', ...result }, null, 2),

@@ -37,7 +37,13 @@ function fakeClient(initial, ready = true) {
       if (sql.startsWith('UPDATE bac_si')) {
         writes++;
         const row = rows.find((item) => item.code === args[1]);
-        if (!row || row.certificate?.trim()) return { rowCount: 0 };
+        if (
+          !row ||
+          (args.length === 3
+            ? row.certificate !== args[2]
+            : row.certificate?.trim())
+        )
+          return { rowCount: 0 };
         row.certificate = args[0];
         return { rowCount: 1 };
       }
@@ -60,6 +66,145 @@ test('dry-run không ghi; phân biệt có sẵn, không duyệt và sai mã', a
   assert.equal(result.skipped, 3);
   assert.equal(client.writes, 0);
   assert.equal(client.rows[0].certificate, null);
+});
+
+const oldCertificate = 'Mô phỏng, chưa xác minh: chuyên môn Nội tổng quát';
+const newCertificate = 'Đào tạo điện tâm đồ cơ bản';
+const replacement = (code = 'A') => ({
+  ...entry(code, newCertificate),
+  chungChiHienTai: oldCertificate,
+  duLieuDemoDaXacNhan: true,
+  nguon: 'DEMO - fixture kiểm thử',
+});
+const correctionMode = { replaceDemo: true, target: 'test' };
+
+test('cập nhật tên đào tạo demo cũ khớp chính xác, bỏ cơ bản', async () => {
+  const oldValue = 'Đào tạo điện tâm đồ cơ bản';
+  const client = fakeClient([{ code: 'A', certificate: oldValue }]);
+  const input = [{ ...replacement(), chungChiHienTai: oldValue, chungChiDuKien: 'Đào tạo điện tâm đồ' }];
+  const dry = await runSeed(client, input, correctionMode);
+  assert.equal(dry.candidates, 1);
+  const result = await runSeed(client, input, { ...correctionMode, apply: true, confirmTarget: 'test', confirmPlan: dry.planHash, approved: true });
+  assert.equal(result.updated, 1);
+  assert.equal(client.rows[0].certificate, 'Đào tạo điện tâm đồ');
+});
+const approvedCorrection = (dry) => ({
+  ...correctionMode,
+  apply: true,
+  confirmTarget: 'test',
+  confirmPlan: dry.planHash,
+  approved: true,
+});
+
+test('chỉ thay đúng seed cũ; chứng chỉ nhập thủ công được bảo toàn, mã sai bỏ qua', async () => {
+  const client = fakeClient([
+    { code: 'A', certificate: oldCertificate },
+    { code: 'B', certificate: 'Nội dung nhập thủ công' },
+  ]);
+  const input = [replacement('A'), replacement('B'), replacement('C')];
+  const dry = await runSeed(client, input, correctionMode);
+  assert.equal(dry.candidates, 1);
+  assert.equal(dry.conflicts, 1);
+  assert.equal(dry.details[0].beforeCertificate, oldCertificate);
+  assert.equal(dry.details[0].certificate, newCertificate);
+  const applied = await runSeed(client, input, approvedCorrection(dry));
+  assert.equal(applied.updated, 1);
+  assert.equal(client.rows[1].certificate, 'Nội dung nhập thủ công');
+});
+
+test('không phê duyệt thì chỉ lập kế hoạch, không chọn cập nhật', async () => {
+  const client = fakeClient([{ code: 'A', certificate: oldCertificate }]);
+  const dry = await runSeed(
+    client,
+    [{ ...replacement(), daPheDuyet: false }],
+    correctionMode,
+  );
+  assert.equal(dry.pendingApproval, 1);
+  assert.equal(dry.candidates, 0);
+  assert.equal(client.writes, 0);
+});
+
+test('giá trị cũ đổi sau dry-run làm vô hiệu mã kế hoạch, không ghi đè', async () => {
+  const client = fakeClient([{ code: 'A', certificate: oldCertificate }]);
+  const dry = await runSeed(client, [replacement()], correctionMode);
+  client.rows[0].certificate = 'Chỉnh thủ công sau dry-run';
+  await assert.rejects(
+    runSeed(client, [replacement()], approvedCorrection(dry)),
+    /xác nhận/,
+  );
+  assert.equal(client.writes, 0);
+  assert.equal(client.rows[0].certificate, 'Chỉnh thủ công sau dry-run');
+});
+
+test('chạy lại correction không cập nhật thêm và không đổi trường ngoài chứng chỉ', async () => {
+  const record = {
+    code: 'A',
+    certificate: oldCertificate,
+    name: 'Nguyễn Văn A',
+    degree: 'Bác sĩ',
+    specialty: 'Nội tổng quát',
+    userId: 123,
+  };
+  const client = fakeClient([record]);
+  const dry = await runSeed(client, [replacement()], correctionMode);
+  await runSeed(client, [replacement()], approvedCorrection(dry));
+  const next = await runSeed(client, [replacement()], correctionMode);
+  assert.equal(next.candidates, 0);
+  assert.equal(
+    (await runSeed(client, [replacement()], approvedCorrection(next))).updated,
+    0,
+  );
+  assert.deepEqual(client.rows[0], { ...record, certificate: newCertificate });
+});
+
+test('correction từ chối mã trùng, nội dung rỗng/quá dài và thiếu xác nhận demo', () => {
+  const doctors = [{ code: 'A', certificate: oldCertificate }];
+  assert.throws(
+    () =>
+      makePlan([replacement(), replacement()], doctors, true, correctionMode),
+    /trùng/,
+  );
+  for (const certificate of ['', 'A'.repeat(256)]) {
+    assert.throws(
+      () =>
+        makePlan(
+          [{ ...replacement(), chungChiDuKien: certificate }],
+          doctors,
+          true,
+          correctionMode,
+        ),
+      /rỗng hoặc quá 255/,
+    );
+  }
+  assert.throws(
+    () =>
+      makePlan(
+        [{ ...replacement(), duLieuDemoDaXacNhan: false }],
+        doctors,
+        true,
+        correctionMode,
+      ),
+    /xác nhận demo/,
+  );
+});
+
+test('correction gặp conflict lúc UPDATE thì rollback cả transaction', async () => {
+  const client = fakeClient([
+    { code: 'A', certificate: oldCertificate },
+    { code: 'B', certificate: oldCertificate },
+  ]);
+  const input = [replacement('A'), replacement('B')];
+  const dry = await runSeed(client, input, correctionMode);
+  const query = client.query.bind(client);
+  client.query = async (sql, args) =>
+    sql.startsWith('UPDATE bac_si') && args[1] === 'B'
+      ? { rowCount: 0 }
+      : query(sql, args);
+  await assert.rejects(
+    runSeed(client, input, approvedCorrection(dry)),
+    /dừng toàn bộ/,
+  );
+  assert.equal(client.rows[0].certificate, oldCertificate);
 });
 
 test('chạy hai lần an toàn, không ghi đè chứng chỉ đã tồn tại', async () => {
