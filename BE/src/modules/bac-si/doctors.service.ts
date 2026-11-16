@@ -27,7 +27,7 @@ export class DoctorsService {
     private readonly passwordService: PasswordService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly auditLogsService: AuditLogsService,
-  ) { }
+  ) {}
 
   // Lấy danh sách dữ liệu cho chức năng: bác sĩ
   async findAll(query: DoctorQueryDto) {
@@ -48,7 +48,10 @@ export class DoctorsService {
     if (isNaN(date.getTime())) {
       throw new BadRequestException('Ngày không hợp lệ');
     }
-    const doctors = await this.doctorRepository.findAvailable(date, specialtyId);
+    const doctors = await this.doctorRepository.findAvailable(
+      date,
+      specialtyId,
+    );
     return {
       message: 'Lấy danh sách bác sĩ đi làm thành công',
       data: doctors.map((doctor) => this.toResponse(doctor)),
@@ -117,6 +120,9 @@ export class DoctorsService {
       ...(passwordHash ? { passwordHash } : {}),
       ...(dto.academicDegree !== undefined
         ? { academicDegree: dto.academicDegree.trim() || null }
+        : {}),
+      ...(dto.certification !== undefined
+        ? { certification: dto.certification?.trim() || null }
         : {}),
       ...(dto.experienceYears !== undefined
         ? { experienceYears: dto.experienceYears }
@@ -191,6 +197,7 @@ export class DoctorsService {
       phoneNumber: dto.phoneNumber?.trim() || null,
       email: dto.email.trim().toLowerCase(),
       academicDegree: dto.academicDegree?.trim() || null,
+      certification: dto.certification?.trim() || null,
       experienceYears: dto.experienceYears ?? 0,
       description: dto.description?.trim() || null,
       status: dto.status ?? TrangThaiChung.DANG_HOAT_DONG,
@@ -237,7 +244,7 @@ export class DoctorsService {
     const ratingCount = doctor.danhGia.length;
     const averageRating = ratingCount
       ? doctor.danhGia.reduce((total, review) => total + review.soSao, 0) /
-      ratingCount
+        ratingCount
       : null;
     return {
       id: doctor.id,
@@ -248,6 +255,7 @@ export class DoctorsService {
       avatarUrl: doctor.nguoiDung.anhDaiDienUrl,
       phoneNumber: doctor.soDienThoai,
       academicDegree: doctor.hocVi,
+      certification: doctor.chungChi,
       experienceYears: doctor.soNamKinhNghiem,
       description: doctor.moTa,
       status: doctor.trangThai,
@@ -267,8 +275,13 @@ export class DoctorsService {
   }
 
   private relatedRecordCount(doctor: DoctorWithRelations) {
-    return Object.values(doctor._count).reduce((sum, count) => sum + count, 0) +
-      Object.values(doctor.nguoiDung._count).reduce((sum, count) => sum + count, 0) +
-      Number(Boolean(doctor.nguoiDung.benhNhan));
+    return (
+      Object.values(doctor._count).reduce((sum, count) => sum + count, 0) +
+      Object.values(doctor.nguoiDung._count).reduce(
+        (sum, count) => sum + count,
+        0,
+      ) +
+      Number(Boolean(doctor.nguoiDung.benhNhan))
+    );
   }
 }

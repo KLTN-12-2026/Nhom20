@@ -8,14 +8,29 @@ export type DoctorWithRelations = Prisma.BacSiGetPayload<{
         anhDaiDienUrl: true;
         anhDaiDienPublicId: true;
         benhNhan: { select: { id: true } };
-        _count: { select: {
-          phieuHangChoDaGoi: true; phieuHangChoXacNhan: true; donThuocDaCap: true;
-          donThuocDaTuChoi: true; giaoDichKho: true; hoaDonDaTao: true;
-          thanhToanDaThu: true; lichHenDaXacNhan: true; duLieuYTeDaGhi: true;
-          tienSuBenhDaGhi: true; canhBaoDaXuLy: true; phanCongCa: true;
-          caDaSapXep: true; caDaDuyet: true; donViDangQuanLy: true;
-          caDaBanGiao: true; caDaNhanBanGiao: true; goiYThuocDaDuyet: true; phienChat: true;
-        } };
+        _count: {
+          select: {
+            phieuHangChoDaGoi: true;
+            phieuHangChoXacNhan: true;
+            donThuocDaCap: true;
+            donThuocDaTuChoi: true;
+            giaoDichKho: true;
+            hoaDonDaTao: true;
+            thanhToanDaThu: true;
+            lichHenDaXacNhan: true;
+            duLieuYTeDaGhi: true;
+            tienSuBenhDaGhi: true;
+            canhBaoDaXuLy: true;
+            phanCongCa: true;
+            caDaSapXep: true;
+            caDaDuyet: true;
+            donViDangQuanLy: true;
+            caDaBanGiao: true;
+            caDaNhanBanGiao: true;
+            goiYThuocDaDuyet: true;
+            phienChat: true;
+          };
+        };
       };
     };
     chuyenKhoa: {
@@ -40,6 +55,7 @@ export interface CreateDoctorData {
   email: string;
   passwordHash: string;
   academicDegree: string | null;
+  certification: string | null;
   experienceYears: number;
   description: string | null;
   status: TrangThaiChung;
@@ -53,6 +69,7 @@ export interface UpdateDoctorData {
   email?: string;
   passwordHash?: string;
   academicDegree?: string | null;
+  certification?: string | null;
   experienceYears?: number;
   description?: string | null;
   status?: TrangThaiChung;
@@ -64,7 +81,10 @@ export interface DoctorRepository {
     status?: TrangThaiChung,
     specialtyId?: number,
   ): Promise<DoctorWithRelations[]>;
-  findAvailable(date: Date, specialtyId?: number): Promise<DoctorWithRelations[]>;
+  findAvailable(
+    date: Date,
+    specialtyId?: number,
+  ): Promise<DoctorWithRelations[]>;
   findById(id: number): Promise<DoctorWithRelations | null>;
   findConflict(
     code: string,

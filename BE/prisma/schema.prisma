@@ -593,6 +593,7 @@ model BacSi {
   hoTen           String         @map("ho_ten") @db.VarChar(150)
   soDienThoai     String?        @map("so_dien_thoai") @db.VarChar(20)
   hocVi           String?        @map("hoc_vi") @db.VarChar(100)
+  chungChi        String?        @map("chung_chi") @db.VarChar(255)
   soNamKinhNghiem Int            @default(0) @map("so_nam_kinh_nghiem")
   moTa            String?        @map("mo_ta") @db.Text
   trangThai       TrangThaiChung @default(DANG_HOAT_DONG) @map("trang_thai")

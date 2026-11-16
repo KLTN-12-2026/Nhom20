@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 import AppModal from '@/components/ui/AppModal';
 import '@/components/ui/admin-crud.css';
@@ -34,6 +34,7 @@ const EMPTY_FORM: CreateDoctorPayload = {
   email: '',
   initialPassword: '',
   academicDegree: '',
+  certification: '',
   experienceYears: 0,
   description: '',
   status: 'DANG_HOAT_DONG',
@@ -70,6 +71,7 @@ export default function TrangQuanLyBacSi() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const filteredDoctors = useMemo(() => {
     const search = searchTerm.trim().toLocaleLowerCase('vi');
@@ -143,6 +145,7 @@ export default function TrangQuanLyBacSi() {
       email: doctor.email,
       initialPassword: '',
       academicDegree: doctor.academicDegree ?? '',
+      certification: doctor.certification ?? '',
       experienceYears: doctor.experienceYears,
       description: doctor.description ?? '',
       status: doctor.status,
@@ -152,6 +155,8 @@ export default function TrangQuanLyBacSi() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       let savedDoctor: Doctor;
@@ -194,6 +199,7 @@ export default function TrangQuanLyBacSi() {
     } catch (requestError) {
       showToast(getApiErrorMessage(requestError), 'danger');
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -615,6 +621,18 @@ export default function TrangQuanLyBacSi() {
                 />
               </div>
               <div className="col-md-6">
+                <label className="form-label" htmlFor="doctor-certification">Chứng chỉ</label>
+                <input
+                  id="doctor-certification"
+                  className="form-control"
+                  maxLength={255}
+                  value={form.certification ?? ''}
+                  onChange={(event) => setForm({ ...form, certification: event.target.value })}
+                  placeholder="Nhập chứng chỉ chuyên môn của bác sĩ"
+                />
+                <small className="text-secondary">Chỉ nhập thông tin được phép công khai trên trang chủ.</small>
+              </div>
+              <div className="col-md-6">
                 <label className="form-label" htmlFor="doctor-email">
                   Email đăng nhập *
                 </label>
@@ -789,6 +807,10 @@ export default function TrangQuanLyBacSi() {
             <dt className="col-sm-4">Kinh nghiệm</dt>
             <dd className="col-sm-8">
               {selectedDoctor.experienceYears} năm
+            </dd>
+            <dt className="col-sm-4">Chứng chỉ</dt>
+            <dd className="col-sm-8 text-break" style={{ whiteSpace: 'pre-wrap' }}>
+              {selectedDoctor.certification || 'Chưa cập nhật'}
             </dd>
             <dt className="col-sm-4">Mô tả</dt>
             <dd className="col-sm-8">

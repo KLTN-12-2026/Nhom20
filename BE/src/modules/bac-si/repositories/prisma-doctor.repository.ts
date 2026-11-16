@@ -16,14 +16,29 @@ const doctorInclude = {
       anhDaiDienUrl: true,
       anhDaiDienPublicId: true,
       benhNhan: { select: { id: true } },
-      _count: { select: {
-        phieuHangChoDaGoi: true, phieuHangChoXacNhan: true, donThuocDaCap: true,
-        donThuocDaTuChoi: true, giaoDichKho: true, hoaDonDaTao: true,
-        thanhToanDaThu: true, lichHenDaXacNhan: true, duLieuYTeDaGhi: true,
-        tienSuBenhDaGhi: true, canhBaoDaXuLy: true, phanCongCa: true,
-        caDaSapXep: true, caDaDuyet: true, donViDangQuanLy: true,
-        caDaBanGiao: true, caDaNhanBanGiao: true, goiYThuocDaDuyet: true, phienChat: true,
-      } },
+      _count: {
+        select: {
+          phieuHangChoDaGoi: true,
+          phieuHangChoXacNhan: true,
+          donThuocDaCap: true,
+          donThuocDaTuChoi: true,
+          giaoDichKho: true,
+          hoaDonDaTao: true,
+          thanhToanDaThu: true,
+          lichHenDaXacNhan: true,
+          duLieuYTeDaGhi: true,
+          tienSuBenhDaGhi: true,
+          canhBaoDaXuLy: true,
+          phanCongCa: true,
+          caDaSapXep: true,
+          caDaDuyet: true,
+          donViDangQuanLy: true,
+          caDaBanGiao: true,
+          caDaNhanBanGiao: true,
+          goiYThuocDaDuyet: true,
+          phienChat: true,
+        },
+      },
     },
   },
   chuyenKhoa: {
@@ -44,7 +59,7 @@ const doctorInclude = {
 
 @Injectable()
 export class PrismaDoctorRepository implements DoctorRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   findAll(search?: string, status?: TrangThaiChung, specialtyId?: number) {
     return this.prisma.bacSi.findMany({
@@ -53,24 +68,24 @@ export class PrismaDoctorRepository implements DoctorRepository {
         ...(specialtyId ? { chuyenKhoaId: specialtyId } : {}),
         ...(search
           ? {
-            OR: [
-              { maBacSi: { contains: search, mode: 'insensitive' } },
-              { hoTen: { contains: search, mode: 'insensitive' } },
-              {
-                nguoiDung: {
-                  email: { contains: search, mode: 'insensitive' },
-                },
-              },
-              {
-                chuyenKhoa: {
-                  tenChuyenKhoa: {
-                    contains: search,
-                    mode: 'insensitive',
+              OR: [
+                { maBacSi: { contains: search, mode: 'insensitive' } },
+                { hoTen: { contains: search, mode: 'insensitive' } },
+                {
+                  nguoiDung: {
+                    email: { contains: search, mode: 'insensitive' },
                   },
                 },
-              },
-            ],
-          }
+                {
+                  chuyenKhoa: {
+                    tenChuyenKhoa: {
+                      contains: search,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+              ],
+            }
           : {}),
       },
       include: doctorInclude,
@@ -121,9 +136,9 @@ export class PrismaDoctorRepository implements DoctorRepository {
 
     const currentDoctor = excludeDoctorId
       ? await this.prisma.bacSi.findUnique({
-        where: { id: excludeDoctorId },
-        select: { nguoiDungId: true },
-      })
+          where: { id: excludeDoctorId },
+          select: { nguoiDungId: true },
+        })
       : null;
     return this.prisma.nguoiDung.findFirst({
       where: {
@@ -171,6 +186,7 @@ export class PrismaDoctorRepository implements DoctorRepository {
           hoTen: data.fullName,
           soDienThoai: data.phoneNumber,
           hocVi: data.academicDegree,
+          chungChi: data.certification,
           soNamKinhNghiem: data.experienceYears,
           moTa: data.description,
           trangThai: data.status,
@@ -214,6 +230,9 @@ export class PrismaDoctorRepository implements DoctorRepository {
           ...(data.academicDegree !== undefined
             ? { hocVi: data.academicDegree }
             : {}),
+          ...(data.certification !== undefined
+            ? { chungChi: data.certification }
+            : {}),
           ...(data.experienceYears !== undefined
             ? { soNamKinhNghiem: data.experienceYears }
             : {}),
@@ -232,7 +251,9 @@ export class PrismaDoctorRepository implements DoctorRepository {
         select: { nguoiDungId: true },
       });
       await transaction.bacSi.delete({ where: { id } });
-      await transaction.nhanVien.deleteMany({ where: { nguoiDungId: current.nguoiDungId } });
+      await transaction.nhanVien.deleteMany({
+        where: { nguoiDungId: current.nguoiDungId },
+      });
       await transaction.nguoiDung.delete({
         where: { id: current.nguoiDungId },
       });

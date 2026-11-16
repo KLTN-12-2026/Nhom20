@@ -14,7 +14,7 @@ export default function HomeServicesSection() {
           </div>
           <Link to="/dich-vu" className="btn btn-primary">Xem tất cả dịch vụ</Link>
         </div>
-        <ServiceCards />
+        <ServiceCards presentation="slider" />
       </div>
     </section>
   );
