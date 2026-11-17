@@ -174,6 +174,11 @@ export default function TrangQuanLyThanhToan() {
     showToast(`Đã nhận hóa đơn chờ thanh toán của ${payload.patient.fullName}`);
   }, [fetchInvoices, showToast]));
 
+  useRealtimeEvent<{ id: number; code: string }>('invoice.ready', useCallback((payload) => {
+    void fetchInvoices();
+    showToast(`Hóa đơn ${payload.code} đã sẵn sàng thanh toán`);
+  }, [fetchInvoices, showToast]));
+
   const targetInvoices = useMemo(() => {
     if (!selectedDate) return invoices;
     return invoices.filter((invoice) => invoice.createdDateKey === selectedDate);

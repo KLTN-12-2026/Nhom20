@@ -169,6 +169,21 @@ export class DispensingService {
       throw new BadRequestException('Chỉ có thể cấp đơn thuốc đang xử lý');
     }
 
+    // Luồng hiện tại cấp toàn bộ đơn: không cho thiếu hoặc lặp dòng trước khi ghi kho/hóa đơn.
+    const requestedItemIds = new Set(
+      dto.items.map((item) => item.prescriptionItemId),
+    );
+    if (requestedItemIds.size !== dto.items.length) {
+      throw new BadRequestException(
+        'Mỗi dòng thuốc chỉ được xuất hiện một lần trong yêu cầu cấp thuốc',
+      );
+    }
+    if (!current.chiTiet.length || dto.items.length !== current.chiTiet.length) {
+      throw new BadRequestException(
+        'Phải gửi đầy đủ các dòng thuốc trong đơn để hoàn tất cấp thuốc',
+      );
+    }
+
     const allocations: DispenseAllocation[] = [];
     for (const itemDto of dto.items) {
       const item = current.chiTiet.find(

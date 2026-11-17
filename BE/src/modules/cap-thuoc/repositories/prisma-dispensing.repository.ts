@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   LoaiGiaoDichKho,
   LoaiMucHoaDon,
@@ -247,26 +247,38 @@ export class PrismaDispensingRepository implements DispensingRepository {
             },
           });
         const visit = prescriptionForInvoice.hoSoKham.luotKham;
-        const examFee = visit.chuyenKhoa.phiKham;
         const medicineFee = prescriptionForInvoice.chiTiet.reduce(
           (total, item) => total.add(item.thanhTien),
           new Prisma.Decimal(0),
         );
-        const total = examFee.add(medicineFee);
         const existingInvoice = await transaction.hoaDon.findUnique({
           where: { luotKhamId: visit.id },
-          select: { id: true, trangThai: true },
+          select: {
+            id: true,
+            trangThai: true,
+            tienKham: true,
+            tienThuoc: true,
+            tongTien: true,
+          },
         });
         if (existingInvoice?.trangThai === TrangThaiHoaDon.DA_THANH_TOAN) {
           throw new Error('INVOICE_ALREADY_PAID');
         }
+        if (existingInvoice?.trangThai === TrangThaiHoaDon.DA_HUY) {
+          throw new BadRequestException('Hóa đơn đã hủy, không thể cấp thuốc');
+        }
+        // Chỉ thay phần tiền thuốc; giữ phí khám đã chốt, dịch vụ, phụ thu và giảm giá.
+        const examFee = existingInvoice?.tienKham ?? visit.chuyenKhoa.phiKham;
+        const total = existingInvoice
+          ? existingInvoice.tongTien
+              .sub(existingInvoice.tienThuoc)
+              .add(medicineFee)
+          : examFee.add(medicineFee);
         const invoice = existingInvoice
           ? await transaction.hoaDon.update({
               where: { id: existingInvoice.id },
               data: {
-                tienKham: examFee,
                 tienThuoc: medicineFee,
-                phiDichVu: new Prisma.Decimal(0),
                 tongTien: total,
                 trangThai: TrangThaiHoaDon.CHUA_THANH_TOAN,
                 thoiGianThanhToan: null,
@@ -286,20 +298,31 @@ export class PrismaDispensingRepository implements DispensingRepository {
               },
             });
 
+        // Không xóa dòng dịch vụ hoặc phí khám khi thay chi tiết tiền thuốc.
+        const existingExamLine = existingInvoice
+          ? await transaction.chiTietHoaDon.findFirst({
+              where: { hoaDonId: invoice.id, loaiMuc: LoaiMucHoaDon.PHI_KHAM },
+              select: { id: true },
+            })
+          : null;
         await transaction.chiTietHoaDon.deleteMany({
-          where: { hoaDonId: invoice.id },
+          where: { hoaDonId: invoice.id, loaiMuc: LoaiMucHoaDon.TIEN_THUOC },
         });
         await transaction.chiTietHoaDon.createMany({
           data: [
-            {
-              hoaDonId: invoice.id,
-              loaiMuc: LoaiMucHoaDon.PHI_KHAM,
-              maMuc: visit.chuyenKhoa.maChuyenKhoa,
-              tenMuc: `Phí khám ${visit.chuyenKhoa.tenChuyenKhoa}`,
-              soLuong: 1,
-              donGia: examFee,
-              thanhTien: examFee,
-            },
+            ...(existingExamLine
+              ? []
+              : [
+                  {
+                    hoaDonId: invoice.id,
+                    loaiMuc: LoaiMucHoaDon.PHI_KHAM,
+                    maMuc: visit.chuyenKhoa.maChuyenKhoa,
+                    tenMuc: `Phí khám ${visit.chuyenKhoa.tenChuyenKhoa}`,
+                    soLuong: 1,
+                    donGia: examFee,
+                    thanhTien: examFee,
+                  },
+                ]),
             ...prescriptionForInvoice.chiTiet.map((item) => ({
               hoaDonId: invoice.id,
               thuocId: item.thuocId,

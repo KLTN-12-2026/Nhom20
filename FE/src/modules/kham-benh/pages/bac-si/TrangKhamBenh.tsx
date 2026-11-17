@@ -411,7 +411,7 @@ export default function TrangKhamBenh() {
       showToast(
         hasPrescription
           ? 'Đã hoàn tất khám bệnh và chuyển đơn sang bộ phận Dược sĩ'
-          : 'Đã hoàn tất khám bệnh thành công',
+          : 'Đã hoàn tất khám và chuyển hóa đơn đến Thu ngân',
         'success',
       );
       navigate('/bac-si/hang-doi');
@@ -1059,7 +1059,7 @@ export default function TrangKhamBenh() {
         <div className="modal d-block" role="dialog" style={{ backgroundColor: 'rgba(15, 23, 42, 0.45)' }}>
           <div className="modal-dialog modal-dialog-centered"><div className="modal-content">
             <div className="modal-header"><h2 className="modal-title fs-5">Hoàn tất khi chưa kê thuốc</h2><button type="button" className="btn-close" onClick={() => setShowCompleteWithoutMedicineModal(false)} /></div>
-            <div className="modal-body">Bạn chưa kê thuốc. Bạn có chắc muốn hoàn tất lượt khám này?</div>
+            <div className="modal-body">Bạn xác nhận hoàn tất lượt khám không kê đơn thuốc? Hồ sơ sẽ được hoàn tất và chuyển thông tin thanh toán đến Thu ngân.</div>
             <div className="modal-footer"><button type="button" className="btn btn-outline-secondary" onClick={() => setShowCompleteWithoutMedicineModal(false)}>Quay lại</button><button type="button" className="btn btn-primary" onClick={() => { setShowCompleteWithoutMedicineModal(false); void handleSave('complete', true); }}>Hoàn tất khám</button></div>
           </div></div>
         </div>

@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PhanHeNhatKyHeThong, Prisma } from '@prisma/client';
+import { LoaiDichVu, PhanHeNhatKyHeThong, Prisma } from '@prisma/client';
 import { AuditLogsService } from '../nhat-ky-he-thong/audit-logs.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { ServiceQueryDto } from './dto/service-query.dto';
@@ -30,10 +30,13 @@ export class ServicesService {
       query.status,
       query.specialtyId,
     );
+    const filtered = query.type
+      ? items.filter((item) => item.loaiDichVu === query.type)
+      : items;
     return {
       message: 'Lấy danh sách dịch vụ thành công',
-      data: items.map((item) => this.toResponse(item)),
-      meta: { total: items.length },
+      data: filtered.map((item) => this.toResponse(item)),
+      meta: { total: filtered.length },
     };
   }
 
@@ -66,9 +69,12 @@ export class ServicesService {
     await this.ensureUnique(code, name, id);
     // Chỉ đồng bộ khi dịch vụ khám vẫn thuộc đúng chuyên khoa hiện tại.
     const isExaminationService =
+      (dto.type !== undefined ? dto.type : current.loaiDichVu) !==
+        LoaiDichVu.CAN_LAM_SANG &&
       current.chuyenKhoa !== null &&
       name === `Khám ${current.chuyenKhoa.tenChuyenKhoa}` &&
-      (dto.specialtyId === undefined || dto.specialtyId === current.chuyenKhoaId);
+      (dto.specialtyId === undefined ||
+        dto.specialtyId === current.chuyenKhoaId);
     const item = await this.repository.update(
       id,
       {
@@ -82,6 +88,7 @@ export class ServicesService {
           ? { thoiGianDuKienPhut: dto.estimatedMinutes }
           : {}),
         ...(dto.status !== undefined ? { trangThai: dto.status } : {}),
+        ...(dto.type !== undefined ? { loaiDichVu: dto.type } : {}),
         ...(dto.specialtyId !== undefined
           ? { chuyenKhoa: { connect: { id: dto.specialtyId } } }
           : {}),
@@ -152,6 +159,7 @@ export class ServicesService {
       donGia: dto.price,
       thoiGianDuKienPhut: dto.estimatedMinutes,
       trangThai: dto.status,
+      loaiDichVu: dto.type,
       ...(dto.specialtyId
         ? { chuyenKhoa: { connect: { id: dto.specialtyId } } }
         : {}),
@@ -166,6 +174,7 @@ export class ServicesService {
       price: Number(item.donGia),
       estimatedMinutes: item.thoiGianDuKienPhut,
       status: item.trangThai,
+      type: item.loaiDichVu,
       specialty: item.chuyenKhoa
         ? {
             id: item.chuyenKhoa.id,
