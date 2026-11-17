@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TrangThaiChung } from '@prisma/client';
+import { LoaiDichVu, TrangThaiChung } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
@@ -14,6 +14,12 @@ import {
 } from 'class-validator';
 
 export class CreateServiceDto {
+  // Dữ liệu cũ chưa phân loại giữ NULL; không tự suy luận theo tên hoặc chuyên khoa.
+  @ApiPropertyOptional({ enum: LoaiDichVu, nullable: true })
+  @IsOptional()
+  @IsEnum(LoaiDichVu)
+  type?: LoaiDichVu | null;
+
   @ApiProperty({ example: '6001' })
   @IsString()
   @MaxLength(30)

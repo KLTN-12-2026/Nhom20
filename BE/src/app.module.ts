@@ -26,6 +26,7 @@ import { DoctorReviewsModule } from './modules/danh-gia-bac-si/doctor-reviews.mo
 import { ChatAIModule } from './modules/chat-ai/chat-ai.module';
 import { AdminReportsModule } from './modules/bao-cao-thong-ke/admin-reports.module';
 import { GoiYThuocModule } from './modules/goi-y-thuoc/goi-y-thuoc.module';
+import { ServiceOrdersModule } from './modules/chi-dinh-dich-vu/service-orders.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { GoiYThuocModule } from './modules/goi-y-thuoc/goi-y-thuoc.module';
     ChatAIModule,
     AdminReportsModule,
     GoiYThuocModule,
+    ServiceOrdersModule,
   ],
 })
 export class AppModule {}

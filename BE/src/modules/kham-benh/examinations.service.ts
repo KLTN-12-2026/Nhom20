@@ -68,7 +68,9 @@ export class ExaminationsService {
 
   complete(userId: number, appointmentId: number, dto: SaveExaminationDto) {
     if (!dto.symptoms?.trim())
-      throw new BadRequestException('Triệu chứng lâm sàng là thông tin bắt buộc');
+      throw new BadRequestException(
+        'Triệu chứng lâm sàng là thông tin bắt buộc',
+      );
     if (!dto.diagnosis?.trim())
       throw new BadRequestException('Chẩn đoán là thông tin bắt buộc');
     if (!dto.conclusion?.trim())
@@ -93,7 +95,9 @@ export class ExaminationsService {
 
   completeByVisit(userId: number, visitId: number, dto: SaveExaminationDto) {
     if (!dto.symptoms?.trim())
-      throw new BadRequestException('Triệu chứng lâm sàng là thông tin bắt buộc');
+      throw new BadRequestException(
+        'Triệu chứng lâm sàng là thông tin bắt buộc',
+      );
     if (!dto.diagnosis?.trim())
       throw new BadRequestException('Chẩn đoán là thông tin bắt buộc');
     if (!dto.conclusion?.trim())
@@ -250,7 +254,19 @@ export class ExaminationsService {
           record.donThuoc.id,
         );
       }
-      record = await this.repository.markComplete(record.id, visit.id);
+      const completed = await this.repository.markComplete(
+        record.id,
+        visit.id,
+        userId,
+      );
+      record = completed;
+      if (completed.invoiceForReception) {
+        this.realtimeService.emitToRoom(
+          REALTIME_ROOMS.role('RECEPTIONIST'),
+          REALTIME_EVENTS.INVOICE_READY,
+          completed.invoiceForReception,
+        );
+      }
       const prescription = record.donThuoc;
       if (prescription) {
         const payload = this.recordResponse(record);
@@ -275,9 +291,9 @@ export class ExaminationsService {
     return {
       message:
         status === TrangThaiHoSoKham.DA_HOAN_TAT
-          ? (record.donThuoc
-              ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
-              : 'Đã hoàn tất khám bệnh thành công')
+          ? record.donThuoc
+            ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
+            : 'Đã hoàn tất khám và chuyển hóa đơn đến Thu ngân'
           : 'Đã lưu bản nháp phiếu khám',
       data: { ...this.recordResponse(record), warnings },
     };
@@ -399,7 +415,19 @@ export class ExaminationsService {
           record.donThuoc.id,
         );
       }
-      record = await this.repository.markComplete(record.id, visit.id);
+      const completed = await this.repository.markComplete(
+        record.id,
+        visit.id,
+        userId,
+      );
+      record = completed;
+      if (completed.invoiceForReception) {
+        this.realtimeService.emitToRoom(
+          REALTIME_ROOMS.role('RECEPTIONIST'),
+          REALTIME_EVENTS.INVOICE_READY,
+          completed.invoiceForReception,
+        );
+      }
     }
 
     if (status === TrangThaiHoSoKham.DA_HOAN_TAT && record.donThuoc) {
@@ -430,9 +458,9 @@ export class ExaminationsService {
     return {
       message:
         status === TrangThaiHoSoKham.DA_HOAN_TAT
-          ? (record.donThuoc
-              ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
-              : 'Đã hoàn tất khám bệnh thành công')
+          ? record.donThuoc
+            ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
+            : 'Đã hoàn tất khám và chuyển hóa đơn đến Thu ngân'
           : 'Đã lưu bản nháp phiếu khám',
       data: { ...this.recordResponse(record), warnings },
     };

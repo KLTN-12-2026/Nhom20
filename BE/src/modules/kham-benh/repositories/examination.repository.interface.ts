@@ -107,7 +107,12 @@ export interface ExaminationRepository {
   markComplete(
     recordId: number,
     visitId: number,
-  ): Promise<ExaminationWithRelations>;
+    currentUserId: number,
+  ): Promise<
+    ExaminationWithRelations & {
+      invoiceForReception: { id: number; code: string } | null;
+    }
+  >;
   findHistory(input: {
     doctorId: number;
     search?: string;

@@ -412,6 +412,8 @@ model NguoiDung {
   thongBao            ThongBao[]
   xacThucTokens       XacThucToken[]
   goiYThuocDaDuyet    GoiYThuocThayThe[] @relation("NguoiDuyetGoiY")
+  ketQuaDichVuDaNhap ChiDinhDichVu[] @relation("NguoiNhapKetQuaDichVu")
+  chiDinhDichVuDaHuy ChiDinhDichVu[] @relation("NguoiHuyChiDinhDichVu")
 
   @@index([email])
   @@index([soDienThoai])
@@ -604,6 +606,7 @@ model BacSi {
   luotKham        LuotKham[]
   lichHen         LichHen[]
   danhGia         DanhGiaBacSi[]
+  chiDinhDichVu   ChiDinhDichVu[]
 
   @@index([chuyenKhoaId])
   @@map("bac_si")
@@ -783,6 +786,7 @@ model LuotKham {
   hoSoKham         HoSoKham?
   hoaDon           HoaDon?
   danhGiaBacSi     DanhGiaBacSi?
+  chiDinhDichVu    ChiDinhDichVu[]
 
   @@index([benhNhanId])
   @@index([chuyenKhoaId])
@@ -1240,6 +1244,9 @@ model CanhBaoDonThuoc {
 
 // Danh mục dịch vụ lẻ có thể đưa vào chi tiết hóa đơn.
 model DichVu {
+  // NULL là danh mục cũ chưa phân loại, không tự suy đoán là cận lâm sàng.
+  loaiDichVu         LoaiDichVu?     @map("loai_dich_vu")
+  chiDinhDichVu      ChiDinhDichVu[]
   id                 Int             @id @default(autoincrement())
   maDichVu           String          @unique @map("ma_dich_vu") @db.VarChar(30)
   tenDichVu          String          @map("ten_dich_vu") @db.VarChar(200)
@@ -1261,6 +1268,8 @@ model DichVu {
 
 // Dòng hóa đơn lưu ảnh chụp tên, đơn giá và thành tiền tại thời điểm lập hóa đơn.
 model ChiTietHoaDon {
+  chiDinhDichVuId Int? @unique @map("chi_dinh_dich_vu_id")
+  chiDinhDichVu ChiDinhDichVu? @relation(fields: [chiDinhDichVuId], references: [id], onDelete: Restrict)
   id        Int           @id @default(autoincrement())
   hoaDonId  Int           @map("hoa_don_id")
   dichVuId  Int?          @map("dich_vu_id")
@@ -1282,6 +1291,55 @@ model ChiTietHoaDon {
   @@index([dichVuId])
   @@index([thuocId])
   @@map("chi_tiet_hoa_don")
+}
+
+// Chỉ định cận lâm sàng MVP; kết quả do bác sĩ nhập mô phỏng, không từ thiết bị.
+enum LoaiDichVu {
+  KHAM
+  CAN_LAM_SANG
+
+  @@map("loai_dich_vu")
+}
+
+enum TrangThaiChiDinhDichVu {
+  CHO_THUC_HIEN
+  DA_HOAN_TAT
+  DA_HUY
+
+  @@map("trang_thai_chi_dinh_dich_vu")
+}
+
+model ChiDinhDichVu {
+  id Int @id @default(autoincrement())
+  luotKhamId Int @map("luot_kham_id")
+  dichVuId Int @map("dich_vu_id")
+  bacSiChiDinhId Int @map("bac_si_chi_dinh_id")
+  lyDoChiDinh String @map("ly_do_chi_dinh") @db.VarChar(1000)
+  ghiChu String? @map("ghi_chu") @db.VarChar(2000)
+  trangThai TrangThaiChiDinhDichVu @default(CHO_THUC_HIEN) @map("trang_thai")
+  donGiaSnapshot Decimal @map("don_gia_snapshot") @db.Decimal(15, 2)
+  idempotencyKey String @unique @map("idempotency_key") @db.Uuid
+  ketQua String? @map("ket_qua") @db.Text
+  nguoiNhapKetQuaId Int? @map("nguoi_nhap_ket_qua_id")
+  thoiGianCoKetQua DateTime? @map("thoi_gian_co_ket_qua")
+  lyDoHuy String? @map("ly_do_huy") @db.VarChar(1000)
+  nguoiHuyId Int? @map("nguoi_huy_id")
+  thoiGianHuy DateTime? @map("thoi_gian_huy")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  luotKham LuotKham @relation(fields: [luotKhamId], references: [id], onDelete: Restrict)
+  dichVu DichVu @relation(fields: [dichVuId], references: [id], onDelete: Restrict)
+  bacSiChiDinh BacSi @relation(fields: [bacSiChiDinhId], references: [id], onDelete: Restrict)
+  nguoiNhapKetQua NguoiDung? @relation("NguoiNhapKetQuaDichVu", fields: [nguoiNhapKetQuaId], references: [id], onDelete: Restrict)
+  nguoiHuy NguoiDung? @relation("NguoiHuyChiDinhDichVu", fields: [nguoiHuyId], references: [id], onDelete: Restrict)
+  chiTietHoaDon ChiTietHoaDon?
+
+  @@index([luotKhamId, trangThai])
+  @@index([dichVuId])
+  @@index([bacSiChiDinhId])
+  @@index([nguoiNhapKetQuaId])
+  @@index([nguoiHuyId])
+  @@map("chi_dinh_dich_vu")
 }
 
 model DanhGiaBacSi {
