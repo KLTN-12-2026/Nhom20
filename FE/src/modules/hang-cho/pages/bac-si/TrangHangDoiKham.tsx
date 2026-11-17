@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { WaitingVisitsPanel } from '@/modules/kham-benh';
 
 import { useAppToast } from '@/components/ui/use-app-toast';
 import { getApiErrorMessage } from '@/services/axios-client';
@@ -124,6 +125,7 @@ export default function TrangHangDoiKham() {
         </div>
       </div>
 
+      <WaitingVisitsPanel />
       <section className="doctor-panel overflow-hidden">
         {isLoading && (
           <div className="doctor-empty">

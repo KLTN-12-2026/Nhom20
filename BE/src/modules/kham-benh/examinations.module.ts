@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { WaitingVisitsController } from './waiting-visits.controller';
+import { WaitingVisitsService } from './waiting-visits.service';
+import { WaitingVisitsRepository } from './repositories/waiting-visits.repository';
 
 import { RealtimeModule } from '../thoi-gian-thuc/realtime.module';
 import { ThongBaoModule } from '../thong-bao/thong-bao.module';
@@ -22,8 +25,10 @@ import { DIEN_GIAI_CANH_BAO_AI_REPOSITORY } from './repositories/dien-giai-canh-
     GeminiModule,
     GoiYThuocModule,
   ],
-  controllers: [ExaminationsController],
+  controllers: [WaitingVisitsController, ExaminationsController],
   providers: [
+    WaitingVisitsService,
+    WaitingVisitsRepository,
     ExaminationsService,
     PrescriptionSafetyService,
     GoiYThuocAiService,

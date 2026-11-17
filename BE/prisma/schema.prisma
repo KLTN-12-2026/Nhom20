@@ -140,6 +140,7 @@ enum TrangThaiLuotKham {
   DA_DANG_KY
   DANG_CHO
   DA_VAO_PHONG
+  CHO_KET_QUA
   DA_HOAN_TAT
   DA_HUY
 

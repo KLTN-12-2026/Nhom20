@@ -63,6 +63,22 @@ export class PrismaExaminationRepository implements ExaminationRepository {
 
   save(data: ExaminationSaveData) {
     return this.prisma.$transaction(async (transaction) => {
+      // Autosave trễ phải chờ chuyển trạng thái và không được mở lại hồ sơ đã chốt.
+      await transaction.$queryRaw`SELECT id FROM luot_kham WHERE id = ${data.visitId} FOR UPDATE`;
+      const visit = await transaction.luotKham.findUniqueOrThrow({
+        where: { id: data.visitId },
+        select: { trangThai: true, hoSoKham: { select: { trangThai: true } } },
+      });
+      if (
+        !['DANG_CHO', 'DA_VAO_PHONG', 'CHO_KET_QUA'].includes(
+          visit.trangThai,
+        ) ||
+        visit.hoSoKham?.trangThai === 'DA_HOAN_TAT'
+      ) {
+        throw new BadRequestException(
+          'Lượt khám đã đóng; không thể ghi bản nháp',
+        );
+      }
       const isComplete = data.status === TrangThaiHoSoKham.DA_HOAN_TAT;
       const record = await transaction.hoSoKham.upsert({
         where: { luotKhamId: data.visitId },
@@ -177,6 +193,15 @@ export class PrismaExaminationRepository implements ExaminationRepository {
     return this.prisma.$transaction(async (transaction) => {
       // Khóa cùng hàng với API tạo chỉ định, tránh race tạo chỉ định khi đang hoàn tất.
       await transaction.$queryRaw`SELECT id FROM luot_kham WHERE id = ${visitId} FOR UPDATE`;
+      const lockedVisit = await transaction.luotKham.findUniqueOrThrow({
+        where: { id: visitId },
+        select: { trangThai: true },
+      });
+      if (lockedVisit.trangThai === 'CHO_KET_QUA') {
+        throw new BadRequestException(
+          'Hãy tiếp tục lượt khám trước khi hoàn tất',
+        );
+      }
       const pendingOrders = await transaction.chiDinhDichVu.count({
         where: { luotKhamId: visitId, trangThai: 'CHO_THUC_HIEN' },
       });

@@ -7,6 +7,11 @@ export class ServiceQueryDto {
   @ApiPropertyOptional({ enum: LoaiDichVu })
   @IsOptional()
   @IsEnum(LoaiDichVu)
+  excludeType?: LoaiDichVu;
+
+  @ApiPropertyOptional({ enum: LoaiDichVu })
+  @IsOptional()
+  @IsEnum(LoaiDichVu)
   type?: LoaiDichVu;
 
   @ApiPropertyOptional() @IsOptional() @IsString() search?: string;

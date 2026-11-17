@@ -211,9 +211,9 @@ export class ServiceOrdersService {
   }
 
   private assertEditable(visit: OrderVisit) {
-    if (visit.trangThai !== 'DA_VAO_PHONG')
+    if (!['DA_VAO_PHONG', 'CHO_KET_QUA'].includes(visit.trangThai))
       throw new ConflictException(
-        'Chỉ được xử lý chỉ định trong lượt khám đang khám',
+        'Chỉ được xử lý chỉ định trong lượt đang khám hoặc chờ kết quả',
       );
     if (
       visit.hoaDon &&

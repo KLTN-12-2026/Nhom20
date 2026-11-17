@@ -54,6 +54,13 @@ describe('Bước 3 — phân loại dịch vụ (mock)', () => {
       false,
     );
   });
+  it('bộ lọc public loại CLS, giữ KHAM và NULL; Admin vẫn thấy đủ', async () => {
+    const { service, repo } = setup();
+    repo.findAll.mockResolvedValue([item, { ...item, id: 2, loaiDichVu: 'CAN_LAM_SANG' }, { ...item, id: 3, loaiDichVu: 'KHAM' }]);
+    expect((await service.findAll({ excludeType: 'CAN_LAM_SANG' })).data.map((v) => v.id)).toEqual([1, 3]);
+    expect((await service.findAll({})).data).toHaveLength(3);
+    expect((await service.findAll({ type: 'CAN_LAM_SANG' })).data.map((v) => v.id)).toEqual([2]);
+  });
   it('giữ hành vi đồng bộ dịch vụ khám cũ chưa phân loại', async () => {
     const { service, repo } = setup();
     await service.update(1, { price: 200 }, 7);
