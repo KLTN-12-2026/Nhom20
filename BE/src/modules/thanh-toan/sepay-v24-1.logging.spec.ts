@@ -84,6 +84,8 @@ describe('V24.1 — log webhook không tiết lộ bí mật', () => {
       trangThai: TrangThaiHoaDon.CHUA_THANH_TOAN,
     };
     const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      hoSoKham: { findUnique: jest.fn().mockResolvedValue(null) },
       hoaDon: {
         findUnique: jest.fn().mockResolvedValue(invoice),
         update: jest.fn().mockResolvedValue(invoice),

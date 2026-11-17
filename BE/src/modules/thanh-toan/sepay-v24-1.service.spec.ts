@@ -26,6 +26,7 @@ describe('V24.1 — đối chiếu tiền webhook', () => {
   let emitToRoom: jest.Mock;
   let transaction: jest.Mock;
   let existingTransaction: { hoaDonId: number } | null;
+  let prescriptionStatus: string | null;
   let service: ThanhToanService;
 
   beforeEach(() => {
@@ -39,10 +40,28 @@ describe('V24.1 — đối chiếu tiền webhook', () => {
     created = [];
     updated = [];
     existingTransaction = null;
+    prescriptionStatus = null;
     emitToRoom = jest.fn();
     const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      hoSoKham: {
+        findUnique: jest.fn(() =>
+          Promise.resolve(
+            prescriptionStatus
+              ? { donThuoc: { trangThai: prescriptionStatus } }
+              : null,
+          ),
+        ),
+      },
       hoaDon: {
-        findUnique: jest.fn(() => Promise.resolve({ ...invoice })),
+        findUnique: jest.fn(() =>
+          Promise.resolve({
+            ...invoice,
+            thanhToan: paid.gt(0)
+              ? [{ soTien: paid, trangThai: TrangThaiThanhToan.THANH_CONG }]
+              : [],
+          }),
+        ),
         update: jest.fn(({ data }: { data: Record<string, unknown> }) => {
           updated.push(data);
           return Promise.resolve({ ...invoice, ...data });
@@ -124,6 +143,18 @@ describe('V24.1 — đối chiếu tiền webhook', () => {
     expect(updated).toHaveLength(0);
   });
 
+  it('chặn thu tiền và webhook khi đơn thuốc chưa cấp', async () => {
+    prescriptionStatus = 'CHO_CAP_THUOC';
+    await expect(service.collectCash(invoice.id, 100, 7)).rejects.toThrow(
+      'chưa được cấp',
+    );
+    await expect(service.handleSePayWebhook(dto)).rejects.toThrow(
+      'cần đối soát',
+    );
+    expect(created).toHaveLength(0);
+    expect(updated).toHaveLength(0);
+  });
+
   it('không tự động thanh toán hóa đơn đã hủy', async () => {
     invoice.trangThai = TrangThaiHoaDon.DA_HUY;
     await expect(service.handleSePayWebhook(dto)).rejects.toThrow();
@@ -146,7 +177,7 @@ describe('V24.1 — đối chiếu tiền webhook', () => {
     paid = new Prisma.Decimal(200000);
     if (method === 'cash') await service.collectCash(1, 100000, 5);
     else await service.collectTransfer(1, 100000, 5, 'MOCK');
-    expect(created[0].soTien).toBe(100000);
+    expect(String(created[0].soTien)).toBe('100000');
     expect(updated[0].trangThai).toBe(TrangThaiHoaDon.BAN_NHAP);
   });
 

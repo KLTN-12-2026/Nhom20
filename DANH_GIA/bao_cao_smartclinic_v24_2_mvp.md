@@ -9,7 +9,8 @@ Ngày: 17/11/2026. Nhánh: `Tram`.
 - Bước 3: đã được duyệt thiết kế và triển khai model/API chỉ định, phân loại dịch vụ và chặn hoàn tất khi còn chỉ định chờ. 119 test liên quan PASS; chi tiết và từ điển dữ liệu để đưa vào Word ở mục 8–12.
 - Bước 4: đã triển khai giao diện chỉ định, nhập/xem kết quả mô phỏng và hủy; 12 test trình duyệt với API giả lập PASS, 63 test BE liên quan PASS, build FE/BE PASS (mục 17). Chưa xác nhận E2E với PostgreSQL thật.
 - Bước 5: đã triển khai nháp an toàn, trạng thái chờ/mở lại theo visitId và lọc dịch vụ công khai theo phê duyệt. 111 test BE và 19 test browser API giả lập PASS; build FE/BE PASS. Migration CHO_KET_QUA đã áp dụng riêng lên Neon sau khi chủ dự án duyệt; xem mục 19. Chưa kiểm thử E2E/database thật.
-- Bước 6–7: CHƯA THỰC HIỆN. Chưa cộng phí chỉ định vào hóa đơn hoặc xác nhận E2E với database thật.
+- Bước 6: đã triển khai code cộng phí chỉ định khi hoàn tất khám theo lựa chọn B; test giả lập và build PASS, chưa kiểm thử E2E/PostgreSQL thật. Xem mục 20.
+- Bước 7: đã chạy hồi quy ngày 17/11/2026; 232/232 test BE PASS, trình duyệt 25 PASS/1 FAIL, build FE/BE PASS. Phát hiện lỗi giao diện hóa đơn đã hủy; PostgreSQL/E2E và SePay thật vẫn BLOCKED/NOT RUN. **Chưa đủ điều kiện triển khai dùng thật**; xem mục 21.
 - Schema đã bổ sung trong Bước 3. Sau phê duyệt riêng của chủ dự án, migration `20261117000000_add_service_orders` đã áp dụng và đọc lại thành công trên Neon ngày 17/11/2026 (mục 14). Lượt migration không chạy seed; lượt bổ sung danh mục đã seed riêng theo phê duyệt (mục 16). Không Git mutation; không chạy migration phân quyền cũ.
 - Không thêm khoa, role, lịch trực; không sửa FEFO hoặc thuật toán tồn kho.
 
@@ -715,3 +716,177 @@ Ngày 17/11/2026, sau khi được giải thích đây là migration mới khôn
 - Kết nối sandbox ban đầu EACCES, đã được phép dùng quyền mạng cần thiết. Không in thông tin đăng nhập. Cảnh báo SSL là cảnh báo từ thư viện, không làm thất bại migration.
 
 **MIGRATION PASS:** đã ghi và đọc lại Neon. Không đồng nghĩa Bước 5 đã được E2E trên database thật; chưa tạo dữ liệu test khám, chưa kiểm thử rollback/concurrency PostgreSQL hoặc realtime thật, và chưa triển khai Bước 6.
+
+## 20. Bước 6 — Tính phí chỉ định khi hoàn tất khám
+
+Ngày 17/11/2026, người dùng yêu cầu khảo sát trước, sau đó chọn **B — ghi phí khi hoàn tất khám**. Trong lúc khảo sát chưa sửa code/schema/database. Bước này không chạy migration, seed, Git mutation hoặc ghi dữ liệu khám lên Neon.
+
+### Thiết kế và điểm kiểm tra
+
+- `ChiTietHoaDon.chiDinhDichVuId` đã có FK và unique; `ChiDinhDichVu.donGiaSnapshot` đã có. Không thêm bảng/cột/migration.
+- Trong transaction hoàn tất, khóa lượt khám rồi hóa đơn; chỉ lấy chỉ định cùng lượt, trạng thái `DA_HOAN_TAT`. Mỗi dòng có liên kết chỉ định, `DICH_VU`, số lượng 1, đơn giá/thành tiền bằng snapshot; cộng phần mới vào `phiDichVu` và `tongTien` bằng Decimal.
+- Đối chiếu dòng liên kết đã có: cùng hóa đơn, dịch vụ, loại dòng, số lượng và giá snapshot; xung đột hoặc dòng gắn chỉ định không còn hoàn tất thì dừng đối soát, không tự sửa. Nếu có dòng dịch vụ cũ chưa gắn chỉ định nhưng cùng dịch vụ với dòng sắp thêm, cũng chặn để tránh thu trùng; không tự suy đoán dữ liệu cũ.
+- Bỏ qua chỉ định `DA_HUY`. Còn `CHO_THUC_HIEN` vẫn bị chặn hoàn tất theo Bước 3. Nếu hóa đơn đã thanh toán thiếu phí chỉ định: báo cần đối soát, không tự ghi dòng hoặc thay tổng.
+- Khi đã có đơn thuốc, tạo hóa đơn `BAN_NHAP` khi chốt khám; chưa gửi sự kiện hóa đơn sẵn sàng thu. Backend thanh toán tiền mặt/chuyển khoản thủ công và SePay kiểm tra đơn đã `DA_CAP_THUOC` trước ghi thanh toán. API danh sách trả `sanSangThuTien`; giao diện thu ngân ẩn QR/nút thu và giải thích khi chờ cấp thuốc. Dược sĩ sau cấp thuốc giữ nguyên dòng dịch vụ và phát sự kiện như trước.
+- Chốt khám, cấp thuốc và thu tiền khóa hàng hóa đơn; thu thủ công đọc lại hóa đơn và số tiền đã thu sau khi khóa, dùng Decimal. Khóa/rollback cần kiểm chứng PostgreSQL thật; mock chỉ xác nhận các lời gọi.
+- SePay đã có test chuyển thiếu phát `payment.partial`, không phát `payment.success`. Nếu tiền thực đã chuyển tới một hóa đơn có đơn chưa cấp, webhook trả lỗi đối soát, không ghi nhận như đã thanh toán; **chưa xác minh cơ chế gửi lại/đối soát của nhà cung cấp**. Không được dùng production trước khi kiểm thử và thống nhất xử lý tình huống này.
+
+### Kết quả kiểm tra
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Hai test mới có/không thuốc trước sửa | FAIL vì không có dòng phí, tái hiện lỗi |
+| 12 suite BE liên quan, bao gồm nháp, waiting, chỉ định, hóa đơn, cấp thuốc, SePay | **158/158 PASS**, mock/transaction giả lập |
+| Có thuốc/không thuốc, giá snapshot, gọi hoàn tất hai lần, dòng cũ không liên kết, hóa đơn đã thanh toán thiếu phí | PASS ở mức unit/mock |
+| Hủy chỉ định | Query chỉ lấy trạng thái hoàn tất; kiểm tra dòng liên kết bất thường bị chặn trong mock; chưa thử ghi/hủy thực trên DB |
+| Cấp thuốc | Test giữ phí dịch vụ, chỉ xóa dòng thuốc, giữ FEFO/Serializable — PASS trong mock |
+| SePay chuyển thiếu | `payment.partial`, không phải `payment.success` — PASS trong mock |
+| Thu tiền/SePay trước cấp thuốc | Bị chặn; webhook báo cần đối soát — PASS trong mock |
+| Build FE, build BE | PASS; FE còn cảnh báo chunk lớn |
+| Lint FE file thanh toán và lint BE 3 file nghiệp vụ | PASS |
+| PostgreSQL riêng, race/rollback, browser→BE→DB, SePay thật | **BLOCKED/NOT RUN**: chưa có database test riêng, không ghi dữ liệu khám lên Neon |
+
+Không có dữ liệu test được tạo trên Neon để xóa. Test source được giữ lại để chạy hồi quy. Không tuyên bố test đã chứng minh transaction thật hoặc đủ điều kiện dùng thu tiền thật.
+
+### File thay đổi Bước 6
+
+- `BE/src/modules/kham-benh/repositories/prisma-examination.repository.ts`
+- `BE/src/modules/kham-benh/examination-invoice.spec.ts`
+- `BE/src/modules/cap-thuoc/repositories/prisma-dispensing.repository.ts`
+- `BE/src/modules/cap-thuoc/dispensing-invoice.spec.ts`
+- `BE/src/modules/thanh-toan/thanh-toan.service.ts`
+- `BE/src/modules/thanh-toan/sepay-v24-1.service.spec.ts`
+- `BE/src/modules/thanh-toan/sepay-v24-1.logging.spec.ts`
+- `FE/src/modules/thanh-toan/pages/thu-ngan/TrangQuanLyThanhToan.tsx`
+- Báo cáo này.
+
+**Checkpoint Bước 6: CODE + TEST GIẢ LẬP PASS, CHƯA ĐỦ ĐIỀU KIỆN PRODUCTION.** Chờ duyệt Bước 7; cần PostgreSQL test tách biệt để kiểm thử đồng thời, rollback, dữ liệu lịch sử và luồng thuốc–dịch vụ–thu tiền, cùng phương án đối soát webhook nhận tiền trước cấp thuốc.
+
+## 21. Bước 7 — Hồi quy và điều kiện triển khai
+
+### 21.1. Phạm vi thực hiện
+
+Chủ dự án đã chọn **Duyệt Bước 7**. Thực hiện trên nhánh `Tram`, ngày 17/11/2026. Đọc lại RULE.md, yêu cầu MVP, báo cáo cũ, source khám/chỉ định/cấp thuốc/thanh toán và các test; kiểm tra branch/status/diff trước khi sửa. Không sửa logic nghiệp vụ trong bước hồi quy này, không thay schema, không chạy migration/seed, không kết nối ghi Neon, không Git mutation.
+
+- Tạo mới: `FE/tests/service-order-payments.browser.mjs` — 7 test thu ngân bằng Chrome thật, API giả lập.
+- Cập nhật: báo cáo này.
+- Giữ nguyên 8 file code/test Bước 6 đang có thay đổi trước Bước 7, liệt kê tại mục 20. Không ghi nhận các diff ấy là code mới của Bước 7.
+- Không xóa test cũ, không nới assertion để cho xanh. Test mới phát hiện lỗi được giữ FAIL để tái hiện và sửa sau khi duyệt.
+
+### 21.2. Kết quả chạy thực tế
+
+| Kiểm tra | Kết quả Bước 7 | Giới hạn |
+|---|---|---|
+| Toàn bộ Jest BE: `npm.cmd test -- --runInBand` | **22 suites, 232/232 PASS**, 18,533 giây | Unit/service/repository mock; một số controller chạy Nest/Supertest với service/auth giả lập. Không phải Prisma/PostgreSQL thật |
+| `FE/tests/service-orders.browser.mjs` | **19/19 PASS**, 51,898 giây | Chrome thật; API và socket bị giả lập/chặn |
+| `FE/tests/service-order-payments.browser.mjs` | **6 PASS, 1 FAIL**, 13,745 giây | Chrome thật; invoice/thuốc/thanh toán lấy từ fixture trong bộ nhớ; không gọi thu tiền thật |
+| Build BE: `npm.cmd run build` | **PASS**, exit 0 | Nest build |
+| Build FE: `npm.cmd run build` | **PASS**, exit 0 | `tsc -b` và Vite; còn cảnh báo chunk >500 kB |
+| TypeScript BE: `node node_modules/typescript/bin/tsc --noEmit` | **PASS**, exit 0 | Không emit |
+| TypeScript FE: cùng lệnh trên | **PASS**, exit 0 | FE dùng project references; kết quả kiểm tra app còn được bao phủ bởi `tsc -b` trong build |
+| Lint FE toàn bộ: `npm.cmd run lint` | **PASS**, exit 0, **7 warning** | Không sửa warning ngoài phạm vi; test mới không thêm warning |
+| Lint BE toàn bộ, bỏ `--fix` | **FAIL: 564 errors, 15 warnings** | Có lỗi format/type-safety ở nhiều module/test; chưa phân loại hết lịch sử phát sinh. Không tự format hoặc sửa hàng loạt |
+| Lint riêng 3 file nghiệp vụ Bước 6 | **PASS**, exit 0 | Repository khám, repository cấp thuốc, service thanh toán |
+| `git diff --check` | **PASS**, exit 0 | Cảnh báo LF/CRLF không phải lỗi whitespace |
+| PostgreSQL riêng: FK/unique/rollback/concurrency | **BLOCKED** | Chưa có DB test được cung cấp; không tìm thấy `docker`, `psql`, `postgres` trong PATH. Không suy ra máy không thể cài DB |
+| Trình duyệt → BE → DB và Socket.IO server thật | **NOT RUN** | Không dùng Neon chung để tạo dữ liệu khám thử |
+| SePay/ngân hàng thật, retry webhook trước cấp thuốc | **NOT RUN** | Không phát sinh giao dịch thật; chưa kiểm chứng cơ chế retry/đối soát |
+
+Tổng đếm theo lượt chạy chính: **258 test, 257 PASS, 1 FAIL** (232 BE + 26 browser). Không cộng số test của các bước trước vào tổng mới. Không gọi kết quả này là E2E PASS.
+
+### 21.3. Lỗi tái hiện được — hóa đơn đã hủy vẫn có nút thu tiền
+
+- Fixture API trả `trangThai: DA_HUY`, `sanSangThuTien: true`, chưa có khoản thanh toán. Trạng thái sẵn sàng hiện chỉ phản ánh đơn thuốc, không phản ánh hóa đơn đã hủy.
+- Chrome mở đúng trang `/thu-ngan/thanh-toan`, mở chi tiết; vẫn tìm thấy **1** nút `Xác nhận thu tiền mặt`, trong khi kỳ vọng **0**. Test thứ 7 FAIL `1 !== 0`.
+- Nguyên nhân source: `TrangQuanLyThanhToan.tsx`, phần `fetchInvoices` chỉ phân biệt `DA_THANH_TOAN` / đã thu một phần / chưa thanh toán, không xử lý `DA_HUY`. Điều kiện hiện form và nút xác nhận cũng không kiểm tra trạng thái hủy.
+- Hậu quả: trạng thái hiển thị sai, bộ lọc đã hủy không hoạt động đúng và người dùng thấy thao tác thu không hợp lệ. **Chưa chứng minh đã thu tiền sai:** Backend `collectPayment` và webhook vẫn chặn `DA_HUY`; test webhook hủy hiện PASS.
+- Lỗi ánh xạ đã tồn tại trong phần source trước diff Bước 6. Theo RULE.md mục 14.10, chưa tự sửa lỗi cũ trong lượt hồi quy.
+- Phương án cần duyệt: sửa riêng ánh xạ `DA_HUY`, ẩn form/QR/nút thu của hóa đơn hủy, vẫn cho xem chi tiết; chạy lại test mới đến PASS. Không cần migration hoặc thay dữ liệu.
+
+### 21.4. Các rủi ro còn lại qua rà soát source
+
+1. **Tiền đã vào ngân hàng nhưng thuốc chưa cấp:** guard Bước 6 trả lỗi cần đối soát trước `thanhToan.create`. Không có bản ghi giao dịch chờ đối soát được tạo bởi nhánh này. Không được giả định nhà cung cấp sẽ gửi lại mãi hoặc sẽ tự xử lý sau cấp thuốc. Cần duyệt phương án ghi nhận/đối soát khoản nhận sớm và kiểm thử callback trên môi trường riêng; không tự bỏ guard cho thanh toán thiếu thuốc.
+2. **Đơn bị từ chối cấp:** readiness chỉ đúng khi không có đơn hoặc đơn `DA_CAP_THUOC`; đơn `TU_CHOI_CAP_THUOC` vẫn chặn thu. Cần thống nhất nghiệp vụ xử lý đơn bị từ chối trước khi dùng thật; không tự bỏ tiền thuốc hoặc cho chốt chỉ tiền khám/dịch vụ.
+3. **Chống trùng giao dịch SePay liên hóa đơn:** `ThanhToan.maGiaoDich` hiện là index, không phải unique; kiểm tra trùng qua `findFirst` và khóa theo từng hóa đơn. Source chưa chứng minh loại trừ được hai request cùng mã giao dịch nhưng khác hóa đơn chạy đồng thời. Đây là rủi ro cần test trên PostgreSQL, không phải lỗi concurrency đã được tái hiện trong bước này. Không tự thêm migration.
+4. **Hai lần hoàn tất khám:** test repository xác nhận không cộng phí hai lần. Qua API, service kiểm tra lượt/hồ sơ đã đóng và có thể trả lỗi cho lần gọi thứ hai, không phải idempotent HTTP 200. Điều bảo đảm hiện tại là không tạo thêm phí, chưa phải trải nghiệm retry hoàn tất luôn thành công.
+5. **Ranh giới transaction:** lưu nháp và chốt khám/phí là hai transaction khác nhau. Nếu chốt phí bị từ chối, nháp đã lưu có thể còn; không tuyên bố toàn bộ HTTP hoàn tất khám rollback cả phần nháp. Dòng phí/tổng hóa đơn và trạng thái chốt nằm trong transaction `markComplete`, cần kiểm chứng rollback thật.
+6. **Realtime:** unit test có kiểm tra emit và browser có kiểm tra reload; socket browser đã bị chặn để tránh kết nối thật. Chưa xác minh cập nhật tự động giữa cửa sổ bác sĩ, dược sĩ, thu ngân. Không coi test reload là test Socket.IO.
+
+### 21.5. Đối chiếu 25 ca bắt buộc
+
+`Mock` dưới đây bao gồm unit/repository/controller giả lập; `UI-mock` là trình duyệt thật với API giả lập. Không ca nào dưới đây được xác nhận trên PostgreSQL thật trong Bước 7.
+
+| # | Ca kiểm tra | Bằng chứng/kết quả |
+|---|---|---|
+| 1 | Khám không thuốc → thu ngân | PASS mock tạo hóa đơn và thông tin sự kiện; PASS UI-mock xem phí khám + dịch vụ |
+| 2 | Có thuốc → dược sĩ → thu ngân | PASS mock từng phần cấp thuốc/bảo vệ phí; UI-mock chặn trước cấp và mở sau reload. E2E liên vai trò BLOCKED |
+| 3 | Một chỉ định hợp lệ | PASS service/controller mock + UI-mock |
+| 4 | Hai chỉ định khác nhau | PASS mock + UI-mock |
+| 5 | Cùng dịch vụ, hai yêu cầu hợp lệ | PASS mock + UI-mock, hai khóa khác nhau |
+| 6 | Double-click không trùng | PASS UI-mock; khóa idempotency được kiểm tra ở mock |
+| 7 | Chờ kết quả không tự hoàn tất | PASS mock + UI-mock |
+| 8 | Backend từ chối hoàn tất khi còn pending | PASS mock |
+| 9 | Chuyển sang khám B trong lúc A chờ | PASS UI-mock |
+| 10 | Mở đúng A theo visitId | PASS UI-mock; kiểm tra không dùng active API |
+| 11 | Nhập kết quả mô phỏng | PASS mock + UI-mock, có nhãn mô phỏng |
+| 12 | Hoàn tất sau xử lý kết quả | PASS repository mock; chưa test chuỗi end-to-end thật |
+| 13 | Hủy chỉ định không tính phí | PASS mock lọc DA_HOAN_TAT và kiểm tra dòng phí bất thường; hủy chỉ định UI-mock PASS. Khác lỗi hóa đơn DA_HUY ở mục 21.3 |
+| 14 | Bác sĩ khác không sửa chỉ định | PASS service mock kiểm tra ownership |
+| 15 | Người không có quyền không nhập kết quả | PASS controller mock role/permission/401/403 |
+| 16 | Phí chỉ định tính đúng một lần | PASS repository mock, kể cả gọi hai lần; race thật BLOCKED |
+| 17 | Cấp thuốc giữ dòng phí dịch vụ | PASS repository mock; UI-mock sau reload vẫn có dòng X-quang |
+| 18 | Không trùng tiền khám | PASS repository mock cấp thuốc |
+| 19 | Không sửa hóa đơn đã quyết toán | PASS mock từ chối thiếu phí và không ghi đè; UI-mock đủ tiền không có nút thu |
+| 20 | SePay thiếu tiền không báo đủ | PASS service mock payment.partial; UI-mock hiển thị còn 300.000 trên tổng 500.000, đã nhận 200.000 |
+| 21 | X-quang không làm phí khám | PASS classification mock/UI-mock lọc công khai; source tiền khám lấy ChuyenKhoa.phiKham |
+| 22 | Reload giữ đúng dữ liệu | PASS UI-mock; dữ liệu server là fixture, không chứng minh persistence PostgreSQL |
+| 23 | Tạo chỉ định đồng thời | BLOCKED PostgreSQL; chỉ kiểm tra thứ tự khóa và xử lý unique bằng mock |
+| 24 | Tạo/cập nhật phí đồng thời | BLOCKED PostgreSQL; test tuần tự không thay thế concurrency |
+| 25 | FK/transaction PostgreSQL | BLOCKED, chưa có DB test riêng |
+
+### 21.6. Cách tái chạy và kiểm thử tiếp
+
+Các lệnh dưới chỉ tái chạy local test/build, không chạy Prisma migration hoặc seed:
+
+```powershell
+# Tại BE
+npm.cmd test -- --runInBand
+npm.cmd run build
+node node_modules/typescript/bin/tsc --noEmit
+# Script npm lint của BE có --fix; dùng lệnh không sửa file khi audit:
+node node_modules/eslint/bin/eslint.js "{src,apps,libs,test}/**/*.ts"
+
+# Tại FE, terminal test riêng
+npm.cmd run dev -- --host 127.0.0.1 --port 5187 --strictPort
+# Terminal FE thứ hai; cần playwright-core có sẵn và Chrome
+$env:PLAYWRIGHT_MODULE = '<đường dẫn tới playwright-core/index.mjs>'
+node --test --test-concurrency=1 tests/service-orders.browser.mjs tests/service-order-payments.browser.mjs
+npm.cmd run lint
+npm.cmd run build
+```
+
+Môi trường đã chạy dùng Chrome tại `C:/Program Files/Google/Chrome/Application/chrome.exe`, playwright-core có sẵn trong thư mục tạm kiểm thử Bước 4. Không cài thêm package, không đổi package/lockfile. Test mới chặn request API, socket và tài nguyên bên ngoài; context đóng sau mỗi test. Không gửi request ghi thanh toán. Không có dữ liệu test Neon để xóa; giữ source test để hồi quy.
+
+Khi có PostgreSQL test riêng, bắt buộc xác minh đích không phải Neon dùng chung trước khi tạo fixture. Dùng bệnh nhân/bác sĩ/dịch vụ/thuốc giả lập trong DB đó để chạy thật:
+
+1. Không thuốc: khám 300.000 + X-quang snapshot 200.000 → 1 dòng mỗi loại, tổng 500.000; hoàn tất lại không thêm phí.
+2. Có thuốc: trước cấp chưa thu; sau cấp 50.000 tiền thuốc → tổng 550.000; ID và giá dòng X-quang không đổi.
+3. Pending chặn hoàn tất; hủy trước thực hiện không có phí; không cho hủy dịch vụ đã hoàn tất.
+4. Đổi giá danh mục sau tạo chỉ định không đổi snapshot; cùng dịch vụ với hai ID chỉ định hợp lệ ra hai dòng, retry cùng ID không ra dòng mới.
+5. Ép lỗi giữa ghi chi tiết và tăng tổng; kiểm tra rollback thực, không còn dòng rời/tổng lệch. Chạy hai request cùng lượt đồng thời và thu tiền/cấp thuốc đồng thời.
+6. Hóa đơn đã trả tiền thiếu phí phải báo đối soát và giữ nguyên; không tự backfill hóa đơn cũ trên Neon.
+7. Webhook thiếu/đủ/dư, retry cùng transaction ID, sai auth, khác hóa đơn, hóa đơn hủy, nhận sớm trước cấp thuốc; đối chiếu sổ giao dịch trước/sau.
+8. Ba cửa sổ bác sĩ/dược sĩ/thu ngân kiểm tra room/permission và realtime thật; F5, đổi ngày và A→B→A vẫn đúng lượt.
+
+### 21.7. Điều kiện triển khai PC main — hiện tại NO-GO
+
+Không triển khai để thu tiền thật khi còn FAIL/BLOCKED trên. Thứ tự đề xuất, **chưa thực hiện thao tác Git/deploy nào**:
+
+1. Duyệt sửa tối thiểu lỗi hóa đơn hủy, chạy test mới đến PASS; thống nhất xử lý đơn từ chối cấp và tiền SePay nhận sớm. Không bỏ guard chỉ để giao diện chạy.
+2. Cấp DB test tách biệt, chạy ca FK/unique/rollback/concurrency và liên vai trò; xử lý các lỗi thực tế nếu có. Thống nhất phần lint BE cần xử lý/ngoại lệ, không gọi toàn repo lint PASS.
+3. Rà soát diff, quyền truy cập, backup/khôi phục và kết quả test trước khi nhóm tự commit/merge. Không đưa secret/env vào Git.
+4. PC dùng đúng bộ source BE/FE đồng nhất, cài dependency theo lockfile, generate Prisma Client local, chạy build FE/BE và restart BE/FE có kiểm soát.
+5. Hai migration `20261117000000_add_service_orders` và `20261118000000_add_waiting_visit_status` đã được áp dụng riêng theo phê duyệt trước (mục 14, 19). Bước 7 không tạo migration mới. Trước triển khai cần kiểm tra read-only lịch sử ở đúng DB đích; **không chạy migrate deploy hàng loạt, không chạy lại SQL hoặc seed** chỉ vì pull source. Không tái xác minh Neon trong Bước 7.
+6. Smoke test sau triển khai theo kế hoạch được chủ dự án duyệt; không dùng bệnh nhân/hóa đơn thật để thử lỗi hoặc chuyển tiền thử tùy tiện. Theo dõi lỗi BE, số phí chỉ định/tổng hóa đơn, giao dịch chờ đối soát và realtime. Không rollback bằng reset DB hoặc xóa enum/bảng đã có dữ liệu.
+
+**Kết luận Bước 7:** đã thực hiện phần hồi quy local và báo cáo; **V24.2 chưa hoàn thành nghiệm thu**. Code luồng chính đã triển khai, chưa xác nhận hoạt động E2E, còn một lỗi UI tái hiện được và các điều kiện database/thanh toán chưa đạt. Dừng sau V24.2; không thêm khoa/role hoặc triển khai hệ thống cận lâm sàng đầy đủ.
