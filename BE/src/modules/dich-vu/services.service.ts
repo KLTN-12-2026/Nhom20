@@ -30,9 +30,11 @@ export class ServicesService {
       query.status,
       query.specialtyId,
     );
-    const filtered = query.type
-      ? items.filter((item) => item.loaiDichVu === query.type)
-      : items;
+    // Public loại trừ CLS nhưng giữ dịch vụ cũ NULL; Admin không truyền vẫn thấy đủ.
+    const filtered = items.filter((item) =>
+      (!query.type || item.loaiDichVu === query.type) &&
+      (!query.excludeType || item.loaiDichVu !== query.excludeType),
+    );
     return {
       message: 'Lấy danh sách dịch vụ thành công',
       data: filtered.map((item) => this.toResponse(item)),

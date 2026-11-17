@@ -41,6 +41,13 @@ function setup(
 }
 
 describe('Bước 2 — hoàn tất khám không thuốc (mock)', () => {
+  it('Bước 5: chặn hoàn tất nếu trạng thái vừa chuyển chờ sau khi service đọc', async () => {
+    const { tx, run } = setup();
+    tx.luotKham.findUniqueOrThrow.mockResolvedValueOnce({ trangThai: 'CHO_KET_QUA' });
+    await expect(run()).rejects.toThrow('Hãy tiếp tục lượt khám');
+    expect(tx.hoaDon.upsert).not.toHaveBeenCalled();
+    expect(tx.hoSoKham.update).not.toHaveBeenCalled();
+  });
   it.each([true, false])(
     'chặn hoàn tất khi còn chỉ định chờ (có thuốc=%s)',
     async (hasPrescription) => {

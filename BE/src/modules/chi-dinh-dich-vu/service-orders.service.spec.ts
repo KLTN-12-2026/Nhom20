@@ -112,6 +112,14 @@ function setup() {
 }
 
 describe('Bước 3 — chỉ định dịch vụ, service mock (không phải PostgreSQL)', () => {
+  it('Bước 5: nhập kết quả được trong lượt chờ, vẫn giữ quyền sở hữu', async () => {
+    const { create, service, tx, records } = setup();
+    const result = await create();
+    tx.visit!.trangThai = 'CHO_KET_QUA';
+    await service.saveResult(7, result.data.id, { result: 'Kết quả demo' });
+    expect(records[0].trangThai).toBe('DA_HOAN_TAT');
+    await expect(service.saveResult(99, result.data.id, { result: 'Không hợp lệ' })).rejects.toThrow(ForbiddenException);
+  });
   it('tạo chỉ định với giá DB và bác sĩ sở hữu, không hoàn tất khám/tạo hóa đơn', async () => {
     const { create, tx, realtime } = setup();
     const result = await create();

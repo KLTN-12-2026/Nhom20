@@ -46,7 +46,7 @@ function ServiceCard({ item }: { item: ReturnType<typeof useServices>['services'
 }
 
 export default function ServiceCards({ presentation = 'pagination' }: { presentation?: 'pagination' | 'slider' }) {
-  const { services, isLoading, error, reload } = useServices('DANG_HOAT_DONG');
+  const { services, isLoading, error, reload } = useServices('DANG_HOAT_DONG', 'CAN_LAM_SANG');
   const [page, setPage] = useState(1);
 
   const items = services;
