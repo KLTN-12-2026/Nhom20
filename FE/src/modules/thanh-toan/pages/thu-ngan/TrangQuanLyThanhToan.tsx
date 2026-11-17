@@ -19,6 +19,7 @@ interface Invoice {
   code: string; patient: string; phone: string; createdAt: string;
   createdDateKey: string;
   total: number; paid: number; status: InvoiceStatus;
+  ready: boolean;
   items: { id: string | number; kind: string; name: string; quantity: number; unitPrice: number }[];
   payments: { time: string; amount: number; method: string; collector: string; reference?: string }[];
 }
@@ -108,6 +109,7 @@ export default function TrangQuanLyThanhToan() {
           total,
           paid,
           status: status as InvoiceStatus,
+          ready: hData.sanSangThuTien === true,
           items,
           payments: thanhToan.map((t) => ({
             time: dinhDangNgayGio(String(t.thoiGianThanhToan)),
@@ -724,7 +726,9 @@ export default function TrangQuanLyThanhToan() {
           </div>
         </div>
         <div className="col-md-7">
-          {remaining > 0 && canUpdate ? (
+          {!selected.ready && remaining > 0 ? (
+            <div className="alert alert-warning">Đơn thuốc chưa được cấp. Chưa thể thu tiền hoặc tạo mã QR.</div>
+          ) : remaining > 0 && canUpdate ? (
             <>
               <label className="form-label fw-semibold">Phương thức cho lần thu mới</label>
               <div className="d-flex flex-wrap gap-2 mb-3">
@@ -832,7 +836,7 @@ export default function TrangQuanLyThanhToan() {
           <span className="material-symbols-outlined me-1" style={{ fontSize: 18 }}>print</span>
           In bill 58mm
         </button>
-        {remaining > 0 && canUpdate && (
+        {remaining > 0 && canUpdate && selected.ready && (
           method === 'TIEN_MAT' ? (
             <button
               type="button"

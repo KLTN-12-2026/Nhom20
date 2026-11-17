@@ -43,6 +43,7 @@ function setup(
     },
   };
   const tx = {
+    $queryRaw: jest.fn().mockResolvedValue([]),
     loThuoc: {
       findUniqueOrThrow: jest.fn().mockResolvedValue({
         id: 6,

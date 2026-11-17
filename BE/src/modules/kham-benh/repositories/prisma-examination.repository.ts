@@ -218,7 +218,9 @@ export class PrismaExaminationRepository implements ExaminationRepository {
       if (currentRecord.luotKhamId !== visitId) {
         throw new Error('Hồ sơ không thuộc lượt khám');
       }
-      if (!currentRecord.donThuoc) {
+      {
+        // Khóa hóa đơn theo cùng thứ tự với API chỉ định; thanh toán cũng phải lấy khóa này.
+        await transaction.$queryRaw`SELECT id FROM hoa_don WHERE luot_kham_id = ${visitId} FOR UPDATE`;
         const visit = await transaction.luotKham.findUniqueOrThrow({
           where: { id: visitId },
           select: {
@@ -235,38 +237,140 @@ export class PrismaExaminationRepository implements ExaminationRepository {
         const examFee = visit.chuyenKhoa.phiKham;
         if (examFee.isNegative()) throw new Error('Phí khám không hợp lệ');
         // Chốt phí khám cùng transaction; không sửa hóa đơn đã tồn tại hoặc thanh toán.
-        const invoice = await transaction.hoaDon.upsert({
+        // Đọc trước để không gọi upsert/update dù rỗng trên hóa đơn đã tồn tại.
+        const existingInvoice = await transaction.hoaDon.findUnique({
           where: { luotKhamId: visitId },
-          update: {},
-          create: {
-            maHoaDon: `HD-${Date.now()}-${visitId}`,
-            luotKhamId: visitId,
-            benhNhanId: visit.benhNhanId,
-            nguoiTaoId: currentUserId,
-            tienKham: examFee,
-            tienThuoc: new Prisma.Decimal(0),
-            phiDichVu: new Prisma.Decimal(0),
-            tongTien: examFee,
-            trangThai: TrangThaiHoaDon.CHUA_THANH_TOAN,
-            chiTiet: {
-              create: {
-                loaiMuc: LoaiMucHoaDon.PHI_KHAM,
-                maMuc: visit.chuyenKhoa.maChuyenKhoa,
-                tenMuc: `Phí khám ${visit.chuyenKhoa.tenChuyenKhoa}`,
-                soLuong: 1,
-                donGia: examFee,
-                thanhTien: examFee,
-              },
-            },
-          },
           select: { id: true, maHoaDon: true, trangThai: true },
         });
+        const invoice =
+          existingInvoice ??
+          (await transaction.hoaDon.upsert({
+            where: { luotKhamId: visitId },
+            update: {},
+            create: {
+              maHoaDon: `HD-${Date.now()}-${visitId}`,
+              luotKhamId: visitId,
+              benhNhanId: visit.benhNhanId,
+              nguoiTaoId: currentUserId,
+              tienKham: examFee,
+              tienThuoc: new Prisma.Decimal(0),
+              phiDichVu: new Prisma.Decimal(0),
+              tongTien: examFee,
+              trangThai: currentRecord.donThuoc
+                ? TrangThaiHoaDon.BAN_NHAP
+                : TrangThaiHoaDon.CHUA_THANH_TOAN,
+              chiTiet: {
+                create: {
+                  loaiMuc: LoaiMucHoaDon.PHI_KHAM,
+                  maMuc: visit.chuyenKhoa.maChuyenKhoa,
+                  tenMuc: `Phí khám ${visit.chuyenKhoa.tenChuyenKhoa}`,
+                  soLuong: 1,
+                  donGia: examFee,
+                  thanhTien: examFee,
+                },
+              },
+            },
+            select: { id: true, maHoaDon: true, trangThai: true },
+          }));
         if (invoice.trangThai === TrangThaiHoaDon.DA_HUY) {
           throw new BadRequestException(
             'Hóa đơn đã bị hủy; không thể hoàn tất lượt khám',
           );
         }
-        if (invoice.trangThai !== TrangThaiHoaDon.DA_THANH_TOAN) {
+        const orders = await transaction.chiDinhDichVu.findMany({
+          where: { luotKhamId: visitId, trangThai: 'DA_HOAN_TAT' },
+          include: { dichVu: { select: { maDichVu: true, tenDichVu: true } } },
+        });
+        const existingLines = await transaction.chiTietHoaDon.findMany({
+          where: {
+            OR: [
+              { hoaDonId: invoice.id, chiDinhDichVuId: { not: null } },
+              { chiDinhDichVuId: { in: orders.map((order) => order.id) } },
+            ],
+          },
+          select: {
+            chiDinhDichVuId: true,
+            hoaDonId: true,
+            dichVuId: true,
+            loaiMuc: true,
+            donGia: true,
+            thanhTien: true,
+            soLuong: true,
+          },
+        });
+        for (const line of existingLines) {
+          const order = orders.find((item) => item.id === line.chiDinhDichVuId);
+          if (
+            !order ||
+            line.hoaDonId !== invoice.id ||
+            line.dichVuId !== order.dichVuId ||
+            line.loaiMuc !== LoaiMucHoaDon.DICH_VU ||
+            line.soLuong !== 1 ||
+            !line.donGia.equals(order.donGiaSnapshot) ||
+            !line.thanhTien.equals(order.donGiaSnapshot)
+          ) {
+            throw new BadRequestException(
+              'Phí chỉ định trên hóa đơn không khớp; cần đối soát thủ công',
+            );
+          }
+        }
+        const missing = orders.filter(
+          (order) =>
+            !existingLines.some((line) => line.chiDinhDichVuId === order.id),
+        );
+        if (
+          invoice.trangThai === TrangThaiHoaDon.DA_THANH_TOAN &&
+          missing.length
+        ) {
+          throw new BadRequestException(
+            'Hóa đơn đã thanh toán nhưng thiếu phí chỉ định; cần đối soát thủ công',
+          );
+        }
+        if (missing.length) {
+          const legacyLine = await transaction.chiTietHoaDon.findFirst({
+            where: {
+              hoaDonId: invoice.id,
+              loaiMuc: LoaiMucHoaDon.DICH_VU,
+              chiDinhDichVuId: null,
+              dichVuId: { in: missing.map((order) => order.dichVuId) },
+            },
+            select: { id: true },
+          });
+          if (legacyLine)
+            throw new BadRequestException(
+              'Hóa đơn có phí dịch vụ chưa liên kết chỉ định; cần đối soát thủ công',
+            );
+          const amount = missing.reduce(
+            (sum, order) => sum.add(order.donGiaSnapshot),
+            new Prisma.Decimal(0),
+          );
+          if (missing.some((order) => order.donGiaSnapshot.isNegative()))
+            throw new BadRequestException('Giá chỉ định không hợp lệ');
+          await transaction.chiTietHoaDon.createMany({
+            data: missing.map((order) => ({
+              hoaDonId: invoice.id,
+              chiDinhDichVuId: order.id,
+              dichVuId: order.dichVuId,
+              loaiMuc: LoaiMucHoaDon.DICH_VU,
+              maMuc: order.dichVu.maDichVu,
+              tenMuc: order.dichVu.tenDichVu,
+              soLuong: 1,
+              donGia: order.donGiaSnapshot,
+              thanhTien: order.donGiaSnapshot,
+            })),
+          });
+          await transaction.hoaDon.update({
+            where: { id: invoice.id },
+            data: {
+              phiDichVu: { increment: amount },
+              tongTien: { increment: amount },
+            },
+          });
+        }
+        if (
+          !currentRecord.donThuoc &&
+          invoice.trangThai !== TrangThaiHoaDon.DA_THANH_TOAN
+        ) {
           invoiceForReception = { id: invoice.id, code: invoice.maHoaDon };
         }
       }

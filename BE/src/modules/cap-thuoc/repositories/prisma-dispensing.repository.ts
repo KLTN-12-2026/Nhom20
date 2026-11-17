@@ -247,6 +247,8 @@ export class PrismaDispensingRepository implements DispensingRepository {
             },
           });
         const visit = prescriptionForInvoice.hoSoKham.luotKham;
+        // Đồng bộ với chốt phí và thu tiền; không được cập nhật hóa đơn song song.
+        await transaction.$queryRaw`SELECT id FROM hoa_don WHERE luot_kham_id = ${visit.id} FOR UPDATE`;
         const medicineFee = prescriptionForInvoice.chiTiet.reduce(
           (total, item) => total.add(item.thanhTien),
           new Prisma.Decimal(0),
