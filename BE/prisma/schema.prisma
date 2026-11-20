@@ -400,6 +400,7 @@ model NguoiDung {
   thanhToanDaThu      ThanhToan[]        @relation("NguoiThuTien")
   lichHenDaXacNhan    LichHen[]          @relation("NguoiXacNhanLichHen")
   duLieuYTeDaGhi      DiUngBenhNhan[]    @relation("NguoiGhiNhanDiUng")
+  hoaDonDaHuy         HoaDon[]           @relation("NguoiHuyHoaDon")
   tienSuBenhDaGhi     TienSuBenh[]       @relation("NguoiGhiNhanTienSu")
   canhBaoDaXuLy       CanhBaoDonThuoc[]  @relation("NguoiXuLyCanhBao")
   phanCongCa          PhanCongCa[]       @relation("NhanSuDuocPhanCongCa")
@@ -1032,11 +1033,15 @@ model HoaDon {
   trangThai         TrangThaiHoaDon @default(BAN_NHAP) @map("trang_thai")
   nguoiTaoId        Int             @map("nguoi_tao_id")
   thoiGianThanhToan DateTime?       @map("thoi_gian_thanh_toan")
+  lyDoHuy           String?         @map("ly_do_huy") @db.VarChar(1000)
+  nguoiHuyId        Int?            @map("nguoi_huy_id")
+  thoiGianHuy       DateTime?       @map("thoi_gian_huy")
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
   luotKham          LuotKham        @relation(fields: [luotKhamId], references: [id], onDelete: Restrict)
   benhNhan          BenhNhan        @relation(fields: [benhNhanId], references: [id], onDelete: Restrict)
   nguoiTao          NguoiDung       @relation("NguoiTaoHoaDon", fields: [nguoiTaoId], references: [id], onDelete: Restrict)
+  nguoiHuy          NguoiDung?      @relation("NguoiHuyHoaDon", fields: [nguoiHuyId], references: [id], onDelete: Restrict)
   thanhToan         ThanhToan[]
   chiTiet           ChiTietHoaDon[]
 
