@@ -15,17 +15,19 @@ import '@/components/ui/admin-crud.css';
 import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
 import './TrangKhamBenh.css';
+import { useAuthStore } from '@/stores/auth.store';
 
 const LOCAL_DRAFT_PREFIX = 'smart_clinic_draft_';
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // Hết hạn nháp sau 24 giờ
 
-function getLocalDraftKey(id: number) {
-  return `${LOCAL_DRAFT_PREFIX}${id}`;
+function getLocalDraftKey(id: number, userId?: number | null) {
+  return `${LOCAL_DRAFT_PREFIX}${userId ? `${userId}_` : ''}${id}`;
 }
 
-function saveLocalDraft(id: number, data: any) {
+function saveLocalDraft(id: number, data: any, userId?: number | null) {
   try {
     localStorage.setItem(
-      getLocalDraftKey(id),
+      getLocalDraftKey(id, userId),
       JSON.stringify({ ...data, pending: true, savedAt: Date.now() }),
     );
   } catch (e) {
@@ -33,18 +35,25 @@ function saveLocalDraft(id: number, data: any) {
   }
 }
 
-function getLocalDraft(id: number) {
+function getLocalDraft(id: number, userId?: number | null) {
   try {
-    const raw = localStorage.getItem(getLocalDraftKey(id));
-    return raw ? JSON.parse(raw) : null;
+    const key = getLocalDraftKey(id, userId);
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed.savedAt && Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
 }
 
-function clearLocalDraft(id: number) {
+function clearLocalDraft(id: number, userId?: number | null) {
   try {
-    localStorage.removeItem(getLocalDraftKey(id));
+    localStorage.removeItem(getLocalDraftKey(id, userId));
   } catch (e) {
     console.warn('Không thể xóa draft khỏi localStorage', e);
   }
@@ -97,6 +106,7 @@ function ExaminationSession() {
   });
   const [medicineSearch, setMedicineSearch] = useState('');
   const [activePrescriptionIndex, setActivePrescriptionIndex] = useState<number | null>(null);
+  const user = useAuthStore((state) => state.user);
   const draftHydratedRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const saveQueueRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -179,7 +189,7 @@ function ExaminationSession() {
       const draft = visitData?.draft;
 
       // So sánh dữ liệu nháp trên server và bộ nhớ tạm localStorage
-      const localDraft = getLocalDraft(currentId);
+      const localDraft = getLocalDraft(currentId, user?.id);
       const serverUpdatedTime = draft?.updatedAt ? new Date(draft.updatedAt).getTime() : 0;
       const shouldUseLocal = visitData?.status !== 'DA_HOAN_TAT' && visitData?.status !== 'DA_HUY' && localDraft && (
         localDraft.pending ||
@@ -240,7 +250,7 @@ function ExaminationSession() {
     } finally {
       setIsLoading(false);
     }
-  }, [loadWarnings, luotKhamId, navigate, showToast]);
+  }, [loadWarnings, luotKhamId, navigate, showToast, user?.id]);
 
   useEffect(() => {
     void reload();
@@ -306,9 +316,9 @@ function ExaminationSession() {
       if (latestPayloadRef.current === payload) {
         setIsDirty(false);
         // Chỉ xác nhận đúng snapshot đã gửi; response cũ không xóa nháp mới đang gõ.
-        const local = getLocalDraft(currentVisitId);
+        const local = getLocalDraft(currentVisitId, user?.id);
         if (local) {
-          try { localStorage.setItem(getLocalDraftKey(currentVisitId), JSON.stringify({ ...local, pending: false })); } catch { /* Bộ nhớ trình duyệt có thể bị khóa. */ }
+          try { localStorage.setItem(getLocalDraftKey(currentVisitId, user?.id), JSON.stringify({ ...local, pending: false })); } catch { /* Bộ nhớ trình duyệt có thể bị khóa. */ }
         }
       }
       if (!silent) showToast(response.data.message || 'Đã lưu nháp hồ sơ khám');
@@ -319,7 +329,7 @@ function ExaminationSession() {
     } finally {
       if (silent) setIsAutoSaving(false);
     }
-  }, [luotKhamId, payload, showToast, visit]);
+  }, [luotKhamId, payload, showToast, user?.id, visit]);
 
   // Lưu đệm localStorage tức thời để chống mất dữ liệu khi mất mạng hoặc F5
   useEffect(() => {
@@ -335,8 +345,8 @@ function ExaminationSession() {
       doctorNotes,
       followUpDate,
       prescriptions,
-    });
-  }, [conclusion, diagnosis, doctorNotes, followUpDate, icd10Code, luotKhamId, prescriptions, specialtyContent, symptoms, visit, vitals]);
+    }, user?.id);
+  }, [conclusion, diagnosis, doctorNotes, followUpDate, icd10Code, luotKhamId, prescriptions, specialtyContent, symptoms, user?.id, visit, vitals]);
 
   // Lắng nghe sự kiện Online/Offline
   useEffect(() => {
@@ -459,7 +469,7 @@ function ExaminationSession() {
     try {
       await examinationApi.complete(targetVisitId, payload);
       setIsDirty(false);
-      clearLocalDraft(targetVisitId);
+      clearLocalDraft(targetVisitId, user?.id);
       const hasPrescription = payload.prescription && payload.prescription.length > 0;
       showToast(
         hasPrescription
@@ -1021,7 +1031,11 @@ function ExaminationSession() {
               disabled={isSubmitting || visit.status === 'CHO_KET_QUA'}
               onClick={() => void handleSave('complete')}
             >
-              {isSubmitting ? 'Đang lưu...' : 'Hoàn tất khám & chuyển Dược'}
+              {isSubmitting
+                ? 'Đang lưu...'
+                : payload.prescription.length > 0
+                ? 'Hoàn tất khám & chuyển Dược'
+                : 'Hoàn tất khám & chuyển Thu ngân'}
             </button>
           </div>
           </fieldset>

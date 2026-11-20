@@ -10,6 +10,7 @@ export const REALTIME_EVENTS = {
   PRESCRIPTION_UPDATED: 'prescription.updated',
   PRESCRIPTION_DISPENSED: 'prescription.dispensed',
   INVOICE_READY: 'invoice.ready',
+  INVOICE_CANCELLED: 'invoice.cancelled',
   SERVICE_ORDER_UPDATED: 'service-order.updated',
   PRESCRIPTION_WARNING_CREATED: 'prescription.warning_created',
   PAYMENT_SUCCESS: 'payment.success',
