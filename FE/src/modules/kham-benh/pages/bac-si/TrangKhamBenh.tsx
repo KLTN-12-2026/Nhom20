@@ -596,9 +596,14 @@ function ExaminationSession() {
   return (
     <div className="medicine-inventory admin-crud-page doctor-page doctor-examination-page">
       <div className="admin-crud-heading">
-        <div>
+        <div className="w-100">
           <p className="admin-management-eyebrow">Phiếu khám điện tử</p>
-          <h1>KHÁM BỆNH</h1>
+          <div className="d-flex align-items-center justify-content-between">
+            <h1>KHÁM BỆNH</h1>
+            <span className="badge text-bg-info">
+              {visit.status === 'CHO_KET_QUA' ? 'Chờ kết quả' : visit.status === 'DA_VAO_PHONG' ? 'Đang khám' : visit.status}
+            </span>
+          </div>
           <p className="admin-management-description">
             Ghi nhận sinh hiệu, chẩn đoán và chỉ định cho bệnh nhân.
           </p>
@@ -607,10 +612,29 @@ function ExaminationSession() {
 
       <div className="doctor-exam-shell">
         <WaitingVisitsPanel />
-        <div className="d-flex gap-2 align-items-center mb-3">
-          <span className="badge text-bg-info">{visit.status === 'CHO_KET_QUA' ? 'Chờ kết quả' : visit.status === 'DA_VAO_PHONG' ? 'Đang khám' : visit.status}</span>
-          {visit.status === 'DA_VAO_PHONG' && <button type="button" className="btn btn-outline-primary" disabled={isSubmitting} onClick={() => void changeWaitingStatus('wait')}>Lưu nháp và chờ kết quả</button>}
-          {visit.status === 'CHO_KET_QUA' && <button type="button" className="btn btn-primary" disabled={isSubmitting} onClick={() => void changeWaitingStatus('resume')}>Tiếp tục lượt khám</button>}
+        <div className="d-flex gap-2 align-items-center doctor-exam-status-bar mb-3">
+          {visit.status === 'DA_VAO_PHONG' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+              onClick={() => void changeWaitingStatus('wait')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>hourglass_top</span>
+              Lưu nháp và chờ kết quả
+            </button>
+          )}
+          {visit.status === 'CHO_KET_QUA' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+              onClick={() => void changeWaitingStatus('resume')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>play_arrow</span>
+              Tiếp tục lượt khám
+            </button>
+          )}
         </div>
         {!isOnline && (
           <div className="alert alert-warning d-flex align-items-center gap-2 mb-3 shadow-sm w-100">
