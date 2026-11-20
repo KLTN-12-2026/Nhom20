@@ -36,8 +36,8 @@ function VisitServiceOrders({ visitId, visitStatus, patientName, disabled }: {
     <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
       <h2 id="service-orders-title" className="mb-0">Chỉ định dịch vụ cận lâm sàng</h2>
       <div className="d-flex gap-2">
-        <button type="button" className="btn btn-outline-primary btn-sm" disabled={state.busy || state.loading} onClick={() => void state.reload()}>Làm mới chỉ định</button>
-        {editable && <button type="button" className="btn btn-primary btn-sm" disabled={blocked} onClick={() => setCreating(true)}>Thêm chỉ định</button>}
+        <button type="button" className="btn btn-outline-primary" disabled={state.busy || state.loading} onClick={() => void state.reload()}>Làm mới chỉ định</button>
+        {editable && <button type="button" className="btn btn-primary" disabled={blocked} onClick={() => setCreating(true)}>Thêm chỉ định</button>}
       </div>
     </div>
     <p className="small text-secondary">{RESULT_NOTICE}</p>
@@ -58,7 +58,7 @@ function VisitServiceOrders({ visitId, visitStatus, patientName, disabled }: {
             <button type="button" className="btn btn-outline-primary btn-sm" disabled={state.busy} onClick={() => setModal({ id: order.id, mode: 'view' })}>Xem chi tiết</button>
             {editable && order.status === 'CHO_THUC_HIEN' && <>
               <button type="button" className="btn btn-primary btn-sm" disabled={blocked} onClick={() => setModal({ id: order.id, mode: 'result' })}>Nhập kết quả</button>
-              <button type="button" className="btn btn-outline-danger btn-sm" disabled={blocked} onClick={() => setModal({ id: order.id, mode: 'cancel' })}>Hủy chỉ định</button>
+              <button type="button" className="btn btn-danger btn-sm text-white" disabled={blocked} onClick={() => setModal({ id: order.id, mode: 'cancel' })}>Hủy chỉ định</button>
             </>}
           </div></td>
         </tr>)}</tbody>
