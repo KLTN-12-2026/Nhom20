@@ -10,7 +10,15 @@ export function WaitingVisitsPanel() {
   if (!allowed) return null;
   return <section className="doctor-panel p-3 mb-4" aria-label="Lượt chờ kết quả">
     <div className="d-flex justify-content-between align-items-center mb-3"><h2 className="h5 mb-0">Lượt chờ kết quả</h2>
-      <button type="button" className="btn btn-sm btn-outline-primary" disabled={state.loading} onClick={state.reload}>Làm mới lượt chờ</button></div>
+      <button
+        type="button"
+        className="btn btn-sm btn-primary"
+        disabled={state.loading}
+        onClick={state.reload}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>refresh</span>
+        Làm mới lượt chờ
+      </button></div>
     {state.loading ? <p role="status">Đang tải lượt chờ...</p> : state.error ? <p role="status" className="text-danger">{state.error}</p> : <>
       {!state.items.length ? <p className="text-secondary">Không có lượt chờ kết quả.</p> : <div className="table-responsive"><table className="table align-middle">
         <thead><tr><th>Lượt khám</th><th>Bệnh nhân</th><th>Chỉ định</th><th>Thao tác</th></tr></thead>
