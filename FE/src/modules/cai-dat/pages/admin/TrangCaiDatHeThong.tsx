@@ -39,7 +39,7 @@ export default function TrangCaiDatHeThong() {
             </div>
             <div className="col-12">
               <label className="form-label fw-semibold text-muted small">Địa chỉ</label>
-              <input type="text" className="form-control bg-light border-0 py-2" defaultValue="123 Đường Công Nghệ, Quận Smart, TP.HCM" />
+              <input type="text" className="form-control bg-light border-0 py-2" defaultValue="123 Đường Công Nghệ, Quận Smart, TP.Đà Nẵng" />
             </div>
             <div className="col-md-6">
               <label className="form-label fw-semibold text-muted small">Số điện thoại liên hệ</label>
