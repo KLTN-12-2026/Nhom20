@@ -15,4 +15,9 @@ export const paymentApi = {
     const response = await axiosClient.post<ApiResponse<any>>(`/thanh-toan/hoa-don/${id}/chuyen-khoan`, { soTien: amount, maGiaoDich: reference });
     return response.data;
   },
+
+  async cancelInvoice(id: number, lyDoHuy: string) {
+    const response = await axiosClient.post<ApiResponse<any>>(`/thanh-toan/hoa-don/${id}/huy`, { lyDoHuy });
+    return response.data;
+  },
 };
