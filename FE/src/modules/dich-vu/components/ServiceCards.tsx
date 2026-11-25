@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMemo, useState, Fragment } from 'react';
+import { useMemo, useState, useEffect, Fragment } from 'react';
 import { useServices } from '../hooks/use-services';
 import { getServiceIcon } from '@/utils/icon-mapper';
 import HomeCardSlider from '@/modules/trang-chu/components/HomeCardSlider';
@@ -9,7 +9,7 @@ function currency(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
 }
 
-const PAGE_SIZE = 4; // 4 cards/trang — 1 hàng grid 4 cột
+const PAGE_SIZE = 8; // 8 cards/trang — 2 hàng grid 4 cột
 
 function getPageNumbers(current: number, total: number) {
   return [...new Set([1, total, current - 1, current, current + 1])]
@@ -45,12 +45,18 @@ function ServiceCard({ item }: { item: ReturnType<typeof useServices>['services'
   );
 }
 
-export default function ServiceCards({ presentation = 'pagination' }: { presentation?: 'pagination' | 'slider' }) {
+export default function ServiceCards({
+  presentation = 'pagination',
+  pageSize = PAGE_SIZE,
+}: {
+  presentation?: 'pagination' | 'slider';
+  pageSize?: number;
+}) {
   const { services, isLoading, error, reload } = useServices('DANG_HOAT_DONG', 'CAN_LAM_SANG');
   const [page, setPage] = useState(1);
 
   const items = services;
-  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const currentPage = Math.min(page, totalPages);
 
   const pageNumbers = useMemo(
@@ -59,9 +65,15 @@ export default function ServiceCards({ presentation = 'pagination' }: { presenta
   );
 
   const visible = useMemo(
-    () => items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [items, currentPage],
+    () => items.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [items, currentPage, pageSize],
   );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   if (isLoading) return (
     <div className="public-page-empty">
@@ -89,8 +101,8 @@ export default function ServiceCards({ presentation = 'pagination' }: { presenta
         {visible.map((item) => <ServiceCard key={item.id} item={item} />)}
       </div>
 
-      {/* Phân trang số 1, 2, 3... — chỉ hiện khi > 1 trang */}
-      {totalPages > 1 && (
+      {/* Phân trang số 1, 2, 3... */}
+      {!isLoading && !error && items.length > 0 && (
         <nav className="d-flex justify-content-center mt-4" aria-label="Phân trang dịch vụ">
           <ul className="pagination mb-0 flex-wrap">
             {/* Nút « */}
