@@ -18,6 +18,7 @@ import { Roles } from '../../common/auth/roles.decorator';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { SePayWebhookDto } from './dto/sepay-webhook.dto';
+import { HuyHoaDonDto } from './dto/huy-hoa-don.dto';
 import { ThanhToanService } from './thanh-toan.service';
 
 @ApiTags('Thanh toan')
@@ -90,6 +91,23 @@ export class ThanhToanController {
       soTien,
       user.id,
       maGiaoDich,
+    );
+  }
+
+  @Post('hoa-don/:id/huy')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('RECEPTIONIST')
+  @Permissions('HOA_DON.UPDATE')
+  // Chức năng: Thanh toán — Hủy hóa đơn (bắt buộc nhập lý do)
+  async cancelInvoice(
+    @Param('id') id: string,
+    @Body() dto: HuyHoaDonDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.thanhToanService.cancelInvoice(
+      Number(id),
+      dto.lyDoHuy,
+      user.id,
     );
   }
 }

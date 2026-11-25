@@ -186,6 +186,12 @@ export default function TrangDoiNguBacSi() {
                     {doctor.description ||
                       `Bác sĩ phụ trách chuyên khoa ${doctor.specialty.name}.`}
                   </p>
+                  {doctor.certification?.trim() && (
+                    <div className="public-doctor-card__certification">
+                      <strong>Chứng chỉ</strong>
+                      <span>{doctor.certification}</span>
+                    </div>
+                  )}
                   <Link
                     className="btn btn-primary mt-auto"
                     to={`/dat-lich?chuyenKhoaId=${doctor.specialty.id}`}

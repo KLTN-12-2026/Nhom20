@@ -27,7 +27,8 @@ export class PrismaQueueRepository implements QueueRepository {
     return this.prisma.phieuHangCho.findMany({
       where: {
         ngayXepHang: date,
-        luotKham: { bacSiId: doctorId },
+        // Lượt chờ kết quả có danh sách riêng; không tính là đang khám trong hàng đợi.
+        luotKham: { bacSiId: doctorId, trangThai: { not: 'CHO_KET_QUA' } },
         trangThai: {
           in: [
             TrangThaiHangCho.DA_VAO_PHONG,

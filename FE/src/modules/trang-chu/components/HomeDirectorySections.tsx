@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useDoctors } from '@/modules/bac-si/hooks/use-doctors';
 import { useSpecialties } from '@/modules/chuyen-khoa/hooks/use-specialties';
 import { getSpecialtyIcon } from '@/utils/icon-mapper';
-import { useRef, useState } from 'react';
+import CardSlider from './HomeCardSlider';
 import '../public-pages.css';
 
 function initials(name: string) { return name.split(' ').slice(-2).map((part) => part[0]).join('').toUpperCase(); }
@@ -33,57 +33,6 @@ function StarRating({ seed }: { seed: string | number }) {
       })}
       <small className="hd-star-count ms-1">({display}/5)</small>
     </span>
-  );
-}
-
-/** Slider dùng cuộn ngang + nút mũi tên */
-function CardSlider({ children, itemWidth = 270 }: { children: React.ReactNode[]; itemWidth?: number }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [canPrev, setCanPrev] = useState(false);
-  const [canNext, setCanNext] = useState(true);
-
-  const scroll = (dir: 'prev' | 'next') => {
-    const el = trackRef.current;
-    if (!el) return;
-    const delta = (itemWidth + 20) * 2;
-    el.scrollBy({ left: dir === 'next' ? delta : -delta, behavior: 'smooth' });
-  };
-
-  const onScroll = () => {
-    const el = trackRef.current;
-    if (!el) return;
-    setCanPrev(el.scrollLeft > 8);
-    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
-  };
-
-  return (
-    <div className="hd-slider-wrap">
-      <button
-        className={`hd-slider-btn hd-slider-btn--prev${canPrev ? '' : ' hd-slider-btn--disabled'}`}
-        onClick={() => scroll('prev')}
-        aria-label="Trang trước"
-        disabled={!canPrev}
-      >
-        <span className="material-symbols-outlined">chevron_left</span>
-      </button>
-
-      <div className="hd-slider-track" ref={trackRef} onScroll={onScroll}>
-        {children.map((child, i) => (
-          <div key={i} className="hd-slider-item" style={{ minWidth: itemWidth }}>
-            {child}
-          </div>
-        ))}
-      </div>
-
-      <button
-        className={`hd-slider-btn hd-slider-btn--next${canNext ? '' : ' hd-slider-btn--disabled'}`}
-        onClick={() => scroll('next')}
-        aria-label="Trang sau"
-        disabled={!canNext}
-      >
-        <span className="material-symbols-outlined">chevron_right</span>
-      </button>
-    </div>
   );
 }
 
@@ -193,6 +142,7 @@ export default function HomeDirectorySections() {
                     <div className="public-doctor-card__meta">
                       <span>{doctor.experienceYears} năm kinh nghiệm</span>
                     </div>
+                    {doctor.certification?.trim() && <div className="public-doctor-card__certification"><strong>Chứng chỉ</strong><span>{doctor.certification}</span></div>}
                     <Link className="btn btn-primary mt-auto" to={`/dat-lich?chuyenKhoaId=${doctor.specialty.id}`}>Đặt lịch khám</Link>
                   </div>
                 </article>
@@ -215,6 +165,7 @@ export default function HomeDirectorySections() {
                     <div className="public-doctor-card__meta">
                       <span>{doctor.experienceYears} năm kinh nghiệm</span>
                     </div>
+                    {doctor.certification?.trim() && <div className="public-doctor-card__certification"><strong>Chứng chỉ</strong><span>{doctor.certification}</span></div>}
                     <Link className="btn btn-outline-primary mt-auto" to={`/dat-lich?chuyenKhoaId=${doctor.specialty.id}`}>Đặt lịch khám</Link>
                   </div>
                 </article>

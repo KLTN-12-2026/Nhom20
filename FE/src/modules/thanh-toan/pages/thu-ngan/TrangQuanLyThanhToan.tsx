@@ -19,8 +19,11 @@ interface Invoice {
   code: string; patient: string; phone: string; createdAt: string;
   createdDateKey: string;
   total: number; paid: number; status: InvoiceStatus;
+  ready: boolean;
   items: { id: string | number; kind: string; name: string; quantity: number; unitPrice: number }[];
   payments: { time: string; amount: number; method: string; collector: string; reference?: string }[];
+  cancellationReason?: string;
+  cancelledAt?: string;
 }
 
 const money = (value: number) => `${new Intl.NumberFormat('vi-VN').format(value)} ₫`;
@@ -86,7 +89,15 @@ export default function TrangQuanLyThanhToan() {
 
         const paid = thanhToan.filter((t) => t.trangThai === 'THANH_CONG').reduce((sum: number, t) => sum + Number(t.soTien), 0);
         const total = Number(hData.tongTien);
-        const status = hData.trangThai === 'DA_THANH_TOAN' ? 'Đã thanh toán' : paid > 0 ? 'Thanh toán một phần' : 'Chưa thanh toán';
+        const isCancelled = hData.trangThai === 'DA_HUY';
+        const isPaid = hData.trangThai === 'DA_THANH_TOAN' || (total > 0 && paid >= total);
+        const status: InvoiceStatus = isCancelled
+          ? 'Đã hủy'
+          : isPaid
+          ? 'Đã thanh toán'
+          : paid > 0
+          ? 'Thanh toán một phần'
+          : 'Chưa thanh toán';
 
         // Luôn hiển thị snapshot chi tiết hóa đơn đã chốt khi cấp thuốc.
         // Không lấy lại đơn thuốc để tránh lệch hóa đơn cũ khi bác sĩ chỉnh đơn mới.
@@ -107,7 +118,8 @@ export default function TrangQuanLyThanhToan() {
           createdDateKey: dateKey(new Date(String(hData.createdAt))),
           total,
           paid,
-          status: status as InvoiceStatus,
+          status,
+          ready: hData.sanSangThuTien === true,
           items,
           payments: thanhToan.map((t) => ({
             time: dinhDangNgayGio(String(t.thoiGianThanhToan)),
@@ -115,7 +127,9 @@ export default function TrangQuanLyThanhToan() {
             method: t.phuongThuc === 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản',
             collector: 'Hệ thống',
             reference: String(t.maGiaoDich || '')
-          }))
+          })),
+          cancellationReason: typeof hData.lyDoHuy === 'string' ? hData.lyDoHuy : undefined,
+          cancelledAt: hData.thoiGianHuy ? dinhDangNgayGio(String(hData.thoiGianHuy)) : undefined,
         };
       });
       setInvoices(mapped);
@@ -142,6 +156,48 @@ export default function TrangQuanLyThanhToan() {
   const [method, setMethod] = useState<PaymentMethod>('TIEN_MAT');
   const [amount, setAmount] = useState('');
   const [cashReceived, setCashReceived] = useState('');
+
+  // Trạng thái hủy hóa đơn
+  const [cancellingInvoice, setCancellingInvoice] = useState<Invoice | null>(null);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+
+  const handleOpenCancel = useCallback((invoice: Invoice) => {
+    setCancellingInvoice(invoice);
+    setCancellationReason('');
+    setCancelError('');
+  }, []);
+
+  const handleConfirmCancel = useCallback(async () => {
+    if (!cancellingInvoice) return;
+    const trimmed = cancellationReason.trim();
+    if (!trimmed || trimmed.length < 3) {
+      setCancelError('Vui lòng nhập lý do hủy (tối thiểu 3 ký tự)');
+      return;
+    }
+    setIsCancelling(true);
+    try {
+      await paymentApi.cancelInvoice(cancellingInvoice.id, trimmed);
+      showToast(`Đã hủy hóa đơn ${cancellingInvoice.code} thành công`, 'success');
+      setCancellingInvoice(null);
+      setCancellationReason('');
+      setCancelError('');
+      await fetchInvoices();
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'response' in err
+        ? ((err as Record<string, any>).response?.data?.message || 'Không thể hủy hóa đơn')
+        : 'Không thể hủy hóa đơn';
+      showToast(String(msg), 'danger');
+    } finally {
+      setIsCancelling(false);
+    }
+  }, [cancellingInvoice, cancellationReason, showToast, fetchInvoices]);
+
+  useRealtimeEvent<{ id: number; maHoaDon: string; lyDoHuy: string }>('invoice.cancelled', useCallback((payload) => {
+    void fetchInvoices();
+    showToast(`Hóa đơn ${payload.maHoaDon} đã được hủy`);
+  }, [fetchInvoices, showToast]));
 
   useRealtimeEvent<{ maHoaDon: string, soTien: number, maGiaoDich: string, excessAmount?: string }>('payment.success', useCallback((payload) => {
     fetchInvoices();
@@ -172,6 +228,11 @@ export default function TrangQuanLyThanhToan() {
   useRealtimeEvent<{ code: string; patient: { fullName: string } }>('prescription.dispensed', useCallback((payload) => {
     void fetchInvoices();
     showToast(`Đã nhận hóa đơn chờ thanh toán của ${payload.patient.fullName}`);
+  }, [fetchInvoices, showToast]));
+
+  useRealtimeEvent<{ id: number; code: string }>('invoice.ready', useCallback((payload) => {
+    void fetchInvoices();
+    showToast(`Hóa đơn ${payload.code} đã sẵn sàng thanh toán`);
   }, [fetchInvoices, showToast]));
 
   const targetInvoices = useMemo(() => {
@@ -548,6 +609,8 @@ export default function TrangQuanLyThanhToan() {
                             ? 'green'
                             : invoice.status === 'Thanh toán một phần'
                             ? 'amber'
+                            : invoice.status === 'Đã hủy'
+                            ? 'gray'
                             : 'red'
                         }`}
                       >
@@ -562,9 +625,9 @@ export default function TrangQuanLyThanhToan() {
                           onClick={() => openInvoice(invoice)}
                         >
                           <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>
-                            {invoice.status === 'Đã thanh toán' || !canUpdate ? 'visibility' : 'payments'}
+                            {invoice.status === 'Đã thanh toán' || invoice.status === 'Đã hủy' || !canUpdate ? 'visibility' : 'payments'}
                           </span>
-                          <span className="text-nowrap">{invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}</span>
+                          <span className="text-nowrap">{invoice.status === 'Đã thanh toán' || invoice.status === 'Đã hủy' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}</span>
                         </button>
                         <button
                           type="button"
@@ -576,6 +639,18 @@ export default function TrangQuanLyThanhToan() {
                           <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>print</span>
                           <span className="text-nowrap">In</span>
                         </button>
+                        {invoice.status !== 'Đã thanh toán' && invoice.status !== 'Đã hủy' && canUpdate && (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger text-nowrap d-inline-flex align-items-center gap-1"
+                            style={{ minHeight: '32px', height: '32px', padding: '0 8px', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
+                            title="Hủy hóa đơn"
+                            onClick={() => handleOpenCancel(invoice)}
+                          >
+                            <span className="material-symbols-outlined align-middle" style={{ fontSize: 16 }}>block</span>
+                            <span className="text-nowrap">Hủy</span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -598,6 +673,8 @@ export default function TrangQuanLyThanhToan() {
                           ? 'green'
                           : invoice.status === 'Thanh toán một phần'
                           ? 'amber'
+                          : invoice.status === 'Đã hủy'
+                          ? 'gray'
                           : 'red'
                       }`}
                     >
@@ -631,9 +708,9 @@ export default function TrangQuanLyThanhToan() {
                       onClick={() => openInvoice(invoice)}
                     >
                       <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                        {invoice.status === 'Đã thanh toán' || !canUpdate ? 'visibility' : 'payments'}
+                        {invoice.status === 'Đã thanh toán' || invoice.status === 'Đã hủy' || !canUpdate ? 'visibility' : 'payments'}
                       </span>
-                      {invoice.status === 'Đã thanh toán' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}
+                      {invoice.status === 'Đã thanh toán' || invoice.status === 'Đã hủy' || !canUpdate ? 'Xem chi tiết' : 'Thu tiền'}
                     </button>
                     <button
                       type="button"
@@ -644,6 +721,17 @@ export default function TrangQuanLyThanhToan() {
                       <span className="material-symbols-outlined" style={{ fontSize: 18 }}>print</span>
                       In
                     </button>
+                    {invoice.status !== 'Đã thanh toán' && invoice.status !== 'Đã hủy' && canUpdate && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        onClick={() => handleOpenCancel(invoice)}
+                        title="Hủy hóa đơn"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>block</span>
+                        Hủy
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -719,7 +807,28 @@ export default function TrangQuanLyThanhToan() {
           </div>
         </div>
         <div className="col-md-7">
-          {remaining > 0 && canUpdate ? (
+          {selected.status === 'Đã hủy' ? (
+            <div className="alert alert-secondary d-flex flex-column gap-2 p-3 border rounded-3 bg-light">
+              <div className="d-flex align-items-center gap-2 text-danger fw-bold fs-6">
+                <span className="material-symbols-outlined fs-4">cancel</span>
+                <span>Hóa đơn đã bị hủy</span>
+              </div>
+              <div className="text-secondary small">
+                {selected.cancellationReason ? (
+                  <><strong>Lý do hủy:</strong> {selected.cancellationReason}</>
+                ) : (
+                  'Hóa đơn này đã được hủy và khóa. Không thể thực hiện thu tiền hoặc quét mã QR.'
+                )}
+              </div>
+              {selected.cancelledAt && (
+                <div className="text-muted small">
+                  <strong>Thời gian hủy:</strong> {selected.cancelledAt}
+                </div>
+              )}
+            </div>
+          ) : !selected.ready && remaining > 0 ? (
+            <div className="alert alert-warning">Đơn thuốc chưa được cấp. Chưa thể thu tiền hoặc tạo mã QR.</div>
+          ) : remaining > 0 && canUpdate ? (
             <>
               <label className="form-label fw-semibold">Phương thức cho lần thu mới</label>
               <div className="d-flex flex-wrap gap-2 mb-3">
@@ -827,7 +936,17 @@ export default function TrangQuanLyThanhToan() {
           <span className="material-symbols-outlined me-1" style={{ fontSize: 18 }}>print</span>
           In bill 58mm
         </button>
-        {remaining > 0 && canUpdate && (
+        {selected.status !== 'Đã hủy' && selected.status !== 'Đã thanh toán' && canUpdate && (
+          <button
+            type="button"
+            className="btn btn-outline-danger d-inline-flex align-items-center gap-1"
+            onClick={() => handleOpenCancel(selected)}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>block</span>
+            Hủy hóa đơn
+          </button>
+        )}
+        {remaining > 0 && canUpdate && selected.ready && selected.status !== 'Đã hủy' && (
           method === 'TIEN_MAT' ? (
             <button
               type="button"
@@ -852,6 +971,87 @@ export default function TrangQuanLyThanhToan() {
     </div>
   </div>
 </div>}
+
+      {/* Modal xác nhận hủy hóa đơn */}
+      {cancellingInvoice && (
+        <div className="modal d-block" role="dialog" aria-modal="true" style={{ backgroundColor: 'rgba(15, 23, 42, 0.55)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header bg-danger text-white">
+                <h2 className="modal-title fs-5 d-flex align-items-center gap-2">
+                  <span className="material-symbols-outlined">warning</span>
+                  Xác nhận hủy hóa đơn
+                </h2>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  aria-label="Đóng"
+                  onClick={() => !isCancelling && setCancellingInvoice(null)}
+                />
+              </div>
+              <div className="modal-body p-4">
+                <div className="alert alert-warning mb-3">
+                  <div className="fw-semibold">Mã hóa đơn: {cancellingInvoice.code}</div>
+                  <div>Bệnh nhân: <strong>{cancellingInvoice.patient}</strong> ({cancellingInvoice.phone || 'Không có SĐT'})</div>
+                  <div>Tổng tiền: <strong>{money(cancellingInvoice.total)}</strong></div>
+                </div>
+
+                <div className="mb-2">
+                  <label htmlFor="lyDoHuyInput" className="form-label fw-bold">
+                    Lý do hủy hóa đơn <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    id="lyDoHuyInput"
+                    className={`form-control ${cancelError ? 'is-invalid' : ''}`}
+                    rows={3}
+                    placeholder="Nhập lý do hủy hóa đơn (ví dụ: Bệnh nhân đổi lịch, hủy khám, sai thông tin chỉ định...)"
+                    value={cancellationReason}
+                    disabled={isCancelling}
+                    onChange={(e) => {
+                      setCancellationReason(e.target.value);
+                      if (cancelError && e.target.value.trim().length >= 3) {
+                        setCancelError('');
+                      }
+                    }}
+                  />
+                  {cancelError && <div className="invalid-feedback d-block">{cancelError}</div>}
+                  <small className="text-muted d-block mt-1">
+                    Bắt buộc nhập lý do hủy (tối thiểu 3 ký tự) để phục vụ kiểm toán và đối soát.
+                  </small>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  disabled={isCancelling}
+                  onClick={() => setCancellingInvoice(null)}
+                >
+                  Quay lại
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger d-inline-flex align-items-center gap-1"
+                  disabled={isCancelling || cancellationReason.trim().length < 3}
+                  onClick={handleConfirmCancel}
+                >
+                  {isCancelling ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete_forever</span>
+                      Xác nhận hủy hóa đơn
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

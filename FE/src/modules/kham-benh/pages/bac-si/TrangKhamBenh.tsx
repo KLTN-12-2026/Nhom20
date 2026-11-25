@@ -7,40 +7,53 @@ import { examinationApi } from '../../api/examination.api';
 import type { PrescriptionWarning, WarningAiSuggestionResult } from '../../types/examination.types';
 import { usePrescriptionMedicines } from '@/modules/thuoc/hooks/use-prescription-medicines';
 import { KhamChuyenKhoa } from '../../components/kham-chuyen-khoa/KhamChuyenKhoa';
+import { ServiceOrdersPanel } from '@/modules/chi-dinh-dich-vu';
+import { WaitingVisitsPanel } from '../../components/WaitingVisitsPanel';
+import { waitingVisitsApi } from '../../api/waiting-visits.api';
+import { getApiErrorMessage } from '@/services/axios-client';
 import '@/components/ui/admin-crud.css';
 import '@/modules/thuoc/medicine-inventory.css';
 import '@/modules/bac-si/doctor-workspace.css';
 import './TrangKhamBenh.css';
+import { useAuthStore } from '@/stores/auth.store';
 
 const LOCAL_DRAFT_PREFIX = 'smart_clinic_draft_';
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // Hết hạn nháp sau 24 giờ
 
-function getLocalDraftKey(id: number) {
-  return `${LOCAL_DRAFT_PREFIX}${id}`;
+function getLocalDraftKey(id: number, userId?: number | null) {
+  return `${LOCAL_DRAFT_PREFIX}${userId ? `${userId}_` : ''}${id}`;
 }
 
-function saveLocalDraft(id: number, data: any) {
+function saveLocalDraft(id: number, data: any, userId?: number | null) {
   try {
     localStorage.setItem(
-      getLocalDraftKey(id),
-      JSON.stringify({ ...data, savedAt: Date.now() }),
+      getLocalDraftKey(id, userId),
+      JSON.stringify({ ...data, pending: true, savedAt: Date.now() }),
     );
   } catch (e) {
     console.warn('Không thể lưu draft vào localStorage', e);
   }
 }
 
-function getLocalDraft(id: number) {
+function getLocalDraft(id: number, userId?: number | null) {
   try {
-    const raw = localStorage.getItem(getLocalDraftKey(id));
-    return raw ? JSON.parse(raw) : null;
+    const key = getLocalDraftKey(id, userId);
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed.savedAt && Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
 }
 
-function clearLocalDraft(id: number) {
+function clearLocalDraft(id: number, userId?: number | null) {
   try {
-    localStorage.removeItem(getLocalDraftKey(id));
+    localStorage.removeItem(getLocalDraftKey(id, userId));
   } catch (e) {
     console.warn('Không thể xóa draft khỏi localStorage', e);
   }
@@ -53,6 +66,12 @@ function formatVietnameseDate(value: string) {
 }
 
 export default function TrangKhamBenh() {
+  const [params] = useSearchParams();
+  // Mỗi ID có form riêng: không dùng dữ liệu A với ID B trong lúc React đổi route.
+  return <ExaminationSession key={params.get('luotKhamId') ?? 'active'} />;
+}
+
+function ExaminationSession() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { showToast } = useAppToast();
@@ -87,7 +106,12 @@ export default function TrangKhamBenh() {
   });
   const [medicineSearch, setMedicineSearch] = useState('');
   const [activePrescriptionIndex, setActivePrescriptionIndex] = useState<number | null>(null);
+  const user = useAuthStore((state) => state.user);
   const draftHydratedRef = useRef<number | null>(null);
+  const mountedRef = useRef(true);
+  const saveQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+  const transitionRef = useRef(false);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const safetyCheckKeyRef = useRef('');
   const followUpDatePickerRef = useRef<HTMLInputElement>(null);
   const diagnosisRef = useRef<HTMLInputElement>(null);
@@ -126,6 +150,7 @@ export default function TrangKhamBenh() {
     if (!id || isNaN(id)) return;
     try {
       const response = await examinationApi.getWarnings(id);
+      if (!mountedRef.current) return;
       setWarnings(response.data.data ?? []);
     } catch {
       // Chưa có đơn thuốc thì không hiển thị cảnh báo và không chặn thao tác khám.
@@ -140,6 +165,7 @@ export default function TrangKhamBenh() {
       setError(null);
       try {
         const activeRes = await examinationApi.getActiveVisit();
+        if (!mountedRef.current) return;
         if (activeRes.data.data?.id) {
           currentId = activeRes.data.data.id;
           navigate(`/bac-si/kham-benh?luotKhamId=${currentId}`, { replace: true });
@@ -157,14 +183,16 @@ export default function TrangKhamBenh() {
     setError(null);
     try {
       const response = await examinationApi.getVisit(currentId);
+      if (!mountedRef.current) return;
       const visitData = response.data.data;
       setVisit(visitData);
       const draft = visitData?.draft;
 
       // So sánh dữ liệu nháp trên server và bộ nhớ tạm localStorage
-      const localDraft = getLocalDraft(currentId);
+      const localDraft = getLocalDraft(currentId, user?.id);
       const serverUpdatedTime = draft?.updatedAt ? new Date(draft.updatedAt).getTime() : 0;
-      const shouldUseLocal = localDraft && (
+      const shouldUseLocal = visitData?.status !== 'DA_HOAN_TAT' && visitData?.status !== 'DA_HUY' && localDraft && (
+        localDraft.pending ||
         !draft ||
         (localDraft.savedAt && localDraft.savedAt > serverUpdatedTime) ||
         (localDraft.symptoms && !draft.trieuChung && !draft.symptoms) ||
@@ -185,8 +213,8 @@ export default function TrangKhamBenh() {
         setLastSavedAt(draft?.updatedAt ?? draft?.submittedAt ?? null);
         setIsDirty(true);
         showToast('Đã khôi phục dữ liệu phiên khám chưa lưu từ phiên trước', 'info');
-      } else if (draft && draftHydratedRef.current !== draft.id) {
-        draftHydratedRef.current = draft.id;
+      } else if (draft && draftHydratedRef.current !== currentId) {
+        draftHydratedRef.current = currentId;
         setVitals({
           bloodPressure: String(draft.vitals?.bloodPressure ?? ''),
           heartRate: String(draft.vitals?.heartRate ?? ''),
@@ -222,7 +250,7 @@ export default function TrangKhamBenh() {
     } finally {
       setIsLoading(false);
     }
-  }, [loadWarnings, luotKhamId, navigate, showToast]);
+  }, [loadWarnings, luotKhamId, navigate, showToast, user?.id]);
 
   useEffect(() => {
     void reload();
@@ -259,6 +287,8 @@ export default function TrangKhamBenh() {
       instructions: p.instructions || undefined,
     })),
   }), [conclusion, diagnosis, doctorNotes, followUpDate, icd10Code, prescriptions, specialtyContent, symptoms, vitals]);
+  const latestPayloadRef = useRef(payload);
+  latestPayloadRef.current = payload;
 
   // Chỉ kiểm tra lại an toàn khi nội dung đơn thay đổi, không chờ chu kỳ tự lưu 4 giây.
   const prescriptionSafetyKey = useMemo(
@@ -273,14 +303,25 @@ export default function TrangKhamBenh() {
 
   const saveDraft = useCallback(async (silent = false) => {
     const currentVisitId = luotKhamId || visit?.id;
-    if (!visit || !currentVisitId) return false;
+    if (!visit || visit.id !== currentVisitId || !['DA_VAO_PHONG', 'DANG_CHO', 'CHO_KET_QUA'].includes(visit.status)) return false;
     try {
       if (silent) setIsAutoSaving(true);
-      const response = await examinationApi.saveDraft(currentVisitId, payload);
+      // Tuần tự hóa autosave và lưu tay; phản hồi cũ không đánh dấu sạch bản nháp mới.
+      const request = saveQueueRef.current.then(() => examinationApi.saveDraft(currentVisitId, payload));
+      saveQueueRef.current = request.catch(() => undefined);
+      const response = await request;
+      if (!mountedRef.current) return true;
       setLastSavedAt(response.data.data?.updatedAt ?? new Date().toISOString());
       setWarnings(response.data.data?.warnings ?? []);
-      setIsDirty(false);
-      if (!silent) showToast('Đã lưu nháp hồ sơ khám');
+      if (latestPayloadRef.current === payload) {
+        setIsDirty(false);
+        // Chỉ xác nhận đúng snapshot đã gửi; response cũ không xóa nháp mới đang gõ.
+        const local = getLocalDraft(currentVisitId, user?.id);
+        if (local) {
+          try { localStorage.setItem(getLocalDraftKey(currentVisitId, user?.id), JSON.stringify({ ...local, pending: false })); } catch { /* Bộ nhớ trình duyệt có thể bị khóa. */ }
+        }
+      }
+      if (!silent) showToast(response.data.message || 'Đã lưu nháp hồ sơ khám');
       return true;
     } catch {
       if (!silent) showToast('Có lỗi xảy ra khi lưu bản nháp', 'danger');
@@ -288,12 +329,12 @@ export default function TrangKhamBenh() {
     } finally {
       if (silent) setIsAutoSaving(false);
     }
-  }, [luotKhamId, payload, showToast, visit]);
+  }, [luotKhamId, payload, showToast, user?.id, visit]);
 
   // Lưu đệm localStorage tức thời để chống mất dữ liệu khi mất mạng hoặc F5
   useEffect(() => {
     const currentVisitId = luotKhamId || visit?.id;
-    if (!visit || !currentVisitId) return;
+    if (!visit || visit.id !== currentVisitId || ['DA_HOAN_TAT', 'DA_HUY'].includes(visit.status)) return;
     saveLocalDraft(currentVisitId, {
       vitals,
       symptoms,
@@ -304,8 +345,8 @@ export default function TrangKhamBenh() {
       doctorNotes,
       followUpDate,
       prescriptions,
-    });
-  }, [conclusion, diagnosis, doctorNotes, followUpDate, icd10Code, luotKhamId, prescriptions, specialtyContent, symptoms, visit, vitals]);
+    }, user?.id);
+  }, [conclusion, diagnosis, doctorNotes, followUpDate, icd10Code, luotKhamId, prescriptions, specialtyContent, symptoms, user?.id, visit, vitals]);
 
   // Lắng nghe sự kiện Online/Offline
   useEffect(() => {
@@ -333,6 +374,7 @@ export default function TrangKhamBenh() {
   }, [isDirty, isSubmitting, saveDraft, visit]);
 
   useEffect(() => {
+    if (isSubmitting || transitionRef.current) return;
     if (!visit || !luotKhamId || !prescriptionSafetyKey) {
       if (!prescriptionSafetyKey) setWarnings([]);
       return undefined;
@@ -350,13 +392,34 @@ export default function TrangKhamBenh() {
         .finally(() => setIsSafetyChecking(false));
     }, 450);
     return () => window.clearTimeout(timer);
-  }, [luotKhamId, prescriptionSafetyKey, saveDraft, visit]);
+  }, [isSubmitting, luotKhamId, prescriptionSafetyKey, saveDraft, visit]);
+
+  const changeWaitingStatus = async (action: 'wait' | 'resume') => {
+    if (transitionRef.current || isSubmitting || !visit) return;
+    transitionRef.current = true;
+    setIsSubmitting(true);
+    try {
+      // Lưu đúng ID trước khi rời phòng; lỗi lưu nháp thì không chuyển trạng thái.
+      if (!await saveDraft(true)) throw new Error('Không lưu được bản nháp; chưa chuyển trạng thái');
+      const response = await waitingVisitsApi.transition(visit.id, action);
+      if (!mountedRef.current) return;
+      showToast(response.message);
+      if (action === 'wait') navigate('/bac-si/hang-doi');
+      else setVisit((current: typeof visit) => ({ ...current, status: response.data.status }));
+    } catch (err: unknown) {
+      if (mountedRef.current) showToast(getApiErrorMessage(err, 'Không thể chuyển trạng thái lượt khám'), 'danger');
+    } finally { transitionRef.current = false; if (mountedRef.current) setIsSubmitting(false); }
+  };
 
   const handleSave = async (
     status: 'draft' | 'complete',
     confirmWithoutMedicine = false,
   ) => {
     if (!visit) return;
+    if (transitionRef.current || isSubmitting) return;
+    if (status === 'complete' && visit.status === 'CHO_KET_QUA') {
+      showToast('Hãy tiếp tục lượt khám trước khi hoàn tất', 'warning'); return;
+    }
     if (status === 'draft') {
       await saveDraft();
       return;
@@ -406,12 +469,12 @@ export default function TrangKhamBenh() {
     try {
       await examinationApi.complete(targetVisitId, payload);
       setIsDirty(false);
-      clearLocalDraft(targetVisitId);
+      clearLocalDraft(targetVisitId, user?.id);
       const hasPrescription = payload.prescription && payload.prescription.length > 0;
       showToast(
         hasPrescription
           ? 'Đã hoàn tất khám bệnh và chuyển đơn sang bộ phận Dược sĩ'
-          : 'Đã hoàn tất khám bệnh thành công',
+          : 'Đã hoàn tất khám và chuyển hóa đơn đến Thu ngân',
         'success',
       );
       navigate('/bac-si/hang-doi');
@@ -543,9 +606,14 @@ export default function TrangKhamBenh() {
   return (
     <div className="medicine-inventory admin-crud-page doctor-page doctor-examination-page">
       <div className="admin-crud-heading">
-        <div>
+        <div className="w-100">
           <p className="admin-management-eyebrow">Phiếu khám điện tử</p>
-          <h1>KHÁM BỆNH</h1>
+          <div className="d-flex align-items-center justify-content-between">
+            <h1>KHÁM BỆNH</h1>
+            <span className="badge text-bg-info">
+              {visit.status === 'CHO_KET_QUA' ? 'Chờ kết quả' : visit.status === 'DA_VAO_PHONG' ? 'Đang khám' : visit.status}
+            </span>
+          </div>
           <p className="admin-management-description">
             Ghi nhận sinh hiệu, chẩn đoán và chỉ định cho bệnh nhân.
           </p>
@@ -553,6 +621,31 @@ export default function TrangKhamBenh() {
       </div>
 
       <div className="doctor-exam-shell">
+        <WaitingVisitsPanel />
+        <div className="d-flex gap-2 align-items-center doctor-exam-status-bar mb-3">
+          {visit.status === 'DA_VAO_PHONG' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+              onClick={() => void changeWaitingStatus('wait')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>hourglass_top</span>
+              Lưu nháp và chờ kết quả
+            </button>
+          )}
+          {visit.status === 'CHO_KET_QUA' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+              onClick={() => void changeWaitingStatus('resume')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>play_arrow</span>
+              Tiếp tục lượt khám
+            </button>
+          )}
+        </div>
         {!isOnline && (
           <div className="alert alert-warning d-flex align-items-center gap-2 mb-3 shadow-sm w-100">
             <span className="material-symbols-outlined">wifi_off</span>
@@ -562,6 +655,7 @@ export default function TrangKhamBenh() {
           </div>
         )}
         <form className="doctor-panel overflow-hidden" onSubmit={(event) => event.preventDefault()} onChange={() => setIsDirty(true)}>
+          <fieldset disabled={isSubmitting || ['DA_HOAN_TAT', 'DA_HUY'].includes(visit.status)} style={{ display: 'contents' }}>
           <section className="doctor-exam-patient-bar">
             <div className="doctor-patient__avatar">
               {visit.patient.fullName.split(' ').slice(-2).map((part: string) => part[0]).join('')}
@@ -670,6 +764,10 @@ export default function TrangKhamBenh() {
               </div>
             </div>
           </section>
+
+          {visit.id === activeVisitId && (
+            <ServiceOrdersPanel visitId={visit.id} visitStatus={visit.status} patientName={visit.patient.fullName} disabled={isSubmitting} />
+          )}
 
           <section className="doctor-form-section">
             <h2 className="d-flex align-items-center gap-1">
@@ -930,12 +1028,17 @@ export default function TrangKhamBenh() {
             <button
               type="button"
               className="btn btn-primary"
-              disabled={isSubmitting}
+              disabled={isSubmitting || visit.status === 'CHO_KET_QUA'}
               onClick={() => void handleSave('complete')}
             >
-              {isSubmitting ? 'Đang lưu...' : 'Hoàn tất khám & chuyển Dược'}
+              {isSubmitting
+                ? 'Đang lưu...'
+                : payload.prescription.length > 0
+                ? 'Hoàn tất khám & chuyển Dược'
+                : 'Hoàn tất khám & chuyển Thu ngân'}
             </button>
           </div>
+          </fieldset>
         </form>
 
         <aside className="doctor-exam-aside">
@@ -1059,7 +1162,7 @@ export default function TrangKhamBenh() {
         <div className="modal d-block" role="dialog" style={{ backgroundColor: 'rgba(15, 23, 42, 0.45)' }}>
           <div className="modal-dialog modal-dialog-centered"><div className="modal-content">
             <div className="modal-header"><h2 className="modal-title fs-5">Hoàn tất khi chưa kê thuốc</h2><button type="button" className="btn-close" onClick={() => setShowCompleteWithoutMedicineModal(false)} /></div>
-            <div className="modal-body">Bạn chưa kê thuốc. Bạn có chắc muốn hoàn tất lượt khám này?</div>
+            <div className="modal-body">Bạn xác nhận hoàn tất lượt khám không kê đơn thuốc? Hồ sơ sẽ được hoàn tất và chuyển thông tin thanh toán đến Thu ngân.</div>
             <div className="modal-footer"><button type="button" className="btn btn-outline-secondary" onClick={() => setShowCompleteWithoutMedicineModal(false)}>Quay lại</button><button type="button" className="btn btn-primary" onClick={() => { setShowCompleteWithoutMedicineModal(false); void handleSave('complete', true); }}>Hoàn tất khám</button></div>
           </div></div>
         </div>

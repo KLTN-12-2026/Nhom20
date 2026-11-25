@@ -9,6 +9,7 @@ export interface Doctor {
   avatarUrl: string | null;
   phoneNumber: string | null;
   academicDegree: string | null;
+  certification: string | null;
   experienceYears: number;
   description: string | null;
   status: DoctorStatus;
@@ -33,6 +34,7 @@ export interface CreateDoctorPayload {
   email: string;
   initialPassword: string;
   academicDegree?: string;
+  certification?: string | null;
   experienceYears: number;
   description?: string;
   status: DoctorStatus;

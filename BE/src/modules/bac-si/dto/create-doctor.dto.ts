@@ -26,7 +26,8 @@ export class CreateDoctorDto {
   @IsString()
   @MaxLength(150)
   @Matches(/^[\p{Lu}\p{Lt}][\p{L}]*(?:\s+[\p{Lu}\p{Lt}][\p{L}]*)*$/u, {
-    message: 'Họ tên chỉ gồm chữ cái và khoảng trắng, mỗi từ phải viết hoa chữ cái đầu (ví dụ: Nguyễn Văn A)',
+    message:
+      'Họ tên chỉ gồm chữ cái và khoảng trắng, mỗi từ phải viết hoa chữ cái đầu (ví dụ: Nguyễn Văn A)',
   })
   fullName: string;
 
@@ -61,6 +62,16 @@ export class CreateDoctorDto {
   @IsString()
   @MaxLength(100)
   academicDegree?: string;
+
+  @ApiPropertyOptional({
+    description: 'Chứng chỉ chuyên môn được phép công khai',
+    maxLength: 255,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  certification?: string | null;
 
   @ApiPropertyOptional({ example: 10, default: 0 })
   @IsOptional()

@@ -68,7 +68,9 @@ export class ExaminationsService {
 
   complete(userId: number, appointmentId: number, dto: SaveExaminationDto) {
     if (!dto.symptoms?.trim())
-      throw new BadRequestException('Triệu chứng lâm sàng là thông tin bắt buộc');
+      throw new BadRequestException(
+        'Triệu chứng lâm sàng là thông tin bắt buộc',
+      );
     if (!dto.diagnosis?.trim())
       throw new BadRequestException('Chẩn đoán là thông tin bắt buộc');
     if (!dto.conclusion?.trim())
@@ -93,7 +95,9 @@ export class ExaminationsService {
 
   completeByVisit(userId: number, visitId: number, dto: SaveExaminationDto) {
     if (!dto.symptoms?.trim())
-      throw new BadRequestException('Triệu chứng lâm sàng là thông tin bắt buộc');
+      throw new BadRequestException(
+        'Triệu chứng lâm sàng là thông tin bắt buộc',
+      );
     if (!dto.diagnosis?.trim())
       throw new BadRequestException('Chẩn đoán là thông tin bắt buộc');
     if (!dto.conclusion?.trim())
@@ -108,7 +112,9 @@ export class ExaminationsService {
   }
 
   // Thiếu liều dùng hoặc cách dùng là lỗi nhập đơn, không sinh thành cảnh báo AI.
-  private validatePrescriptionBeforeComplete(dto: SaveExaminationDto) {
+  private validatePrescriptionBeforeComplete(dto: {
+    prescription?: { dosage?: string | null; instructions?: string | null }[];
+  }) {
     const lines = dto.prescription ?? [];
     if (lines.some((line) => !line.dosage?.trim())) {
       throw new BadRequestException(
@@ -167,7 +173,16 @@ export class ExaminationsService {
     status: TrangThaiHoSoKham,
   ) {
     const { visit } = await this.requireOwnedVisit(userId, appointmentId);
+    if (
+      status === TrangThaiHoSoKham.DA_HOAN_TAT &&
+      visit.trangThai === 'CHO_KET_QUA'
+    ) {
+      throw new BadRequestException(
+        'Hãy tiếp tục lượt khám trước khi hoàn tất',
+      );
+    }
     const allowedVisitStatuses = new Set<TrangThaiLuotKham>([
+      TrangThaiLuotKham.CHO_KET_QUA,
       TrangThaiLuotKham.DA_VAO_PHONG,
       TrangThaiLuotKham.DANG_CHO,
     ]);
@@ -229,7 +244,8 @@ export class ExaminationsService {
       followUpDate: dto.followUpDate
         ? this.startOfDay(dto.followUpDate)
         : undefined,
-      prescription: lines.map((line) => ({
+      // Thiếu prescription là giữ đơn cũ; chỉ mảng rỗng tường minh mới xóa thuốc.
+      prescription: dto.prescription?.map((line) => ({
         medicineId: line.medicineId,
         quantity: line.quantity,
         dosage: line.dosage.trim(),
@@ -246,11 +262,30 @@ export class ExaminationsService {
 
     if (status === TrangThaiHoSoKham.DA_HOAN_TAT) {
       if (record.donThuoc) {
+        // Request thiếu prescription giữ đơn cũ, nhưng đơn giữ lại vẫn phải hợp lệ.
+        this.validatePrescriptionBeforeComplete({
+          prescription: record.donThuoc.chiTiet.map((line) => ({
+            dosage: line.lieuDung,
+            instructions: line.huongDanSuDung,
+          })),
+        });
         await this.prescriptionSafetyService.ensureNoPendingCriticalWarning(
           record.donThuoc.id,
         );
       }
-      record = await this.repository.markComplete(record.id, visit.id);
+      const completed = await this.repository.markComplete(
+        record.id,
+        visit.id,
+        userId,
+      );
+      record = completed;
+      if (completed.invoiceForReception) {
+        this.realtimeService.emitToRoom(
+          REALTIME_ROOMS.role('RECEPTIONIST'),
+          REALTIME_EVENTS.INVOICE_READY,
+          completed.invoiceForReception,
+        );
+      }
       const prescription = record.donThuoc;
       if (prescription) {
         const payload = this.recordResponse(record);
@@ -275,9 +310,9 @@ export class ExaminationsService {
     return {
       message:
         status === TrangThaiHoSoKham.DA_HOAN_TAT
-          ? (record.donThuoc
-              ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
-              : 'Đã hoàn tất khám bệnh thành công')
+          ? record.donThuoc
+            ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
+            : 'Đã hoàn tất khám và chuyển hóa đơn đến Thu ngân'
           : 'Đã lưu bản nháp phiếu khám',
       data: { ...this.recordResponse(record), warnings },
     };
@@ -318,7 +353,16 @@ export class ExaminationsService {
     status: TrangThaiHoSoKham,
   ) {
     const { visit } = await this.requireOwnedVisitById(userId, visitId);
+    if (
+      status === TrangThaiHoSoKham.DA_HOAN_TAT &&
+      visit.trangThai === 'CHO_KET_QUA'
+    ) {
+      throw new BadRequestException(
+        'Hãy tiếp tục lượt khám trước khi hoàn tất',
+      );
+    }
     const allowedVisitStatuses = new Set<TrangThaiLuotKham>([
+      TrangThaiLuotKham.CHO_KET_QUA,
       TrangThaiLuotKham.DA_VAO_PHONG,
       TrangThaiLuotKham.DANG_CHO,
     ]);
@@ -379,7 +423,8 @@ export class ExaminationsService {
       conclusion: dto.conclusion,
       doctorNotes: dto.doctorNotes,
       followUpDate: dto.followUpDate ? new Date(dto.followUpDate) : undefined,
-      prescription: lines.map((p) => {
+      // Lưu nháp một phần không được biến trường thiếu thành yêu cầu xóa đơn.
+      prescription: dto.prescription?.map((p) => {
         const med = medicineById.get(p.medicineId);
         if (!med)
           throw new BadRequestException(
@@ -395,11 +440,29 @@ export class ExaminationsService {
 
     if (status === TrangThaiHoSoKham.DA_HOAN_TAT) {
       if (record.donThuoc) {
+        this.validatePrescriptionBeforeComplete({
+          prescription: record.donThuoc.chiTiet.map((line) => ({
+            dosage: line.lieuDung,
+            instructions: line.huongDanSuDung,
+          })),
+        });
         await this.prescriptionSafetyService.ensureNoPendingCriticalWarning(
           record.donThuoc.id,
         );
       }
-      record = await this.repository.markComplete(record.id, visit.id);
+      const completed = await this.repository.markComplete(
+        record.id,
+        visit.id,
+        userId,
+      );
+      record = completed;
+      if (completed.invoiceForReception) {
+        this.realtimeService.emitToRoom(
+          REALTIME_ROOMS.role('RECEPTIONIST'),
+          REALTIME_EVENTS.INVOICE_READY,
+          completed.invoiceForReception,
+        );
+      }
     }
 
     if (status === TrangThaiHoSoKham.DA_HOAN_TAT && record.donThuoc) {
@@ -430,9 +493,9 @@ export class ExaminationsService {
     return {
       message:
         status === TrangThaiHoSoKham.DA_HOAN_TAT
-          ? (record.donThuoc
-              ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
-              : 'Đã hoàn tất khám bệnh thành công')
+          ? record.donThuoc
+            ? 'Đã hoàn tất khám và chuyển đơn sang Dược sĩ'
+            : 'Đã hoàn tất khám và chuyển hóa đơn đến Thu ngân'
           : 'Đã lưu bản nháp phiếu khám',
       data: { ...this.recordResponse(record), warnings },
     };

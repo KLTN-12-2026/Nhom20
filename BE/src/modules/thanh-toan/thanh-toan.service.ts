@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { RealtimeService } from '../thoi-gian-thuc/realtime.service';
@@ -93,6 +94,7 @@ export class ThanhToanService {
     const transactionCode = String(dto.id || dto.referenceCode);
     // Đối chiếu các khoản đã thu và ghi khoản mới cùng transaction.
     const result = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM hoa_don WHERE id = ${hoaDon.id} FOR UPDATE`;
       const currentInvoice = await tx.hoaDon.findUnique({
         where: { id: hoaDon.id },
       });
@@ -123,6 +125,7 @@ export class ThanhToanService {
         }
         return { duplicate: true as const };
       }
+      await this.ensurePrescriptionDispensed(tx, currentInvoice.luotKhamId);
       const previous = await tx.thanhToan.aggregate({
         where: {
           hoaDonId: currentInvoice.id,
@@ -200,8 +203,28 @@ export class ThanhToanService {
     // Chức năng: Thanh toán — lấy hóa đơn và lịch sử giao dịch
     const invoices = await this.prisma.hoaDon.findMany({
       include: {
-        benhNhan: true,
+        benhNhan: {
+          select: {
+            id: true,
+            maBenhNhan: true,
+            hoTen: true,
+            soDienThoai: true,
+            gioiTinh: true,
+            ngaySinh: true,
+          },
+        },
         thanhToan: true,
+        nguoiHuy: {
+          select: {
+            id: true,
+            hoTen: true,
+          },
+        },
+        luotKham: {
+          select: {
+            hoSoKham: { select: { donThuoc: { select: { trangThai: true } } } },
+          },
+        },
         // Chi tiết hóa đơn là snapshot tại thời điểm lập hóa đơn,
         // không đọc lại đơn thuốc vì đơn có thể được chỉnh sửa về sau.
         chiTiet: {
@@ -221,8 +244,88 @@ export class ThanhToanService {
 
     return {
       message: 'Lấy danh sách hóa đơn thành công',
-      data: invoices,
+      data: invoices.map(({ luotKham, ...invoice }) => ({
+        ...invoice,
+        sanSangThuTien:
+          !luotKham.hoSoKham?.donThuoc ||
+          luotKham.hoSoKham.donThuoc.trangThai === 'DA_CAP_THUOC',
+      })),
     };
+  }
+
+  // Chức năng: Thanh toán — Hủy hóa đơn (bắt buộc có lý do hủy)
+  async cancelInvoice(id: number, lyDoHuy: string, currentUserId: number) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM hoa_don WHERE id = ${id} FOR UPDATE`;
+      const hoaDon = await tx.hoaDon.findUnique({
+        where: { id },
+        include: { thanhToan: true },
+      });
+
+      if (!hoaDon) {
+        throw new NotFoundException('Không tìm thấy hóa đơn');
+      }
+
+      if (hoaDon.trangThai === TrangThaiHoaDon.DA_HUY) {
+        throw new ConflictException('Hóa đơn đã bị hủy trước đó');
+      }
+
+      const hasSuccessfulPayment = hoaDon.thanhToan.some(
+        (p) => p.trangThai === TrangThaiThanhToan.THANH_CONG,
+      );
+
+      if (
+        hoaDon.trangThai === TrangThaiHoaDon.DA_THANH_TOAN ||
+        hasSuccessfulPayment
+      ) {
+        throw new BadRequestException(
+          'Không thể hủy hóa đơn đã có giao dịch thanh toán thành công',
+        );
+      }
+
+      const updated = await tx.hoaDon.update({
+        where: { id },
+        data: {
+          trangThai: TrangThaiHoaDon.DA_HUY,
+          lyDoHuy: lyDoHuy.trim(),
+          nguoiHuyId: currentUserId,
+          thoiGianHuy: new Date(),
+        },
+        include: {
+          benhNhan: {
+            select: {
+              id: true,
+              maBenhNhan: true,
+              hoTen: true,
+              soDienThoai: true,
+            },
+          },
+          nguoiHuy: {
+            select: {
+              id: true,
+              hoTen: true,
+            },
+          },
+        },
+      });
+
+      this.realtimeService.emitToRoom(
+        REALTIME_ROOMS.role('RECEPTIONIST'),
+        REALTIME_EVENTS.INVOICE_CANCELLED,
+        {
+          id: updated.id,
+          maHoaDon: updated.maHoaDon,
+          lyDoHuy: updated.lyDoHuy,
+        },
+      );
+
+      this.logger.log(`Đã hủy hóa đơn ${updated.maHoaDon}: ${lyDoHuy}`);
+
+      return {
+        message: 'Hủy hóa đơn thành công',
+        data: updated,
+      };
+    });
   }
 
   // Xử lý logic nghiệp vụ cho chức năng: thanh toán
@@ -260,23 +363,31 @@ export class ThanhToanService {
     reference?: string,
   ) {
     // Chức năng nội bộ: cập nhật giao dịch và trạng thái hóa đơn trong một giao dịch CSDL.
-    const hoaDon = await this.prisma.hoaDon.findUnique({
-      where: { id },
-      include: { thanhToan: true },
-    });
-
-    if (!hoaDon) throw new Error('Không tìm thấy hóa đơn');
-
-    const paid = hoaDon.thanhToan
-      .filter((p) => p.trangThai === TrangThaiThanhToan.THANH_CONG)
-      .reduce((acc, curr) => acc + Number(curr.soTien), 0);
-    const remaining = Number(hoaDon.tongTien) - paid;
-
-    if (remaining <= 0) throw new Error('Hóa đơn đã được thanh toán đủ');
-
-    const amountToPay = Math.min(soTien, remaining);
-
     return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM hoa_don WHERE id = ${id} FOR UPDATE`;
+      const hoaDon = await tx.hoaDon.findUnique({
+        where: { id },
+        include: { thanhToan: true },
+      });
+      if (!hoaDon) throw new BadRequestException('Không tìm thấy hóa đơn');
+      if (
+        hoaDon.trangThai === TrangThaiHoaDon.DA_HUY ||
+        hoaDon.trangThai === TrangThaiHoaDon.DA_THANH_TOAN
+      )
+        throw new ConflictException('Hóa đơn đã thanh toán hoặc bị hủy');
+      await this.ensurePrescriptionDispensed(tx, hoaDon.luotKhamId);
+      if (!Number.isFinite(soTien) || soTien <= 0)
+        throw new BadRequestException('Số tiền phải lớn hơn 0');
+      const paid = hoaDon.thanhToan
+        .filter((p) => p.trangThai === TrangThaiThanhToan.THANH_CONG)
+        .reduce((sum, p) => sum.add(p.soTien), new Prisma.Decimal(0));
+      const remaining = hoaDon.tongTien.sub(paid);
+      if (remaining.lte(0))
+        throw new ConflictException('Hóa đơn đã được thanh toán đủ');
+      const amountToPay = Prisma.Decimal.min(
+        new Prisma.Decimal(soTien),
+        remaining,
+      );
       await tx.thanhToan.create({
         data: {
           hoaDonId: id,
@@ -291,7 +402,7 @@ export class ThanhToanService {
         },
       });
 
-      const isFullyPaid = paid + amountToPay >= Number(hoaDon.tongTien);
+      const isFullyPaid = paid.add(amountToPay).gte(hoaDon.tongTien);
 
       const updated = await tx.hoaDon.update({
         where: { id },
@@ -308,5 +419,20 @@ export class ThanhToanService {
         data: updated,
       };
     });
+  }
+
+  private async ensurePrescriptionDispensed(
+    tx: Prisma.TransactionClient,
+    visitId: number,
+  ) {
+    const record = await tx.hoSoKham.findUnique({
+      where: { luotKhamId: visitId },
+      select: { donThuoc: { select: { trangThai: true } } },
+    });
+    if (record?.donThuoc && record.donThuoc.trangThai !== 'DA_CAP_THUOC') {
+      throw new ConflictException(
+        'Đơn thuốc chưa được cấp; hóa đơn chưa sẵn sàng thanh toán. Nếu đã chuyển khoản, cần đối soát giao dịch.',
+      );
+    }
   }
 }

@@ -1,9 +1,19 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { TrangThaiChung } from '@prisma/client';
+import { LoaiDichVu, TrangThaiChung } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class ServiceQueryDto {
+  @ApiPropertyOptional({ enum: LoaiDichVu })
+  @IsOptional()
+  @IsEnum(LoaiDichVu)
+  excludeType?: LoaiDichVu;
+
+  @ApiPropertyOptional({ enum: LoaiDichVu })
+  @IsOptional()
+  @IsEnum(LoaiDichVu)
+  type?: LoaiDichVu;
+
   @ApiPropertyOptional() @IsOptional() @IsString() search?: string;
   @ApiPropertyOptional({ enum: TrangThaiChung })
   @IsOptional()
