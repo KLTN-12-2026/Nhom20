@@ -46,13 +46,7 @@ export default function Footer() {
             </div>
             <div className="d-flex flex-column text-body-sm text-on-surface-variant gap-1">
               <div>
-                <strong>Số điện thoại liên hệ:</strong>{' '}
-                <a
-                  href="tel:19001234"
-                  className="text-primary text-decoration-none fw-semibold"
-                >
-                  1900 1234
-                </a>
+                <strong>Số điện thoại liên hệ:</strong> 1900 1234
               </div>
               <div>
                 <strong>Email:</strong>{' '}
