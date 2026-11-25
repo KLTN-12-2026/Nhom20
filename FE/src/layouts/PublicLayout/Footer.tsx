@@ -50,17 +50,7 @@ export default function Footer() {
               </div>
               <div>
                 <strong>Email:</strong>{' '}
-                <a
-                  href="mailto:contact@smartclinic.ai"
-                  className="text-on-surface text-decoration-none fw-medium"
-                  style={{ transition: 'color 0.2s' }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = 'var(--sc-primary)')
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = 'var(--sc-on-surface)')
-                  }
-                >
+                <a>
                   contact@smartclinic.ai
                 </a>
               </div>
