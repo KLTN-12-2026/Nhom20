@@ -186,8 +186,20 @@ export default function HomeDirectorySections() {
             <p>Tìm hiểu quy trình đặt lịch, tiếp đón, cấp phiếu và theo dõi hàng chờ.</p>
           </div>
           <div className="d-flex flex-wrap gap-2">
-            <Link className="btn btn-light text-primary fw-bold" to="/lien-he">Xem hướng dẫn liên hệ</Link>
-            <Link className="btn btn-outline-light" to="/dat-lich">Đặt lịch ngay</Link>
+            <Link
+              className="btn fw-bold"
+              to="/lien-he"
+              style={{ backgroundColor: '#ffffff', color: '#092f70', border: 'none' }}
+            >
+              Xem hướng dẫn liên hệ
+            </Link>
+            <Link
+              className="btn fw-bold"
+              to="/dat-lich"
+              style={{ backgroundColor: '#2563eb', color: '#ffffff', border: 'none' }}
+            >
+              Đặt lịch ngay
+            </Link>
           </div>
         </div>
       </div>
