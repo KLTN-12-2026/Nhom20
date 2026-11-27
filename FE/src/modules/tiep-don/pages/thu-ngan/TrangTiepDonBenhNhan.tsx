@@ -811,7 +811,7 @@ export default function TrangTiepDonBenhNhan() {
                                     </select>
                                   </div>
                                   <div className="col-md-1">
-                                    <button className="btn btn-outline-danger w-100" disabled={allergies.length === 1} type="button" aria-label="Xóa dị ứng" onClick={() => setAllergies((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
+                                    <button className="btn btn-danger w-100" disabled={allergies.length === 1} type="button" aria-label="Xóa dị ứng" onClick={() => setAllergies((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
                                       <span className="material-symbols-outlined">delete</span>
                                     </button>
                                   </div>
