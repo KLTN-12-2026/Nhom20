@@ -48,14 +48,27 @@ function ServiceCard({ item }: { item: ReturnType<typeof useServices>['services'
 export default function ServiceCards({
   presentation = 'pagination',
   pageSize = PAGE_SIZE,
+  search = '',
+  onCountChange,
 }: {
   presentation?: 'pagination' | 'slider';
   pageSize?: number;
+  search?: string;
+  onCountChange?: (count: number) => void;
 }) {
   const { services, isLoading, error, reload } = useServices('DANG_HOAT_DONG', 'CAN_LAM_SANG');
   const [page, setPage] = useState(1);
 
-  const items = services;
+  const items = useMemo(() => {
+    const key = search.trim().toLocaleLowerCase('vi');
+    if (!key) return services;
+    return services.filter(
+      (item) =>
+        item.name.toLocaleLowerCase('vi').includes(key) ||
+        (item.specialty?.name ?? '').toLocaleLowerCase('vi').includes(key),
+    );
+  }, [services, search]);
+
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const currentPage = Math.min(page, totalPages);
 
@@ -68,6 +81,14 @@ export default function ServiceCards({
     () => items.slice((currentPage - 1) * pageSize, currentPage * pageSize),
     [items, currentPage, pageSize],
   );
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    onCountChange?.(items.length);
+  }, [items.length, onCountChange]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -86,7 +107,13 @@ export default function ServiceCards({
       <button className="btn btn-outline-primary" onClick={() => void reload()}>Thử lại</button>
     </div>
   );
-  if (!items.length) return <div className="public-page-empty">Chưa có dịch vụ đang hoạt động.</div>;
+  if (!items.length) {
+    return (
+      <div className="public-page-empty">
+        {search.trim() ? 'Không tìm thấy dịch vụ phù hợp.' : 'Chưa có dịch vụ đang hoạt động.'}
+      </div>
+    );
+  }
 
   if (presentation === 'slider') return (
     <HomeCardSlider itemWidth={260}>
