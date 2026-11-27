@@ -818,7 +818,7 @@ export default function TrangTiepDonBenhNhan() {
                                 </div>
                               ))}
                               <div>
-                                <button className="btn btn-outline-primary btn-sm" disabled={allergies.length >= 10} type="button" onClick={() => setAllergies((current) => [...current, { ...EMPTY_ALLERGY }])}>
+                                <button className="btn btn-primary btn-sm" disabled={allergies.length >= 10} type="button" onClick={() => setAllergies((current) => [...current, { ...EMPTY_ALLERGY }])}>
                                   <span className="material-symbols-outlined me-1">add</span>Thêm dị ứng
                                 </button>
                               </div>
