@@ -565,29 +565,29 @@ export default function TrangQuanLyThanhToan() {
           {/* Giao diện Desktop / Màn hình rộng (Bảng 8 cột) */}
           <div className="d-none d-md-block table-responsive">
             <table
-              className="table reception-table align-middle mb-0"
-              style={{ tableLayout: 'fixed', minWidth: '1150px', width: '100%' }}
+              className="table reception-table reception-table--compact align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1100px', width: '100%' }}
             >
               <colgroup>
-                <col style={{ width: '13%', minWidth: '130px' }} />
-                <col style={{ width: '17%', minWidth: '170px' }} />
-                <col style={{ width: '12%', minWidth: '125px' }} />
-                <col style={{ width: '10%', minWidth: '105px' }} />
-                <col style={{ width: '10%', minWidth: '105px' }} />
-                <col style={{ width: '10%', minWidth: '105px' }} />
-                <col style={{ width: '12%', minWidth: '130px' }} />
-                <col style={{ width: '16%', minWidth: '190px' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '8.5%' }} />
+                <col style={{ width: '8.5%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '20%' }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: '13%', minWidth: '130px' }}>Mã hóa đơn</th>
-                  <th style={{ width: '17%', minWidth: '170px' }}>Bệnh nhân</th>
-                  <th style={{ width: '12%', minWidth: '125px' }}>Ngày lập</th>
-                  <th style={{ width: '10%', minWidth: '105px' }}>Tổng tiền</th>
-                  <th style={{ width: '10%', minWidth: '105px' }}>Đã thu</th>
-                  <th style={{ width: '10%', minWidth: '105px' }}>Còn lại</th>
-                  <th style={{ width: '12%', minWidth: '130px' }}>Trạng thái</th>
-                  <th className="text-end" style={{ width: '16%', minWidth: '190px' }}>Thao tác</th>
+                  <th>Mã hóa đơn</th>
+                  <th>Bệnh nhân</th>
+                  <th>Ngày lập</th>
+                  <th>Tổng tiền</th>
+                  <th>Đã thu</th>
+                  <th>Còn lại</th>
+                  <th>Trạng thái</th>
+                  <th className="text-end">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
