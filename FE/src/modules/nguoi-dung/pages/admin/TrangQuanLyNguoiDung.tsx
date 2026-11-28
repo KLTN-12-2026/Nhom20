@@ -374,25 +374,25 @@ export default function TrangQuanLyNguoiDung() {
           </div>
           <div className="table-responsive">
             <table
-              className="table admin-management-table align-middle mb-0"
-              style={{ tableLayout: 'fixed', minWidth: '1250px', width: '100%' }}
+              className="table admin-management-table admin-management-table--users align-middle mb-0"
+              style={{ tableLayout: 'fixed', minWidth: '1120px', width: '100%' }}
             >
               <colgroup>
-                <col style={{ width: '22%', minWidth: '190px' }} />
-                <col style={{ width: '21%', minWidth: '175px' }} />
-                <col style={{ width: '10%', minWidth: '100px' }} />
-                <col style={{ width: '13%', minWidth: '135px' }} />
-                <col style={{ width: '13%', minWidth: '130px' }} />
-                <col style={{ width: '21%', minWidth: '220px' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '23%' }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: '22%', minWidth: '190px' }}>Người dùng</th>
-                  <th style={{ width: '21%', minWidth: '175px' }}>Liên hệ</th>
-                  <th style={{ width: '10%', minWidth: '100px' }}>Vai trò</th>
-                  <th style={{ width: '13%', minWidth: '135px' }}>Trạng thái</th>
-                  <th style={{ width: '13%', minWidth: '130px' }}>Ngày tạo</th>
-                  <th className="text-end" style={{ width: '21%', minWidth: '220px' }}>Thao tác</th>
+                  <th>Người dùng</th>
+                  <th>Liên hệ</th>
+                  <th>Vai trò</th>
+                  <th>Trạng thái</th>
+                  <th>Ngày tạo</th>
+                  <th className="text-end">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -442,53 +442,56 @@ export default function TrangQuanLyNguoiDung() {
                     </td>
                     <td>
                       <span
-                        className={
+                        className={`text-nowrap ${
                           user.status === 'DANG_HOAT_DONG'
                             ? 'badge-status-active'
                             : 'badge-status-locked'
-                        }
+                        }`}
                       >
                         {STATUS_LABELS[user.status]}
                       </span>
                     </td>
                     <td className="text-nowrap">{formatDate(user.createdAt)}</td>
                     <td>
-                      <div className="admin-crud-actions justify-content-end">
+                      <div className="admin-crud-actions justify-content-end flex-nowrap">
                         <button
-                          className="btn btn-sm btn-primary"
+                          className="btn btn-sm btn-primary text-nowrap"
                           title="Chi tiết"
                           aria-label={`Chi tiết ${user.fullName}`}
                           onClick={() => openUserModal('view', user)}
                         >
                           <span className="material-symbols-outlined">visibility</span>
+                          <span>Chi tiết</span>
                         </button>
                         {canUpdate && (
                           <button
-                            className="btn btn-sm btn-light"
+                            className="btn btn-sm btn-light text-nowrap"
                             title="Sửa"
                             aria-label={`Sửa ${user.fullName}`}
                             onClick={() => openUserModal('edit', user)}
                           >
                             <span className="material-symbols-outlined">edit</span>
+                            <span>Sửa</span>
                           </button>
                         )}
                         {canUpdate && user.status !== 'NGUNG_HOAT_DONG' && (
                           <button
                             type="button"
-                            className={`btn btn-sm ${user.status === 'BI_KHOA' ? 'btn-success' : 'btn-warning'}`}
+                            className={`btn btn-sm text-nowrap ${user.status === 'BI_KHOA' ? 'btn-success' : 'btn-warning'}`}
                             disabled={user.id === currentUser?.id}
                             title={user.id === currentUser?.id ? 'Không thể tự khóa tài khoản' : user.status === 'BI_KHOA' ? 'Mở khóa' : 'Khóa'}
                             aria-label={`${user.status === 'BI_KHOA' ? 'Mở khóa' : 'Khóa'} ${user.fullName}`}
                             onClick={() => openUserModal('lock', user)}
                           >
                             <span className="material-symbols-outlined">{user.status === 'BI_KHOA' ? 'lock_open' : 'lock'}</span>
+                            <span>{user.status === 'BI_KHOA' ? 'Mở khóa' : 'Khóa'}</span>
                           </button>
                         )}
                         {canDelete && (
                           <span title={user.hasBusinessData ? 'Đã phát sinh dữ liệu y tế; vui lòng sử dụng chức năng Khóa tài khoản / Ngừng hoạt động thay vì xóa.' : user.id === currentUser?.id ? 'Không thể tự xóa tài khoản' : undefined}>
                             <button
                               type="button"
-                              className="btn btn-sm btn-danger text-white"
+                              className="btn btn-sm btn-danger text-white text-nowrap"
                               aria-label={`Xóa ${user.fullName}`}
                               title={user.id === currentUser?.id
                                 ? 'Không thể tự xóa tài khoản'
@@ -499,6 +502,7 @@ export default function TrangQuanLyNguoiDung() {
                               onClick={() => openUserModal('delete', user)}
                             >
                               <span className="material-symbols-outlined">delete</span>
+                              <span>Xóa</span>
                             </button>
                           </span>
                         )}
