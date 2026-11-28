@@ -459,6 +459,21 @@
   max-width: 100%;
 }
 
+.admin-management-table--users th,
+.admin-management-table--users td {
+  padding: 14px 12px;
+}
+
+.admin-management-table--users th:first-child,
+.admin-management-table--users td:first-child {
+  padding-left: 18px;
+}
+
+.admin-management-table--users th:last-child,
+.admin-management-table--users td:last-child {
+  padding-right: 18px;
+}
+
 .admin-management-table--patients .admin-management-entity strong {
   word-break: break-word;
   overflow-wrap: anywhere;
