@@ -301,6 +301,24 @@
   vertical-align: middle;
 }
 
+.reception-table--compact thead th {
+  padding: 12px 10px;
+}
+
+.reception-table--compact tbody td {
+  padding: 12px 10px;
+}
+
+.reception-table--compact thead th:first-child,
+.reception-table--compact tbody td:first-child {
+  padding-left: 16px;
+}
+
+.reception-table--compact thead th:last-child,
+.reception-table--compact tbody td:last-child {
+  padding-right: 16px;
+}
+
 .reception-person {
   align-items: center;
   display: flex;
